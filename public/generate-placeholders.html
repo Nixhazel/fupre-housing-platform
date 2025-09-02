@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Placeholder Image Generator</title>
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				padding: 20px;
+				background: #f5f5f5;
+			}
+			.container {
+				max-width: 800px;
+				margin: 0 auto;
+				background: white;
+				padding: 20px;
+				border-radius: 8px;
+				box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+			}
+			.placeholder {
+				display: inline-block;
+				margin: 10px;
+				border: 2px solid #ddd;
+				border-radius: 4px;
+				overflow: hidden;
+			}
+			.placeholder img {
+				display: block;
+			}
+			.download-btn {
+				background: #007bff;
+				color: white;
+				border: none;
+				padding: 8px 16px;
+				border-radius: 4px;
+				cursor: pointer;
+				margin: 5px;
+			}
+			.download-btn:hover {
+				background: #0056b3;
+			}
+			.section {
+				margin: 20px 0;
+				padding: 20px;
+				border: 1px solid #eee;
+				border-radius: 8px;
+			}
+			h2 {
+				color: #333;
+				border-bottom: 2px solid #007bff;
+				padding-bottom: 10px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1>FUPRE Housing - Placeholder Image Generator</h1>
+			<p>
+				This tool generates placeholder images for the FUPRE Housing platform.
+				Right-click and save each image to the appropriate directory.
+			</p>
+
+			<div class="section">
+				<h2>Listing Images (400x300)</h2>
+				<p>Save these to: <code>public/images/listings/</code></p>
+				<div id="listings"></div>
+			</div>
+
+			<div class="section">
+				<h2>Roommate Images (300x200)</h2>
+				<p>Save these to: <code>public/images/roommates/</code></p>
+				<div id="roommates"></div>
+			</div>
+
+			<div class="section">
+				<h2>Avatar Images (100x100)</h2>
+				<p>Save these to: <code>public/images/avatars/</code></p>
+				<div id="avatars"></div>
+			</div>
+
+			<div class="section">
+				<h2>Payment Receipt Images (300x200)</h2>
+				<p>Save these to: <code>public/images/payments/</code></p>
+				<div id="payments"></div>
+			</div>
+
+			<div class="section">
+				<h2>Map Images (400x300)</h2>
+				<p>Save these to: <code>public/maps/</code></p>
+				<div id="maps"></div>
+			</div>
+		</div>
+
+		<script>
+			// Generate listing images
+			function generateListingImage(id, title) {
+				const canvas = document.createElement('canvas');
+				canvas.width = 400;
+				canvas.height = 300;
+				const ctx = canvas.getContext('2d');
+
+				// Background gradient
+				const gradient = ctx.createLinearGradient(0, 0, 400, 300);
+				gradient.addColorStop(0, '#4F46E5');
+				gradient.addColorStop(1, '#7C3AED');
+				ctx.fillStyle = gradient;
+				ctx.fillRect(0, 0, 400, 300);
+
+				// Add some geometric shapes
+				ctx.fillStyle = 'rgba(255,255,255,0.1)';
+				ctx.beginPath();
+				ctx.arc(350, 50, 30, 0, Math.PI * 2);
+				ctx.fill();
+
+				ctx.beginPath();
+				ctx.arc(50, 250, 20, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Add text
+				ctx.fillStyle = 'white';
+				ctx.font = 'bold 24px Arial';
+				ctx.textAlign = 'center';
+				ctx.fillText(title, 200, 150);
+
+				ctx.font = '16px Arial';
+				ctx.fillText('FUPRE Housing', 200, 180);
+
+				return canvas.toDataURL();
+			}
+
+			// Generate roommate images
+			function generateRoommateImage(id, title) {
+				const canvas = document.createElement('canvas');
+				canvas.width = 300;
+				canvas.height = 200;
+				const ctx = canvas.getContext('2d');
+
+				// Background
+				const gradient = ctx.createLinearGradient(0, 0, 300, 200);
+				gradient.addColorStop(0, '#10B981');
+				gradient.addColorStop(1, '#059669');
+				ctx.fillStyle = gradient;
+				ctx.fillRect(0, 0, 300, 200);
+
+				// Add shapes
+				ctx.fillStyle = 'rgba(255,255,255,0.2)';
+				ctx.beginPath();
+				ctx.arc(250, 50, 25, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Add text
+				ctx.fillStyle = 'white';
+				ctx.font = 'bold 18px Arial';
+				ctx.textAlign = 'center';
+				ctx.fillText(title, 150, 100);
+
+				ctx.font = '14px Arial';
+				ctx.fillText('Roommate', 150, 125);
+
+				return canvas.toDataURL();
+			}
+
+			// Generate avatar images
+			function generateAvatarImage(id, name) {
+				const canvas = document.createElement('canvas');
+				canvas.width = 100;
+				canvas.height = 100;
+				const ctx = canvas.getContext('2d');
+
+				// Background circle
+				const gradient = ctx.createRadialGradient(50, 50, 0, 50, 50, 50);
+				gradient.addColorStop(0, '#6366F1');
+				gradient.addColorStop(1, '#4F46E5');
+				ctx.fillStyle = gradient;
+				ctx.beginPath();
+				ctx.arc(50, 50, 50, 0, Math.PI * 2);
+				ctx.fill();
+
+				// Add initials
+				ctx.fillStyle = 'white';
+				ctx.font = 'bold 32px Arial';
+				ctx.textAlign = 'center';
+				ctx.textBaseline = 'middle';
+				ctx.fillText(name.charAt(0).toUpperCase(), 50, 50);
+
+				return canvas.toDataURL();
+			}
+
+			// Generate payment images
+			function generatePaymentImage(id, method) {
+				const canvas = document.createElement('canvas');
+				canvas.width = 300;
+				canvas.height = 200;
+				const ctx = canvas.getContext('2d');
+
+				// Background
+				ctx.fillStyle = '#f8f9fa';
+				ctx.fillRect(0, 0, 300, 200);
+
+				// Border
+				ctx.strokeStyle = '#dee2e6';
+				ctx.lineWidth = 2;
+				ctx.strokeRect(1, 1, 298, 198);
+
+				// Add text
+				ctx.fillStyle = '#333';
+				ctx.font = 'bold 16px Arial';
+				ctx.textAlign = 'center';
+				ctx.fillText('Payment Receipt', 150, 50);
+
+				ctx.font = '14px Arial';
+				ctx.fillText(`Method: ${method}`, 150, 80);
+				ctx.fillText('Amount: ₦1,000', 150, 100);
+				ctx.fillText('Reference: TXN123456789', 150, 120);
+				ctx.fillText('Status: Approved', 150, 140);
+
+				return canvas.toDataURL();
+			}
+
+			// Generate map images
+			function generateMapImage(id, type) {
+				const canvas = document.createElement('canvas');
+				canvas.width = 400;
+				canvas.height = 300;
+				const ctx = canvas.getContext('2d');
+
+				if (type === 'blur') {
+					// Blurred map
+					ctx.fillStyle = '#6B7280';
+					ctx.fillRect(0, 0, 400, 300);
+
+					// Add blur effect simulation
+					ctx.fillStyle = 'rgba(255,255,255,0.1)';
+					for (let i = 0; i < 20; i++) {
+						ctx.beginPath();
+						ctx.arc(
+							Math.random() * 400,
+							Math.random() * 300,
+							Math.random() * 30,
+							0,
+							Math.PI * 2
+						);
+						ctx.fill();
+					}
+
+					// Lock icon
+					ctx.fillStyle = 'rgba(255,255,255,0.8)';
+					ctx.font = 'bold 48px Arial';
+					ctx.textAlign = 'center';
+					ctx.fillText('🔒', 200, 150);
+				} else {
+					// Clear map
+					ctx.fillStyle = '#10B981';
+					ctx.fillRect(0, 0, 400, 300);
+
+					// Add map-like elements
+					ctx.fillStyle = '#059669';
+					ctx.fillRect(50, 50, 100, 60);
+					ctx.fillRect(200, 120, 80, 50);
+					ctx.fillRect(300, 80, 60, 40);
+
+					// Add roads
+					ctx.strokeStyle = '#F59E0B';
+					ctx.lineWidth = 8;
+					ctx.beginPath();
+					ctx.moveTo(0, 150);
+					ctx.lineTo(400, 150);
+					ctx.stroke();
+
+					ctx.beginPath();
+					ctx.moveTo(200, 0);
+					ctx.lineTo(200, 300);
+					ctx.stroke();
+
+					// Add marker
+					ctx.fillStyle = '#EF4444';
+					ctx.beginPath();
+					ctx.arc(200, 150, 10, 0, Math.PI * 2);
+					ctx.fill();
+				}
+
+				return canvas.toDataURL();
+			}
+
+			// Generate all images
+			function generateAllImages() {
+				// Listing images
+				const listingsDiv = document.getElementById('listings');
+				for (let i = 1; i <= 25; i++) {
+					const img = document.createElement('img');
+					img.src = generateListingImage(i, `Listing ${i}`);
+					img.style.width = '200px';
+					img.style.height = '150px';
+					img.alt = `listing${i}`;
+
+					const div = document.createElement('div');
+					div.className = 'placeholder';
+					div.appendChild(img);
+
+					const btn = document.createElement('button');
+					btn.className = 'download-btn';
+					btn.textContent = `Save as listing${i}-1.jpg`;
+					btn.onclick = () => {
+						const link = document.createElement('a');
+						link.download = `listing${i}-1.jpg`;
+						link.href = img.src;
+						link.click();
+					};
+					div.appendChild(btn);
+
+					listingsDiv.appendChild(div);
+				}
+
+				// Roommate images
+				const roommatesDiv = document.getElementById('roommates');
+				for (let i = 1; i <= 12; i++) {
+					const img = document.createElement('img');
+					img.src = generateRoommateImage(i, `Roommate ${i}`);
+					img.style.width = '200px';
+					img.style.height = '133px';
+					img.alt = `roommate${i}`;
+
+					const div = document.createElement('div');
+					div.className = 'placeholder';
+					div.appendChild(img);
+
+					const btn = document.createElement('button');
+					btn.className = 'download-btn';
+					btn.textContent = `Save as roommate${i}-1.jpg`;
+					btn.onclick = () => {
+						const link = document.createElement('a');
+						link.download = `roommate${i}-1.jpg`;
+						link.href = img.src;
+						link.click();
+					};
+					div.appendChild(btn);
+
+					roommatesDiv.appendChild(div);
+				}
+
+				// Avatar images
+				const avatarsDiv = document.getElementById('avatars');
+				const names = [
+					'John',
+					'Mary',
+					'David',
+					'Sarah',
+					'Michael',
+					'Jennifer',
+					'Robert',
+					'Linda',
+					'James',
+					'Admin'
+				];
+				names.forEach((name, i) => {
+					const img = document.createElement('img');
+					img.src = generateAvatarImage(i + 1, name);
+					img.style.width = '100px';
+					img.style.height = '100px';
+					img.alt = `${name.toLowerCase()}1`;
+
+					const div = document.createElement('div');
+					div.className = 'placeholder';
+					div.appendChild(img);
+
+					const btn = document.createElement('button');
+					btn.className = 'download-btn';
+					btn.textContent = `Save as ${name.toLowerCase()}1.jpg`;
+					btn.onclick = () => {
+						const link = document.createElement('a');
+						link.download = `${name.toLowerCase()}1.jpg`;
+						link.href = img.src;
+						link.click();
+					};
+					div.appendChild(btn);
+
+					avatarsDiv.appendChild(div);
+				});
+
+				// Payment images
+				const paymentsDiv = document.getElementById('payments');
+				const methods = ['bank_transfer', 'ussd', 'pos'];
+				for (let i = 1; i <= 15; i++) {
+					const method = methods[i % 3];
+					const img = document.createElement('img');
+					img.src = generatePaymentImage(i, method);
+					img.style.width = '200px';
+					img.style.height = '133px';
+					img.alt = `payment${i}`;
+
+					const div = document.createElement('div');
+					div.className = 'placeholder';
+					div.appendChild(img);
+
+					const btn = document.createElement('button');
+					btn.className = 'download-btn';
+					btn.textContent = `Save as payment${i}.jpg`;
+					btn.onclick = () => {
+						const link = document.createElement('a');
+						link.download = `payment${i}.jpg`;
+						link.href = img.src;
+						link.click();
+					};
+					div.appendChild(btn);
+
+					paymentsDiv.appendChild(div);
+				}
+
+				// Map images
+				const mapsDiv = document.getElementById('maps');
+				for (let i = 1; i <= 25; i++) {
+					// Blurred map
+					const blurImg = document.createElement('img');
+					blurImg.src = generateMapImage(i, 'blur');
+					blurImg.style.width = '200px';
+					blurImg.style.height = '150px';
+					blurImg.alt = `listing${i}-blur`;
+
+					const blurDiv = document.createElement('div');
+					blurDiv.className = 'placeholder';
+					blurDiv.appendChild(blurImg);
+
+					const blurBtn = document.createElement('button');
+					blurBtn.className = 'download-btn';
+					blurBtn.textContent = `Save as listing${i}-blur.jpg`;
+					blurBtn.onclick = () => {
+						const link = document.createElement('a');
+						link.download = `listing${i}-blur.jpg`;
+						link.href = blurImg.src;
+						link.click();
+					};
+					blurDiv.appendChild(blurBtn);
+
+					mapsDiv.appendChild(blurDiv);
+
+					// Clear map
+					const clearImg = document.createElement('img');
+					clearImg.src = generateMapImage(i, 'clear');
+					clearImg.style.width = '200px';
+					clearImg.style.height = '150px';
+					clearImg.alt = `listing${i}-full`;
+
+					const clearDiv = document.createElement('div');
+					clearDiv.className = 'placeholder';
+					clearDiv.appendChild(clearImg);
+
+					const clearBtn = document.createElement('button');
+					clearBtn.className = 'download-btn';
+					clearBtn.textContent = `Save as listing${i}-full.jpg`;
+					clearBtn.onclick = () => {
+						const link = document.createElement('a');
+						link.download = `listing${i}-full.jpg`;
+						link.href = clearImg.src;
+						link.click();
+					};
+					clearDiv.appendChild(clearBtn);
+
+					mapsDiv.appendChild(clearDiv);
+				}
+			}
+
+			// Generate images when page loads
+			window.onload = generateAllImages;
+		</script>
+	</body>
+</html>
