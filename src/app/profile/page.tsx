@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
 	User,
@@ -397,14 +398,18 @@ function ProfileContent() {
 									</Button>
 								)}
 								{(user.role === 'owner' || user.role === 'student') && (
-									<Button className='w-full' variant='outline'>
-										<Users className='h-4 w-4 mr-2' />
-										Create Roommate Listing
+									<Button className='w-full' variant='outline' asChild>
+										<Link href='/roommates/new'>
+											<Users className='h-4 w-4 mr-2' />
+											Create Roommate Listing
+										</Link>
 									</Button>
 								)}
-								<Button className='w-full' variant='outline'>
-									<Heart className='h-4 w-4 mr-2' />
-									View Saved Listings
+								<Button className='w-full' variant='outline' asChild>
+									<Link href='/listings?saved=true'>
+										<Heart className='h-4 w-4 mr-2' />
+										View Saved Listings
+									</Link>
 								</Button>
 							</CardContent>
 						</Card>

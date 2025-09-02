@@ -25,6 +25,7 @@ import {
 	SheetTrigger
 } from '@/components/ui/sheet';
 import { useListingsStore } from '@/lib/store/listingsSlice';
+import { useAuthStore } from '@/lib/store/authSlice';
 import { formatNaira } from '@/lib/utils/currency';
 import { ListingCardSkeleton } from '@/components/shared/Skeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -32,6 +33,7 @@ import { ListingFilters } from '@/components/listing/ListingFilters';
 
 function ListingsContent() {
 	const searchParams = useSearchParams();
+	const { user } = useAuthStore();
 	const {
 		filters,
 		searchQuery,
@@ -54,7 +56,12 @@ function ListingsContent() {
 		setIsLoading(false);
 	}, [searchParams, setSearchQuery]);
 
-	const filteredListings = getFilteredListings();
+	const allListings = getFilteredListings();
+	const showSavedOnly = searchParams.get('saved') === 'true';
+	
+	const filteredListings = showSavedOnly && user 
+		? allListings.filter(listing => user.savedListingIds.includes(listing.id))
+		: allListings;
 
 	const handleSearch = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -82,9 +89,14 @@ function ListingsContent() {
 		<div className='container mx-auto px-4 py-8'>
 			{/* Header */}
 			<div className='mb-8'>
-				<h1 className='text-3xl font-bold mb-4'>Browse Listings</h1>
+				<h1 className='text-3xl font-bold mb-4'>
+					{showSavedOnly ? 'Saved Listings' : 'Browse Listings'}
+				</h1>
 				<p className='text-muted-foreground'>
-					Find your perfect student accommodation near FUPRE campus
+					{showSavedOnly 
+						? 'Your saved student accommodations near FUPRE campus'
+						: 'Find your perfect student accommodation near FUPRE campus'
+					}
 				</p>
 			</div>
 
@@ -162,10 +174,16 @@ function ListingsContent() {
 			{/* Listings Grid/List */}
 			{filteredListings.length === 0 ? (
 				<EmptyState
-					icon={Search}
-					title='No listings found'
-					description='Try adjusting your search criteria or filters to find more results.'
-					action={{
+					icon={showSavedOnly ? Heart : Search}
+					title={showSavedOnly ? 'No saved listings' : 'No listings found'}
+					description={showSavedOnly 
+						? 'You haven\'t saved any listings yet. Browse listings and click the heart icon to save them.'
+						: 'Try adjusting your search criteria or filters to find more results.'
+					}
+					action={showSavedOnly ? {
+						label: 'Browse Listings',
+						onClick: () => window.location.href = '/listings'
+					} : {
 						label: 'Clear Filters',
 						onClick: () => {
 							setSearchQuery('');
