@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
 	ArrowLeft,
@@ -196,11 +197,13 @@ function RoommateDetailContent() {
 												initial={{ opacity: 0, scale: 0.9 }}
 												animate={{ opacity: 1, scale: 1 }}
 												transition={{ delay: index * 0.1 }}
-												className='aspect-video rounded-lg overflow-hidden'>
-												<img
+												className='aspect-video rounded-lg overflow-hidden relative'>
+												<Image
 													src={photo}
 													alt={`Roommate listing photo ${index + 1}`}
-													className='w-full h-full object-cover'
+													fill
+													sizes="(max-width: 768px) 100vw, 50vw"
+													className='object-cover'
 												/>
 											</motion.div>
 										))}

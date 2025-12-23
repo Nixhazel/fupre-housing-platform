@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
 	BarChart3,
@@ -242,11 +243,15 @@ export default function AgentDashboard() {
 										animate={{ opacity: 1, x: 0 }}
 										transition={{ duration: 0.3, delay: index * 0.1 }}
 										className='flex items-center space-x-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors'>
-										<img
-											src={listing.coverPhoto}
-											alt={listing.title}
-											className='w-16 h-16 rounded-lg object-cover'
-										/>
+										<div className='relative w-16 h-16 flex-shrink-0'>
+											<Image
+												src={listing.coverPhoto}
+												alt={listing.title}
+												fill
+												sizes="64px"
+												className='rounded-lg object-cover'
+											/>
+										</div>
 										<div className='flex-1 min-w-0'>
 											<h4 className='font-semibold truncate'>
 												{listing.title}

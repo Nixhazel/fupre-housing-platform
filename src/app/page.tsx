@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
 	Search,
@@ -257,11 +258,13 @@ function HomeContent() {
 								animate={{ opacity: 1, y: 0 }}
 								transition={{ duration: 0.6, delay: index * 0.1 }}>
 								<Card className='overflow-hidden hover:shadow-lg transition-shadow'>
-									<div className='relative'>
-										<img
+									<div className='relative h-48'>
+										<Image
 											src={listing.coverPhoto}
 											alt={listing.title}
-											className='w-full h-48 object-cover'
+											fill
+											sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+											className='object-cover'
 										/>
 										<Badge
 											variant={

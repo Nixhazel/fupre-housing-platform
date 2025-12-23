@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, MapPin, Unlock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,11 +36,13 @@ export function MapBlur({
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							transition={{ duration: 0.3 }}
-							className='relative'>
-							<img
+							className='relative h-64'>
+							<Image
 								src={mapFull}
 								alt='Property location'
-								className='w-full h-64 object-cover'
+								fill
+								sizes="(max-width: 1024px) 100vw, 66vw"
+								className='object-cover'
 							/>
 							<div className='absolute top-2 right-2'>
 								<Badge
@@ -57,11 +60,13 @@ export function MapBlur({
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							transition={{ duration: 0.3 }}
-							className='relative'>
-							<img
+							className='relative h-64'>
+							<Image
 								src={mapPreview}
 								alt='Property location (blurred)'
-								className='w-full h-64 object-cover filter blur-md'
+								fill
+								sizes="(max-width: 1024px) 100vw, 66vw"
+								className='object-cover blur-md'
 							/>
 
 							{/* Overlay */}

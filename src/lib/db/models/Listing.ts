@@ -247,8 +247,8 @@ const ListingSchema = new Schema<IListing, IListingModel>(
 	{
 		timestamps: true,
 		toJSON: {
-			transform: function (_doc, ret) {
-				delete ret.__v;
+			transform: function (_doc, ret: Record<string, unknown>) {
+				ret.__v = undefined;
 				return ret;
 			}
 		}

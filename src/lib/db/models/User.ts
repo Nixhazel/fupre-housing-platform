@@ -183,14 +183,14 @@ const UserSchema = new Schema<IUser, IUserModel>(
 	{
 		timestamps: true,
 		toJSON: {
-			transform: function (_doc, ret) {
+			transform: function (_doc, ret: Record<string, unknown>) {
 				// Remove sensitive fields from JSON output
-				delete ret.password;
-				delete ret.emailVerificationToken;
-				delete ret.emailVerificationExpires;
-				delete ret.passwordResetToken;
-				delete ret.passwordResetExpires;
-				delete ret.__v;
+				ret.password = undefined;
+				ret.emailVerificationToken = undefined;
+				ret.emailVerificationExpires = undefined;
+				ret.passwordResetToken = undefined;
+				ret.passwordResetExpires = undefined;
+				ret.__v = undefined;
 				return ret;
 			}
 		}
@@ -200,8 +200,7 @@ const UserSchema = new Schema<IUser, IUserModel>(
 /**
  * Indexes
  */
-// Email must be unique (already set in field definition)
-UserSchema.index({ email: 1 }, { unique: true });
+// Note: Email index already created via 'unique: true' in field definition
 
 // Composite index for finding active users by role
 UserSchema.index({ role: 1, isDeleted: 1 });

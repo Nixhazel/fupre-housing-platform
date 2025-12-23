@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -184,11 +185,15 @@ export default function UnlockPage() {
 				<Card>
 					<CardContent className='p-4'>
 						<div className='flex items-center space-x-4'>
-							<img
-								src={listing.coverPhoto}
-								alt={listing.title}
-								className='w-16 h-16 rounded-lg object-cover'
-							/>
+							<div className='relative w-16 h-16 flex-shrink-0'>
+								<Image
+									src={listing.coverPhoto}
+									alt={listing.title}
+									fill
+									sizes="64px"
+									className='rounded-lg object-cover'
+								/>
+							</div>
 							<div className='flex-1'>
 								<h3 className='font-semibold'>{listing.title}</h3>
 								<p className='text-sm text-muted-foreground'>
@@ -314,11 +319,13 @@ export default function UnlockPage() {
 										</p>
 									</div>
 								) : (
-									<div className='relative'>
-										<img
+									<div className='relative h-48'>
+										<Image
 											src={uploadedImage}
 											alt='Payment receipt'
-											className='w-full h-48 object-cover rounded-lg'
+											fill
+											sizes="(max-width: 768px) 100vw, 50vw"
+											className='object-cover rounded-lg'
 										/>
 										<Button
 											type='button'

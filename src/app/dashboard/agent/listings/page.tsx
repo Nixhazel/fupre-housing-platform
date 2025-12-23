@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -189,11 +190,13 @@ export default function AgentListingsPage() {
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: index * 0.1 }}>
 							<Card className='overflow-hidden hover:shadow-lg transition-shadow'>
-								<div className='relative'>
-									<img
+								<div className='relative h-48'>
+									<Image
 										src={listing.coverPhoto}
 										alt={listing.title}
-										className='w-full h-48 object-cover'
+										fill
+										sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+										className='object-cover'
 									/>
 									<div className='absolute top-2 right-2 flex gap-2'>
 										<Badge

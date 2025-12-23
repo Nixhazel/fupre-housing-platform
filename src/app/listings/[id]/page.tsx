@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 import {
 	MapPin,
@@ -240,11 +241,13 @@ export default function ListingDetailPage() {
 						<CardContent className='p-0'>
 							<div className='grid grid-cols-2 md:grid-cols-3 gap-2'>
 								{listing.photos.map((photo: string, index: number) => (
-									<div key={index} className='aspect-square overflow-hidden'>
-										<img
+									<div key={index} className='aspect-square overflow-hidden relative'>
+										<Image
 											src={photo}
 											alt={`${listing.title} - Image ${index + 1}`}
-											className='w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer'
+											fill
+											sizes="(max-width: 768px) 50vw, 33vw"
+											className='object-cover hover:scale-105 transition-transform cursor-pointer'
 										/>
 									</div>
 								))}

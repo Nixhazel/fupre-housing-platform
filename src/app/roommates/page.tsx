@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -139,12 +140,14 @@ function RoommatesContent() {
 											transition={{ duration: 0.3, delay: index * 0.1 }}>
 											<Link href={`/roommates/${listing.id}`}>
 												<Card className='overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer'>
-													<div className='relative'>
+													<div className='relative h-48'>
 														{listing.photos.length > 0 && (
-															<img
+															<Image
 																src={listing.photos[0]}
 																alt={listing.title}
-																className='w-full h-48 object-cover group-hover:scale-105 transition-transform'
+																fill
+																sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+																className='object-cover group-hover:scale-105 transition-transform'
 															/>
 														)}
 														<Button
@@ -242,12 +245,14 @@ function RoommatesContent() {
 											transition={{ duration: 0.3, delay: index * 0.1 }}>
 											<Link href={`/roommates/${listing.id}`}>
 												<Card className='overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer'>
-													<div className='relative'>
+													<div className='relative h-48'>
 														{listing.photos.length > 0 && (
-															<img
+															<Image
 																src={listing.photos[0]}
 																alt={listing.title}
-																className='w-full h-48 object-cover group-hover:scale-105 transition-transform'
+																fill
+																sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+																className='object-cover group-hover:scale-105 transition-transform'
 															/>
 														)}
 														<Button

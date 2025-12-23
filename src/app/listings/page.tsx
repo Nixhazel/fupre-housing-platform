@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
 	Search,
@@ -212,13 +213,13 @@ function ListingsContent() {
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.3, delay: index * 0.1 }}>
 							<Card className='overflow-hidden hover:shadow-lg transition-shadow group'>
-								<div className='relative'>
-									<img
+								<div className={`relative overflow-hidden ${viewMode === 'grid' ? 'h-48' : 'h-32'}`}>
+									<Image
 										src={listing.coverPhoto}
 										alt={listing.title}
-										className={`w-full object-cover group-hover:scale-105 transition-transform ${
-											viewMode === 'grid' ? 'h-48' : 'h-32'
-										}`}
+										fill
+										sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+										className="object-cover group-hover:scale-105 transition-transform"
 									/>
 
 									{/* Status Badge */}

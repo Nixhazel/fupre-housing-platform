@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Users, FileText, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -195,11 +196,15 @@ export default function AdminDashboard() {
 												animate={{ opacity: 1, x: 0 }}
 												transition={{ duration: 0.3, delay: index * 0.1 }}
 												className='flex items-center space-x-4 p-4 border rounded-lg'>
-												<img
-													src={proof.imageUrl}
-													alt='Payment proof'
-													className='w-16 h-16 rounded-lg object-cover'
-												/>
+												<div className='relative w-16 h-16 flex-shrink-0'>
+													<Image
+														src={proof.imageUrl}
+														alt='Payment proof'
+														fill
+														sizes="64px"
+														className='rounded-lg object-cover'
+													/>
+												</div>
 												<div className='flex-1 min-w-0'>
 													<h4 className='font-semibold'>
 														Payment Proof #{proof.id.slice(-6)}

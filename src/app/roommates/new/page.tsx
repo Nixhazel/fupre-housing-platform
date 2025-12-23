@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -360,11 +361,13 @@ export default function NewRoommatePage() {
 								) : (
 									<div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
 										{uploadedImages.map((image, index) => (
-											<div key={index} className='relative'>
-												<img
+											<div key={index} className='relative h-32'>
+												<Image
 													src={image}
 													alt={`Upload ${index + 1}`}
-													className='w-full h-32 object-cover rounded-lg'
+													fill
+													sizes="(max-width: 768px) 50vw, 33vw"
+													className='object-cover rounded-lg'
 												/>
 												<Button
 													type='button'
