@@ -48,6 +48,7 @@ This is a **Student Housing and Roommate Platform** specifically designed for **
 ```
 
 **Why Next.js 15?**
+
 - **App Router** - Modern file-based routing (replaces Pages Router)
 - **Server Components** - Render on server for better performance
 - **Streaming** - Progressive page loading
@@ -59,25 +60,26 @@ This is a **Student Housing and Roommate Platform** specifically designed for **
 // next.config.js - Configuration
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true, // Enable App Router
-  },
-  images: {
-    domains: ['images.unsplash.com', 'via.placeholder.com'],
-    formats: ['image/webp', 'image/avif'], // Modern image formats
-  },
-  typescript: {
-    ignoreBuildErrors: false, // Strict type checking
-  },
-  eslint: {
-    ignoreDuringBuilds: false, // Lint during build
-  },
+	experimental: {
+		appDir: true // Enable App Router
+	},
+	images: {
+		domains: ['images.unsplash.com', 'via.placeholder.com'],
+		formats: ['image/webp', 'image/avif'] // Modern image formats
+	},
+	typescript: {
+		ignoreBuildErrors: false // Strict type checking
+	},
+	eslint: {
+		ignoreDuringBuilds: false // Lint during build
+	}
 };
 
 module.exports = nextConfig;
 ```
 
 **App Router Structure:**
+
 ```
 src/app/
 ├── layout.tsx          # Root layout (wraps all pages)
@@ -101,38 +103,40 @@ src/app/
 ```
 
 **tsconfig.json Implementation:**
+
 ```json
 {
-  "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["dom", "dom.iterable", "es6"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
-  },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+	"compilerOptions": {
+		"target": "ES2020",
+		"lib": ["dom", "dom.iterable", "es6"],
+		"allowJs": true,
+		"skipLibCheck": true,
+		"strict": true,
+		"noEmit": true,
+		"esModuleInterop": true,
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"jsx": "preserve",
+		"incremental": true,
+		"plugins": [
+			{
+				"name": "next"
+			}
+		],
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+	},
+	"include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+	"exclude": ["node_modules"]
 }
 ```
 
 **Type Safety Implementation:**
+
 ```typescript
 // src/types/index.ts - Central type definitions
 export type ID = string;
@@ -140,30 +144,30 @@ export type Role = 'student' | 'owner' | 'agent' | 'admin';
 
 // Strict interface definitions
 export interface User {
-  id: ID;
-  name: string;
-  email: string;
-  phone?: string; // Optional field
-  avatarUrl?: string;
-  role: Role;
-  verified: boolean;
-  createdAt: string;
-  savedListingIds: ID[];
-  unlockedListingIds: ID[];
-  agentProfile?: AgentProfile; // Optional nested object
+	id: ID;
+	name: string;
+	email: string;
+	phone?: string; // Optional field
+	avatarUrl?: string;
+	role: Role;
+	verified: boolean;
+	createdAt: string;
+	savedListingIds: ID[];
+	unlockedListingIds: ID[];
+	agentProfile?: AgentProfile; // Optional nested object
 }
 
 // Generic utility types
 export type ApiResponse<T> = {
-  data: T;
-  success: boolean;
-  message?: string;
+	data: T;
+	success: boolean;
+	message?: string;
 };
 
 // Form data types
 export interface LoginFormData {
-  email: string;
-  password: string;
+	email: string;
+	password: string;
 }
 ```
 
@@ -174,81 +178,83 @@ export interface LoginFormData {
 ```
 
 **tailwind.config.js Implementation:**
+
 ```javascript
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
-  theme: {
-    extend: {
-      colors: {
-        primary: {
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
-        },
-        secondary: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
-        },
-      },
-      fontFamily: {
-        sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-geist-mono)', 'monospace'],
-      },
-      spacing: {
-        '18': '4.5rem',
-        '88': '22rem',
-      },
-      animation: {
-        'fade-in': 'fadeIn 0.5s ease-in-out',
-        'slide-up': 'slideUp 0.3s ease-out',
-        'bounce-gentle': 'bounceGentle 2s infinite',
-      },
-      keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        slideUp: {
-          '0%': { transform: 'translateY(10px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-        bounceGentle: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-5px)' },
-        },
-      },
-    },
-  },
-  plugins: [
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/aspect-ratio'),
-  ],
-  darkMode: 'class', // Enable class-based dark mode
+	content: [
+		'./src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+		'./src/components/**/*.{js,ts,jsx,tsx,mdx}',
+		'./src/app/**/*.{js,ts,jsx,tsx,mdx}'
+	],
+	theme: {
+		extend: {
+			colors: {
+				primary: {
+					50: '#eef2ff',
+					100: '#e0e7ff',
+					200: '#c7d2fe',
+					300: '#a5b4fc',
+					400: '#818cf8',
+					500: '#6366f1',
+					600: '#4f46e5',
+					700: '#4338ca',
+					800: '#3730a3',
+					900: '#312e81'
+				},
+				secondary: {
+					50: '#f8fafc',
+					100: '#f1f5f9',
+					200: '#e2e8f0',
+					300: '#cbd5e1',
+					400: '#94a3b8',
+					500: '#64748b',
+					600: '#475569',
+					700: '#334155',
+					800: '#1e293b',
+					900: '#0f172a'
+				}
+			},
+			fontFamily: {
+				sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
+				mono: ['var(--font-geist-mono)', 'monospace']
+			},
+			spacing: {
+				18: '4.5rem',
+				88: '22rem'
+			},
+			animation: {
+				'fade-in': 'fadeIn 0.5s ease-in-out',
+				'slide-up': 'slideUp 0.3s ease-out',
+				'bounce-gentle': 'bounceGentle 2s infinite'
+			},
+			keyframes: {
+				fadeIn: {
+					'0%': { opacity: '0' },
+					'100%': { opacity: '1' }
+				},
+				slideUp: {
+					'0%': { transform: 'translateY(10px)', opacity: '0' },
+					'100%': { transform: 'translateY(0)', opacity: '1' }
+				},
+				bounceGentle: {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-5px)' }
+				}
+			}
+		}
+	},
+	plugins: [
+		require('@tailwindcss/forms'),
+		require('@tailwindcss/typography'),
+		require('@tailwindcss/aspect-ratio')
+	],
+	darkMode: 'class' // Enable class-based dark mode
 };
 ```
 
 **CSS Class Usage Patterns:**
+
 ```typescript
 // Responsive design with Tailwind
 const responsiveClasses = `
@@ -285,12 +291,14 @@ const stateClasses = `
 ```
 
 **Why Radix UI?**
+
 - **Accessibility first** - ARIA attributes, keyboard navigation
 - **Headless** - No default styling, full control
 - **Composable** - Build complex components from primitives
 - **TypeScript** - Full type safety
 
 **Button Component Implementation:**
+
 ```typescript
 // src/components/ui/button.tsx
 import * as React from 'react';
@@ -300,49 +308,52 @@ import { cn } from '@/lib/utils';
 
 // Define button variants using CVA
 const buttonVariants = cva(
-  // Base styles (always applied)
-  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
-  {
-    variants: {
-      variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
-        destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-        outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 hover:underline',
-      },
-      size: {
-        default: 'h-10 px-4 py-2',
-        sm: 'h-9 rounded-md px-3',
-        lg: 'h-11 rounded-md px-8',
-        icon: 'h-10 w-10',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default',
-    },
-  }
+	// Base styles (always applied)
+	'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+	{
+		variants: {
+			variant: {
+				default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+				destructive:
+					'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+				outline:
+					'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+				secondary:
+					'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+				ghost: 'hover:bg-accent hover:text-accent-foreground',
+				link: 'text-primary underline-offset-4 hover:underline'
+			},
+			size: {
+				default: 'h-10 px-4 py-2',
+				sm: 'h-9 rounded-md px-3',
+				lg: 'h-11 rounded-md px-8',
+				icon: 'h-10 w-10'
+			}
+		},
+		defaultVariants: {
+			variant: 'default',
+			size: 'default'
+		}
+	}
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean;
+	extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+		VariantProps<typeof buttonVariants> {
+	asChild?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'button';
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
-    );
-  }
+	({ className, variant, size, asChild = false, ...props }, ref) => {
+		const Comp = asChild ? Slot : 'button';
+		return (
+			<Comp
+				className={cn(buttonVariants({ variant, size, className }))}
+				ref={ref}
+				{...props}
+			/>
+		);
+	}
 );
 Button.displayName = 'Button';
 
@@ -356,52 +367,62 @@ export { Button, buttonVariants };
 ```
 
 **What is CVA?**
+
 - **Type-safe** component variants
 - **Composable** styling system
 - **IntelliSense** support for variants
 - **Runtime** and **compile-time** validation
 
 **CVA Implementation Example:**
+
 ```typescript
 // src/components/ui/badge.tsx
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const badgeVariants = cva(
-  // Base classes
-  'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-  {
-    variants: {
-      variant: {
-        default: 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80',
-        secondary: 'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        destructive: 'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
-        outline: 'text-foreground',
-        success: 'border-transparent bg-green-100 text-green-800 hover:bg-green-200',
-        warning: 'border-transparent bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
-        info: 'border-transparent bg-blue-100 text-blue-800 hover:bg-blue-200',
-      },
-      size: {
-        default: 'px-2.5 py-0.5 text-xs',
-        sm: 'px-2 py-0.5 text-xs',
-        lg: 'px-3 py-1 text-sm',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default',
-    },
-  }
+	// Base classes
+	'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+	{
+		variants: {
+			variant: {
+				default:
+					'border-transparent bg-primary text-primary-foreground hover:bg-primary/80',
+				secondary:
+					'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
+				destructive:
+					'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
+				outline: 'text-foreground',
+				success:
+					'border-transparent bg-green-100 text-green-800 hover:bg-green-200',
+				warning:
+					'border-transparent bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
+				info: 'border-transparent bg-blue-100 text-blue-800 hover:bg-blue-200'
+			},
+			size: {
+				default: 'px-2.5 py-0.5 text-xs',
+				sm: 'px-2 py-0.5 text-xs',
+				lg: 'px-3 py-1 text-sm'
+			}
+		},
+		defaultVariants: {
+			variant: 'default',
+			size: 'default'
+		}
+	}
 );
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+	extends React.HTMLAttributes<HTMLDivElement>,
+		VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, size, ...props }: BadgeProps) {
-  return (
-    <div className={cn(badgeVariants({ variant, size }), className)} {...props} />
-  );
+	return (
+		<div
+			className={cn(badgeVariants({ variant, size }), className)}
+			{...props}
+		/>
+	);
 }
 
 export { Badge, badgeVariants };
@@ -414,12 +435,14 @@ export { Badge, badgeVariants };
 ```
 
 **Why clsx?**
+
 - **Conditional** class application
 - **Performance** optimized
 - **TypeScript** support
 - **Small** bundle size
 
 **cn Utility Implementation:**
+
 ```typescript
 // src/lib/utils.ts
 import { type ClassValue, clsx } from 'clsx';
@@ -427,28 +450,28 @@ import { twMerge } from 'tailwind-merge';
 
 // Combine clsx with tailwind-merge for optimal class handling
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+	return twMerge(clsx(inputs));
 }
 
 // Usage examples
 const buttonClasses = cn(
-  'px-4 py-2 rounded-md', // Base classes
-  isActive && 'bg-blue-500 text-white', // Conditional classes
-  isDisabled && 'opacity-50 cursor-not-allowed', // More conditionals
-  className // Additional classes from props
+	'px-4 py-2 rounded-md', // Base classes
+	isActive && 'bg-blue-500 text-white', // Conditional classes
+	isDisabled && 'opacity-50 cursor-not-allowed', // More conditionals
+	className // Additional classes from props
 );
 
 // Complex conditional styling
 const cardClasses = cn(
-  'p-4 rounded-lg border transition-all duration-200',
-  {
-    'bg-white border-gray-200 hover:border-gray-300': !isDark,
-    'bg-gray-800 border-gray-700 hover:border-gray-600': isDark,
-    'shadow-lg': hasShadow,
-    'cursor-pointer hover:shadow-xl': isClickable,
-  },
-  size === 'large' && 'p-6',
-  size === 'small' && 'p-2'
+	'p-4 rounded-lg border transition-all duration-200',
+	{
+		'bg-white border-gray-200 hover:border-gray-300': !isDark,
+		'bg-gray-800 border-gray-700 hover:border-gray-600': isDark,
+		'shadow-lg': hasShadow,
+		'cursor-pointer hover:shadow-xl': isClickable
+	},
+	size === 'large' && 'p-6',
+	size === 'small' && 'p-2'
 );
 ```
 
@@ -459,6 +482,7 @@ const cardClasses = cn(
 ```
 
 **Why Zustand?**
+
 - **Minimal boilerplate** compared to Redux
 - **TypeScript** first-class support
 - **Persistence** middleware built-in
@@ -466,6 +490,7 @@ const cardClasses = cn(
 - **Small** bundle size (~2kb)
 
 **Store Implementation:**
+
 ```typescript
 // src/lib/store/authSlice.ts
 import { create } from 'zustand';
@@ -475,130 +500,134 @@ import { devtools } from 'zustand/middleware';
 import type { User, Role } from '@/types';
 
 interface AuthState {
-  // State
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  
-  // Actions
-  login: (credentials: { email: string; password: string }) => Promise<User | null>;
-  logout: () => void;
-  updateUser: (updates: Partial<User>) => void;
-  setLoading: (loading: boolean) => void;
+	// State
+	user: User | null;
+	token: string | null;
+	isAuthenticated: boolean;
+	isLoading: boolean;
+
+	// Actions
+	login: (credentials: {
+		email: string;
+		password: string;
+	}) => Promise<User | null>;
+	logout: () => void;
+	updateUser: (updates: Partial<User>) => void;
+	setLoading: (loading: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
-  devtools(
-    persist(
-      immer((set, get) => ({
-        // Initial state
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isLoading: false,
+	devtools(
+		persist(
+			immer((set, get) => ({
+				// Initial state
+				user: null,
+				token: null,
+				isAuthenticated: false,
+				isLoading: false,
 
-        // Actions
-        login: async (credentials) => {
-          set((state) => {
-            state.isLoading = true;
-          });
+				// Actions
+				login: async (credentials) => {
+					set((state) => {
+						state.isLoading = true;
+					});
 
-          try {
-            // Mock authentication - replace with real API call
-            const mockUsers = [
-              {
-                id: '1',
-                name: 'John Doe',
-                email: 'john@example.com',
-                role: 'student' as Role,
-                verified: true,
-                createdAt: new Date().toISOString(),
-                savedListingIds: [],
-                unlockedListingIds: [],
-              },
-              {
-                id: '2',
-                name: 'Jane Agent',
-                email: 'agent@example.com',
-                role: 'agent' as Role,
-                verified: true,
-                createdAt: new Date().toISOString(),
-                savedListingIds: [],
-                unlockedListingIds: [],
-                agentProfile: {
-                  licenseNumber: 'AG123456',
-                  experience: 5,
-                  specialties: ['Student Housing', 'Campus Properties'],
-                },
-              },
-            ];
+					try {
+						// Mock authentication - replace with real API call
+						const mockUsers = [
+							{
+								id: '1',
+								name: 'John Doe',
+								email: 'john@example.com',
+								role: 'student' as Role,
+								verified: true,
+								createdAt: new Date().toISOString(),
+								savedListingIds: [],
+								unlockedListingIds: []
+							},
+							{
+								id: '2',
+								name: 'Jane Agent',
+								email: 'agent@example.com',
+								role: 'agent' as Role,
+								verified: true,
+								createdAt: new Date().toISOString(),
+								savedListingIds: [],
+								unlockedListingIds: [],
+								agentProfile: {
+									licenseNumber: 'AG123456',
+									experience: 5,
+									specialties: ['Student Housing', 'Campus Properties']
+								}
+							}
+						];
 
-            const user = mockUsers.find(u => u.email === credentials.email);
-            
-            if (user) {
-              const token = `mock-jwt-${Date.now()}`;
-              
-              set((state) => {
-                state.user = user;
-                state.token = token;
-                state.isAuthenticated = true;
-                state.isLoading = false;
-              });
-              
-              return user;
-            } else {
-              throw new Error('Invalid credentials');
-            }
-          } catch (error) {
-            set((state) => {
-              state.isLoading = false;
-            });
-            throw error;
-          }
-        },
+						const user = mockUsers.find((u) => u.email === credentials.email);
 
-        logout: () => {
-          set((state) => {
-            state.user = null;
-            state.token = null;
-            state.isAuthenticated = false;
-            state.isLoading = false;
-          });
-        },
+						if (user) {
+							const token = `mock-jwt-${Date.now()}`;
 
-        updateUser: (updates) => {
-          set((state) => {
-            if (state.user) {
-              Object.assign(state.user, updates);
-            }
-          });
-        },
+							set((state) => {
+								state.user = user;
+								state.token = token;
+								state.isAuthenticated = true;
+								state.isLoading = false;
+							});
 
-        setLoading: (loading) => {
-          set((state) => {
-            state.isLoading = loading;
-          });
-        },
-      })),
-      {
-        name: 'auth-storage',
-        storage: createJSONStorage(() => localStorage),
-        partialize: (state) => ({
-          user: state.user,
-          token: state.token,
-          isAuthenticated: state.isAuthenticated,
-        }),
-      }
-    ),
-    {
-      name: 'auth-store',
-    }
-  )
+							return user;
+						} else {
+							throw new Error('Invalid credentials');
+						}
+					} catch (error) {
+						set((state) => {
+							state.isLoading = false;
+						});
+						throw error;
+					}
+				},
+
+				logout: () => {
+					set((state) => {
+						state.user = null;
+						state.token = null;
+						state.isAuthenticated = false;
+						state.isLoading = false;
+					});
+				},
+
+				updateUser: (updates) => {
+					set((state) => {
+						if (state.user) {
+							Object.assign(state.user, updates);
+						}
+					});
+				},
+
+				setLoading: (loading) => {
+					set((state) => {
+						state.isLoading = loading;
+					});
+				}
+			})),
+			{
+				name: 'auth-storage',
+				storage: createJSONStorage(() => localStorage),
+				partialize: (state) => ({
+					user: state.user,
+					token: state.token,
+					isAuthenticated: state.isAuthenticated
+				})
+			}
+		),
+		{
+			name: 'auth-store'
+		}
+	)
 );
 ```
 
 **Store Usage in Components:**
+
 ```typescript
 // Using the auth store in a component
 'use client';
@@ -606,24 +635,24 @@ export const useAuthStore = create<AuthState>()(
 import { useAuthStore } from '@/lib/store/authSlice';
 
 function ProfilePage() {
-  const { user, updateUser, logout } = useAuthStore();
-  
-  const handleUpdateProfile = (updates: Partial<User>) => {
-    updateUser(updates);
-  };
+	const { user, updateUser, logout } = useAuthStore();
 
-  if (!user) {
-    return <div>Please log in</div>;
-  }
+	const handleUpdateProfile = (updates: Partial<User>) => {
+		updateUser(updates);
+	};
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">Profile</h1>
-      <p>Welcome, {user.name}</p>
-      <p>Role: {user.role}</p>
-      <button onClick={logout}>Logout</button>
-    </div>
-  );
+	if (!user) {
+		return <div>Please log in</div>;
+	}
+
+	return (
+		<div className='p-6'>
+			<h1 className='text-2xl font-bold'>Profile</h1>
+			<p>Welcome, {user.name}</p>
+			<p>Role: {user.role}</p>
+			<button onClick={logout}>Logout</button>
+		</div>
+	);
 }
 ```
 
@@ -636,61 +665,61 @@ function ProfilePage() {
 ```
 
 **Why React Hook Form + Zod?**
+
 - **Performance** - Minimal re-renders
 - **Type safety** - Automatic TypeScript types
 - **Validation** - Runtime and compile-time validation
 - **Developer experience** - Great error messages
 
 **Zod Schema Definition:**
+
 ```typescript
 // src/lib/validators/auth.ts
 import { z } from 'zod';
 
 export const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, 'Email is required')
-    .email('Invalid email address'),
-  password: z
-    .string()
-    .min(1, 'Password is required')
-    .min(6, 'Password must be at least 6 characters'),
+	email: z.string().min(1, 'Email is required').email('Invalid email address'),
+	password: z
+		.string()
+		.min(1, 'Password is required')
+		.min(6, 'Password must be at least 6 characters')
 });
 
 export const registerSchema = z
-  .object({
-    name: z
-      .string()
-      .min(1, 'Name is required')
-      .min(2, 'Name must be at least 2 characters')
-      .max(50, 'Name must be less than 50 characters'),
-    email: z
-      .string()
-      .min(1, 'Email is required')
-      .email('Invalid email address'),
-    password: z
-      .string()
-      .min(1, 'Password is required')
-      .min(6, 'Password must be at least 6 characters')
-      .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        'Password must contain at least one uppercase letter, one lowercase letter, and one number'
-      ),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
-    role: z.enum(['student', 'owner', 'agent'], {
-      required_error: 'Please select a role',
-    }),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ['confirmPassword'],
-  });
+	.object({
+		name: z
+			.string()
+			.min(1, 'Name is required')
+			.min(2, 'Name must be at least 2 characters')
+			.max(50, 'Name must be less than 50 characters'),
+		email: z
+			.string()
+			.min(1, 'Email is required')
+			.email('Invalid email address'),
+		password: z
+			.string()
+			.min(1, 'Password is required')
+			.min(6, 'Password must be at least 6 characters')
+			.regex(
+				/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+				'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+			),
+		confirmPassword: z.string().min(1, 'Please confirm your password'),
+		role: z.enum(['student', 'owner', 'agent'], {
+			required_error: 'Please select a role'
+		})
+	})
+	.refine((data) => data.password === data.confirmPassword, {
+		message: "Passwords don't match",
+		path: ['confirmPassword']
+	});
 
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
 ```
 
 **Form Component Implementation:**
+
 ```typescript
 // src/components/forms/LoginForm.tsx
 'use client';
@@ -702,98 +731,103 @@ import { loginSchema, type LoginFormData } from '@/lib/validators/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle
+} from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 
 export function LoginForm() {
-  const { login, isLoading } = useAuthStore();
-  const [error, setError] = React.useState<string>('');
+	const { login, isLoading } = useAuthStore();
+	const [error, setError] = React.useState<string>('');
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
+	const {
+		register,
+		handleSubmit,
+		formState: { errors, isSubmitting }
+	} = useForm<LoginFormData>({
+		resolver: zodResolver(loginSchema),
+		defaultValues: {
+			email: '',
+			password: ''
+		}
+	});
 
-  const onSubmit = async (data: LoginFormData) => {
-    try {
-      setError('');
-      await login(data);
-      // Redirect will be handled by the auth store
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
-    }
-  };
+	const onSubmit = async (data: LoginFormData) => {
+		try {
+			setError('');
+			await login(data);
+			// Redirect will be handled by the auth store
+		} catch (err) {
+			setError(err instanceof Error ? err.message : 'Login failed');
+		}
+	};
 
-  return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Sign In</CardTitle>
-        <CardDescription>
-          Enter your credentials to access your account
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+	return (
+		<Card className='w-full max-w-md mx-auto'>
+			<CardHeader>
+				<CardTitle>Sign In</CardTitle>
+				<CardDescription>
+					Enter your credentials to access your account
+				</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
+					{error && (
+						<Alert variant='destructive'>
+							<AlertDescription>{error}</AlertDescription>
+						</Alert>
+					)}
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              {...register('email')}
-              className={errors.email ? 'border-red-500' : ''}
-            />
-            {errors.email && (
-              <p className="text-sm text-red-500">{errors.email.message}</p>
-            )}
-          </div>
+					<div className='space-y-2'>
+						<Label htmlFor='email'>Email</Label>
+						<Input
+							id='email'
+							type='email'
+							placeholder='Enter your email'
+							{...register('email')}
+							className={errors.email ? 'border-red-500' : ''}
+						/>
+						{errors.email && (
+							<p className='text-sm text-red-500'>{errors.email.message}</p>
+						)}
+					</div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              {...register('password')}
-              className={errors.password ? 'border-red-500' : ''}
-            />
-            {errors.password && (
-              <p className="text-sm text-red-500">{errors.password.message}</p>
-            )}
-          </div>
+					<div className='space-y-2'>
+						<Label htmlFor='password'>Password</Label>
+						<Input
+							id='password'
+							type='password'
+							placeholder='Enter your password'
+							{...register('password')}
+							className={errors.password ? 'border-red-500' : ''}
+						/>
+						{errors.password && (
+							<p className='text-sm text-red-500'>{errors.password.message}</p>
+						)}
+					</div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isSubmitting || isLoading}
-          >
-            {isSubmitting || isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              'Sign In'
-            )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  );
+					<Button
+						type='submit'
+						className='w-full'
+						disabled={isSubmitting || isLoading}>
+						{isSubmitting || isLoading ? (
+							<>
+								<Loader2 className='mr-2 h-4 w-4 animate-spin' />
+								Signing in...
+							</>
+						) : (
+							'Sign In'
+						)}
+					</Button>
+				</form>
+			</CardContent>
+		</Card>
+	);
 }
 ```
 
@@ -804,6 +838,7 @@ export function LoginForm() {
 ```
 
 **Why Framer Motion?**
+
 - **Declarative** animation API
 - **Performance** optimized
 - **Gesture** support
@@ -811,6 +846,7 @@ export function LoginForm() {
 - **TypeScript** support
 
 **Animation Implementation:**
+
 ```typescript
 // src/components/animations/PageTransition.tsx
 'use client';
@@ -819,51 +855,51 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 
 const pageVariants = {
-  initial: {
-    opacity: 0,
-    y: 20,
-    scale: 0.98,
-  },
-  in: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-  },
-  out: {
-    opacity: 0,
-    y: -20,
-    scale: 0.98,
-  },
+	initial: {
+		opacity: 0,
+		y: 20,
+		scale: 0.98
+	},
+	in: {
+		opacity: 1,
+		y: 0,
+		scale: 1
+	},
+	out: {
+		opacity: 0,
+		y: -20,
+		scale: 0.98
+	}
 };
 
 const pageTransition = {
-  type: 'tween',
-  ease: 'anticipate',
-  duration: 0.4,
+	type: 'tween',
+	ease: 'anticipate',
+	duration: 0.4
 };
 
 export function PageTransition({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+	const pathname = usePathname();
 
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={pathname}
-        initial="initial"
-        animate="in"
-        exit="out"
-        variants={pageVariants}
-        transition={pageTransition}
-        className="w-full"
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
-  );
+	return (
+		<AnimatePresence mode='wait'>
+			<motion.div
+				key={pathname}
+				initial='initial'
+				animate='in'
+				exit='out'
+				variants={pageVariants}
+				transition={pageTransition}
+				className='w-full'>
+				{children}
+			</motion.div>
+		</AnimatePresence>
+	);
 }
 ```
 
 **Staggered Animation Component:**
+
 ```typescript
 // src/components/animations/StaggeredList.tsx
 'use client';
@@ -871,58 +907,58 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
 import { motion } from 'framer-motion';
 
 const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-    },
-  },
+	hidden: { opacity: 0 },
+	visible: {
+		opacity: 1,
+		transition: {
+			staggerChildren: 0.1,
+			delayChildren: 0.2
+		}
+	}
 };
 
 const itemVariants = {
-  hidden: { 
-    opacity: 0, 
-    y: 20,
-    scale: 0.95,
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      type: 'spring',
-      stiffness: 100,
-      damping: 12,
-    },
-  },
+	hidden: {
+		opacity: 0,
+		y: 20,
+		scale: 0.95
+	},
+	visible: {
+		opacity: 1,
+		y: 0,
+		scale: 1,
+		transition: {
+			type: 'spring',
+			stiffness: 100,
+			damping: 12
+		}
+	}
 };
 
 interface StaggeredListProps {
-  children: React.ReactNode;
-  className?: string;
+	children: React.ReactNode;
+	className?: string;
 }
 
 export function StaggeredList({ children, className }: StaggeredListProps) {
-  return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className={className}
-    >
-      {React.Children.map(children, (child, index) => (
-        <motion.div key={index} variants={itemVariants}>
-          {child}
-        </motion.div>
-      ))}
-    </motion.div>
-  );
+	return (
+		<motion.div
+			variants={containerVariants}
+			initial='hidden'
+			animate='visible'
+			className={className}>
+			{React.Children.map(children, (child, index) => (
+				<motion.div key={index} variants={itemVariants}>
+					{child}
+				</motion.div>
+			))}
+		</motion.div>
+	);
 }
 ```
 
 **Hover Animation Component:**
+
 ```typescript
 // src/components/animations/HoverCard.tsx
 'use client';
@@ -931,42 +967,40 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 
 interface HoverCardProps {
-  children: React.ReactNode;
-  className?: string;
+	children: React.ReactNode;
+	className?: string;
 }
 
 export function HoverCard({ children, className }: HoverCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
+	const [isHovered, setIsHovered] = useState(false);
 
-  return (
-    <motion.div
-      className={className}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      whileHover={{ 
-        scale: 1.02,
-        y: -2,
-      }}
-      whileTap={{ scale: 0.98 }}
-      transition={{
-        type: 'spring',
-        stiffness: 300,
-        damping: 20,
-      }}
-    >
-      <motion.div
-        animate={{
-          boxShadow: isHovered
-            ? '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-            : '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-        }}
-        transition={{ duration: 0.2 }}
-        className="rounded-lg bg-white p-4 border"
-      >
-        {children}
-      </motion.div>
-    </motion.div>
-  );
+	return (
+		<motion.div
+			className={className}
+			onHoverStart={() => setIsHovered(true)}
+			onHoverEnd={() => setIsHovered(false)}
+			whileHover={{
+				scale: 1.02,
+				y: -2
+			}}
+			whileTap={{ scale: 0.98 }}
+			transition={{
+				type: 'spring',
+				stiffness: 300,
+				damping: 20
+			}}>
+			<motion.div
+				animate={{
+					boxShadow: isHovered
+						? '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+						: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+				}}
+				transition={{ duration: 0.2 }}
+				className='rounded-lg bg-white p-4 border'>
+				{children}
+			</motion.div>
+		</motion.div>
+	);
 }
 ```
 
