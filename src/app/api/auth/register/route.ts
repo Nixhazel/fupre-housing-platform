@@ -11,6 +11,8 @@ import {
 	conflictResponse,
 	serverErrorResponse
 } from '@/lib/api/response';
+import { sendVerificationEmail } from '@/lib/email';
+import { logger } from '@/lib/config/env';
 
 /**
  * POST /api/auth/register
@@ -60,6 +62,30 @@ export async function POST(request: NextRequest) {
 			savedListingIds: [],
 			unlockedListingIds: []
 		});
+
+		// Build verification URL
+		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+		const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${emailVerificationToken}`;
+
+		// Send verification email (non-blocking)
+		sendVerificationEmail(user.email, {
+			name: user.name,
+			verifyUrl,
+			expiresInHours: 24
+		})
+			.then((result) => {
+				if (result.success) {
+					logger.info('Verification email sent', { email: user.email });
+				} else {
+					logger.error('Failed to send verification email', {
+						email: user.email,
+						error: result.error
+					});
+				}
+			})
+			.catch((error) => {
+				logger.error('Error sending verification email', error);
+			});
 
 		// Generate JWT tokens
 		const tokens = await createTokenPair({

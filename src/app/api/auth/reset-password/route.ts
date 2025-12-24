@@ -8,6 +8,8 @@ import {
 	errorResponse,
 	serverErrorResponse
 } from '@/lib/api/response';
+import { sendPasswordResetConfirmationEmail } from '@/lib/email';
+import { logger } from '@/lib/config/env';
 
 /**
  * POST /api/auth/reset-password
@@ -49,6 +51,22 @@ export async function POST(request: NextRequest) {
 		user.passwordResetExpires = undefined;
 
 		await user.save();
+
+		// Send confirmation email (non-blocking)
+		sendPasswordResetConfirmationEmail(user.email, user.name)
+			.then((result) => {
+				if (result.success) {
+					logger.info('Password reset confirmation email sent', { email: user.email });
+				} else {
+					logger.error('Failed to send password reset confirmation email', {
+						email: user.email,
+						error: result.error
+					});
+				}
+			})
+			.catch((error) => {
+				logger.error('Error sending password reset confirmation email', error);
+			});
 
 		return successResponse({
 			message: 'Password reset successfully. You can now log in with your new password.'

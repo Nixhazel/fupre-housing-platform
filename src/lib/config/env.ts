@@ -128,7 +128,7 @@ class EnvConfig {
 			user: process.env.SMTP_USER || '',
 			pass: process.env.SMTP_PASS || '',
 			fromEmail: process.env.SMTP_FROM_EMAIL || 'info@easyvilleestates.com',
-			fromName: process.env.SMTP_FROM_NAME || 'FUPRE Housing Platform'
+			fromName: process.env.SMTP_FROM_NAME || 'Easyville Estates'
 		};
 	}
 

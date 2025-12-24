@@ -9,6 +9,7 @@ import {
 	serverErrorResponse
 } from '@/lib/api/response';
 import { logger } from '@/lib/config/env';
+import { sendPasswordResetEmail } from '@/lib/email';
 
 /**
  * POST /api/auth/forgot-password
@@ -62,23 +63,34 @@ export async function POST(request: NextRequest) {
 		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 		const resetUrl = `${baseUrl}/auth/reset-password?token=${resetToken}`;
 
-		// TODO: Send email with reset link in future phase
-		// Only log in development mode
-		logger.debug('Password reset URL generated', { email: user.email, resetUrl });
+		// Get client IP for security logging
+		const forwardedFor = request.headers.get('x-forwarded-for');
+		const ipAddress = forwardedFor?.split(',')[0]?.trim() || 'unknown';
 
-		/*
-		 * Email sending will be implemented in a future phase
-		 * await sendEmail({
-		 *   to: user.email,
-		 *   subject: 'Password Reset Request',
-		 *   template: 'password-reset',
-		 *   data: { name: user.name, resetUrl }
-		 * });
-		 */
+		// Send password reset email
+		const emailResult = await sendPasswordResetEmail(user.email, {
+			name: user.name,
+			resetUrl,
+			expiresInMinutes: 60,
+			ipAddress
+		});
+
+		if (!emailResult.success) {
+			logger.error('Failed to send password reset email', {
+				email: user.email,
+				error: emailResult.error
+			});
+			// Still return success to prevent email enumeration
+			// But log the error for debugging
+		} else {
+			logger.info('Password reset email sent', {
+				email: user.email,
+				messageId: emailResult.messageId
+			});
+		}
 
 		return successResponse(successMessage);
 	} catch (error) {
 		return serverErrorResponse(error);
 	}
 }
-

@@ -9,6 +9,7 @@ import {
 	serverErrorResponse
 } from '@/lib/api/response';
 import { logger } from '@/lib/config/env';
+import { sendWelcomeEmail } from '@/lib/email';
 
 /**
  * POST /api/auth/verify-email
@@ -50,6 +51,22 @@ export async function POST(request: NextRequest) {
 		user.emailVerificationExpires = undefined;
 
 		await user.save();
+
+		// Send welcome email (non-blocking)
+		sendWelcomeEmail(user.email, user.name)
+			.then((result) => {
+				if (result.success) {
+					logger.info('Welcome email sent', { email: user.email });
+				} else {
+					logger.error('Failed to send welcome email', {
+						email: user.email,
+						error: result.error
+					});
+				}
+			})
+			.catch((error) => {
+				logger.error('Error sending welcome email', error);
+			});
 
 		return successResponse({
 			message: 'Email verified successfully'
@@ -97,6 +114,17 @@ export async function GET(request: NextRequest) {
 		user.emailVerificationExpires = undefined;
 
 		await user.save();
+
+		// Send welcome email (non-blocking)
+		sendWelcomeEmail(user.email, user.name)
+			.then((result) => {
+				if (result.success) {
+					logger.info('Welcome email sent (via link)', { email: user.email });
+				}
+			})
+			.catch(() => {
+				// Silently fail - user still verified
+			});
 
 		// Redirect to success page
 		return Response.redirect(`${baseUrl}/auth/login?verified=true`);
