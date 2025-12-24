@@ -23,6 +23,7 @@ export interface SessionUser {
 	isEmailVerified: boolean;
 	isVerified: boolean;
 	savedListingIds: string[];
+	savedRoommateIds: string[];
 	unlockedListingIds: string[];
 	createdAt: Date;
 }
@@ -55,6 +56,7 @@ export function toSessionUser(user: IUser): SessionUser {
 		isEmailVerified: user.isEmailVerified,
 		isVerified: user.isVerified,
 		savedListingIds: user.savedListingIds.map((id) => id.toString()),
+		savedRoommateIds: user.savedRoommateIds?.map((id) => id.toString()) ?? [],
 		unlockedListingIds: user.unlockedListingIds.map((id) => id.toString()),
 		createdAt: user.createdAt
 	};

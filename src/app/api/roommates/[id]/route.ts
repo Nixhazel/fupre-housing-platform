@@ -33,7 +33,51 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 					return notFoundResponse('Listing ID is required');
 				}
 
-				const listing = await roommatesService.getRoommateListingById(listingId);
+				const listingDoc = await roommatesService.getRoommateListingById(listingId, true);
+				const listingObj = listingDoc.toObject();
+
+				// Transform the populated owner data
+				let owner = null;
+				if (listingObj.ownerId && typeof listingObj.ownerId === 'object') {
+					const ownerData = listingObj.ownerId as {
+						_id: { toString(): string };
+						name: string;
+						email: string;
+						phone?: string;
+						avatarUrl?: string;
+						role: string;
+						isVerified?: boolean;
+						createdAt: Date;
+					};
+					owner = {
+						id: ownerData._id.toString(),
+						name: ownerData.name,
+						email: ownerData.email,
+						phone: ownerData.phone,
+						avatarUrl: ownerData.avatarUrl,
+						role: ownerData.role,
+						isVerified: ownerData.isVerified ?? false,
+						createdAt: ownerData.createdAt.toISOString()
+					};
+				}
+
+				// Build response with owner
+				const listing = {
+					id: listingObj._id.toString(),
+					ownerId: typeof listingObj.ownerId === 'object' 
+						? (listingObj.ownerId as { _id: { toString(): string } })._id.toString()
+						: listingObj.ownerId,
+					ownerType: listingObj.ownerType,
+					title: listingObj.title,
+					budgetMonthly: listingObj.budgetMonthly,
+					moveInDate: listingObj.moveInDate.toISOString(),
+					description: listingObj.description,
+					photos: listingObj.photos,
+					preferences: listingObj.preferences,
+					createdAt: listingObj.createdAt.toISOString(),
+					updatedAt: listingObj.updatedAt.toISOString(),
+					owner
+				};
 
 				return successResponse({ listing });
 			} catch (error) {

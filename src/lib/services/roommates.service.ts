@@ -88,14 +88,19 @@ export async function getRoommateListings(query: RoommateQueryInput) {
 }
 
 /**
- * Get a single roommate listing by ID
+ * Get a single roommate listing by ID with owner populated
  */
-export async function getRoommateListingById(id: string) {
+export async function getRoommateListingById(id: string, includeOwner = true) {
 	await connectDB();
 
-	const listing = await RoommateListing.findActiveById(id);
+	let listing = await RoommateListing.findActiveById(id);
 	if (!listing) {
 		throw new Error('Roommate listing not found');
+	}
+
+	// Populate owner if requested
+	if (includeOwner) {
+		listing = await listing.populate('ownerId', 'name email phone avatarUrl role isVerified createdAt');
 	}
 
 	return listing;

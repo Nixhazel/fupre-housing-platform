@@ -26,8 +26,9 @@ import {
 	SheetTitle,
 	SheetTrigger
 } from '@/components/ui/sheet';
-import { useRoommates } from '@/hooks/api/useRoommates';
+import { useRoommates, useSaveRoommate, useUnsaveRoommate } from '@/hooks/api/useRoommates';
 import { useAuth } from '@/components/providers/AuthProvider';
+import { toast } from 'sonner';
 import { formatNaira } from '@/lib/utils/currency';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { RoommateFilters } from '@/components/roommate/RoommateFilters';
@@ -53,7 +54,14 @@ function RoommatesContent() {
 		// search: searchQuery || undefined  // Add when backend supports it
 	});
 
+	// Save/unsave mutations
+	const saveMutation = useSaveRoommate();
+	const unsaveMutation = useUnsaveRoommate();
+
 	const listings = data?.listings || [];
+
+	// Get saved roommate IDs from user
+	const savedRoommateIds = user?.savedRoommateIds || [];
 
 	// Client-side search filter (until backend supports it)
 	const filteredListings = searchQuery
@@ -67,10 +75,32 @@ function RoommatesContent() {
 	const studentListings = filteredListings.filter((l) => l.ownerType === 'student');
 	const ownerListings = filteredListings.filter((l) => l.ownerType === 'owner');
 
-	const toggleFavorite = (id: string) => {
-		// TODO: Implement favorite functionality for roommates
-		console.log('Toggle favorite:', id);
+	const toggleFavorite = (id: string, e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+
+		if (!user) {
+			toast.error('Please login to save favorites');
+			return;
+		}
+
+		const isSaved = savedRoommateIds.includes(id);
+
+		if (isSaved) {
+			unsaveMutation.mutate(id, {
+				onSuccess: () => toast.success('Removed from favorites'),
+				onError: (err) => toast.error(err.message || 'Failed to remove')
+			});
+		} else {
+			saveMutation.mutate(id, {
+				onSuccess: () => toast.success('Added to favorites'),
+				onError: (err) => toast.error(err.message || 'Failed to save')
+			});
+		}
 	};
+
+	const isSaved = (id: string) => savedRoommateIds.includes(id);
+	const isSaving = saveMutation.isPending || unsaveMutation.isPending;
 
 	if (isLoading) {
 		return (
@@ -197,11 +227,13 @@ function RoommatesContent() {
 														variant='ghost'
 														size='sm'
 														className='absolute top-2 right-2 bg-white/80 hover:bg-white'
-														onClick={(e) => {
-															e.preventDefault();
-															toggleFavorite(listing.id);
-														}}>
-														<Heart className='h-4 w-4' />
+														disabled={isSaving}
+														onClick={(e) => toggleFavorite(listing.id, e)}>
+														<Heart
+															className={`h-4 w-4 ${
+																isSaved(listing.id) ? 'fill-red-500 text-red-500' : ''
+															}`}
+														/>
 													</Button>
 												</div>
 
@@ -295,11 +327,13 @@ function RoommatesContent() {
 														variant='ghost'
 														size='sm'
 														className='absolute top-2 right-2 bg-white/80 hover:bg-white'
-														onClick={(e) => {
-															e.preventDefault();
-															toggleFavorite(listing.id);
-														}}>
-														<Heart className='h-4 w-4' />
+														disabled={isSaving}
+														onClick={(e) => toggleFavorite(listing.id, e)}>
+														<Heart
+															className={`h-4 w-4 ${
+																isSaved(listing.id) ? 'fill-red-500 text-red-500' : ''
+															}`}
+														/>
 													</Button>
 												</div>
 

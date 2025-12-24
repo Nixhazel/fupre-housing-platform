@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
 	ArrowLeft,
 	Calendar,
@@ -15,44 +15,70 @@ import {
 	MapPin,
 	Ban,
 	PawPrint,
-	Sparkles
+	Sparkles,
+	Loader2,
+	AlertCircle,
+	Mail,
+	Phone,
+	Copy,
+	Check,
+	Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/shared/Badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { useRoommatesStore } from '@/lib/store/roommatesSlice';
-import { useAuthStore } from '@/lib/store/authSlice';
+import { Skeleton } from '@/components/shared/Skeleton';
+import { useRoommate, useSaveRoommate, useUnsaveRoommate } from '@/hooks/api/useRoommates';
+import { useAuth } from '@/components/providers/AuthProvider';
 import { formatNaira } from '@/lib/utils/currency';
 import { dayjs } from '@/lib/utils/date';
-import { RoommateListing, User as UserType } from '@/types';
-import { usersData } from '@/data/users';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 function RoommateDetailContent() {
 	const params = useParams();
 	const router = useRouter();
-	const { roommateListings } = useRoommatesStore();
-	const { user: currentUser } = useAuthStore();
+	const listingId = params.id as string;
 
-	const [roommateListing, setRoommateListing] =
-		useState<RoommateListing | null>(null);
-	const [owner, setOwner] = useState<UserType | null>(null);
-	const [isLoading, setIsLoading] = useState(true);
+	// TanStack Query hooks
+	const { user: currentUser, isAuthenticated } = useAuth();
+	const {
+		data: roommateData,
+		isLoading,
+		isError,
+		error
+	} = useRoommate(listingId);
 
-	useEffect(() => {
-		const listingId = params.id as string;
-		const listing = roommateListings.find((l) => l.id === listingId);
+	// Save/unsave mutations
+	const saveMutation = useSaveRoommate();
+	const unsaveMutation = useUnsaveRoommate();
 
-		if (listing) {
-			setRoommateListing(listing);
-			// Find the owner
-			const ownerData = usersData.find((u) => u.id === listing.ownerId);
-			setOwner(ownerData || null);
+	const roommateListing = roommateData?.listing;
+	const owner = roommateListing?.owner;
+
+	// Check if listing is saved
+	const isSaved = currentUser?.savedRoommateIds?.includes(listingId) ?? false;
+	const isSaving = saveMutation.isPending || unsaveMutation.isPending;
+
+	// Contact reveal state
+	const [showContact, setShowContact] = useState(false);
+	const [copiedField, setCopiedField] = useState<'email' | 'phone' | null>(null);
+
+	// Check if this is the user's own listing
+	const isOwnListing = currentUser?.id === owner?.id;
+
+	const handleCopy = async (text: string, field: 'email' | 'phone') => {
+		try {
+			await navigator.clipboard.writeText(text);
+			setCopiedField(field);
+			toast.success(`${field === 'email' ? 'Email' : 'Phone'} copied to clipboard`);
+			setTimeout(() => setCopiedField(null), 2000);
+		} catch {
+			toast.error('Failed to copy to clipboard');
 		}
-		setIsLoading(false);
-	}, [params.id, roommateListings]);
+	};
 
 	const handleShare = async () => {
 		if (!roommateListing) return;
@@ -76,50 +102,103 @@ function RoommateDetailContent() {
 	};
 
 	const handleContact = () => {
-		if (!currentUser) {
-			toast.error('Please login to contact this person');
-			router.push('/auth/login');
+		if (!isAuthenticated || !currentUser) {
+			toast.error('Please login to view contact info');
+			router.push(`/auth/login?returnUrl=/roommates/${listingId}`);
 			return;
 		}
-		toast.success('Contact feature coming soon!');
+		setShowContact(true);
 	};
 
 	const handleSave = () => {
-		if (!currentUser) {
+		if (!isAuthenticated || !currentUser) {
 			toast.error('Please login to save listings');
-			router.push('/auth/login');
+			router.push(`/auth/login?returnUrl=/roommates/${listingId}`);
 			return;
 		}
-		toast.success('Saved to favorites!');
+
+		if (isSaved) {
+			unsaveMutation.mutate(listingId, {
+				onSuccess: () => toast.success('Removed from favorites'),
+				onError: (err) => toast.error(err.message || 'Failed to remove')
+			});
+		} else {
+			saveMutation.mutate(listingId, {
+				onSuccess: () => toast.success('Added to favorites'),
+				onError: (err) => toast.error(err.message || 'Failed to save')
+			});
+		}
 	};
 
+	// Loading state
 	if (isLoading) {
 		return (
-			<div className='min-h-screen bg-background flex items-center justify-center'>
-				<div className='text-center'>
-					<div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4'></div>
-					<p className='text-muted-foreground'>Loading...</p>
+			<div className='min-h-screen bg-background'>
+				<div className='container mx-auto px-4 py-8'>
+					<Skeleton className='h-10 w-40 mb-6' />
+					<Skeleton className='h-8 w-3/4 mb-2' />
+					<Skeleton className='h-4 w-1/2 mb-8' />
+					<div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
+						<div className='lg:col-span-2 space-y-6'>
+							<Card>
+								<CardContent className='p-4'>
+									<div className='grid grid-cols-2 gap-2'>
+										<Skeleton className='aspect-video rounded-lg' />
+										<Skeleton className='aspect-video rounded-lg' />
+									</div>
+								</CardContent>
+							</Card>
+							<Card>
+								<CardHeader>
+									<Skeleton className='h-6 w-32' />
+								</CardHeader>
+								<CardContent>
+									<Skeleton className='h-4 w-full mb-2' />
+									<Skeleton className='h-4 w-3/4 mb-2' />
+									<Skeleton className='h-4 w-1/2' />
+								</CardContent>
+							</Card>
+						</div>
+						<div className='space-y-6'>
+							<Card>
+								<CardHeader>
+									<Skeleton className='h-6 w-24' />
+								</CardHeader>
+								<CardContent>
+									<Skeleton className='h-8 w-1/2 mb-4' />
+									<Skeleton className='h-4 w-full mb-4' />
+									<Skeleton className='h-4 w-3/4' />
+								</CardContent>
+							</Card>
+						</div>
+					</div>
 				</div>
 			</div>
 		);
 	}
 
-	if (!roommateListing) {
+	// Error state
+	if (isError || !roommateListing) {
 		return (
 			<div className='min-h-screen bg-background flex items-center justify-center'>
-				<div className='text-center'>
-					<h1 className='text-2xl font-bold mb-4'>
-						Roommate Listing Not Found
-					</h1>
-					<p className='text-muted-foreground mb-6'>
-						The roommate listing you&apos;re looking for doesn&apos;t exist or
-						has been removed.
-					</p>
-					<Button onClick={() => router.push('/roommates')}>
-						<ArrowLeft className='h-4 w-4 mr-2' />
-						Back to Roommates
-					</Button>
-				</div>
+				<Card className='max-w-md text-center'>
+					<CardContent className='py-12'>
+						<AlertCircle className='h-16 w-16 text-red-500 mx-auto mb-4' />
+						<h1 className='text-2xl font-bold mb-4'>
+							Roommate Listing Not Found
+						</h1>
+						<p className='text-muted-foreground mb-6'>
+							{error?.message ||
+								"The roommate listing you're looking for doesn't exist or has been removed."}
+						</p>
+						<Button asChild>
+							<Link href='/roommates'>
+								<ArrowLeft className='h-4 w-4 mr-2' />
+								Back to Roommates
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
 			</div>
 		);
 	}
@@ -318,11 +397,11 @@ function RoommateDetailContent() {
 											<h3 className='font-semibold'>{owner.name}</h3>
 											<div className='flex items-center gap-2'>
 												<Badge
-													variant={owner.verified ? 'default' : 'secondary'}>
+													variant={owner.isVerified ? 'default' : 'secondary'}>
 													{owner.role.charAt(0).toUpperCase() +
 														owner.role.slice(1)}
 												</Badge>
-												{owner.verified && (
+												{owner.isVerified && (
 													<Badge
 														variant='outline'
 														className='text-green-600 border-green-600'>
@@ -339,20 +418,125 @@ function RoommateDetailContent() {
 							</Card>
 						)}
 
-						{/* Actions */}
+						{/* Contact & Actions */}
 						<Card>
-							<CardContent className='pt-6'>
+							<CardHeader>
+								<CardTitle className='flex items-center gap-2'>
+									<MessageCircle className='h-5 w-5' />
+									Contact Information
+								</CardTitle>
+							</CardHeader>
+							<CardContent className='space-y-4'>
+								<AnimatePresence mode='wait'>
+									{showContact && owner && isAuthenticated ? (
+										<motion.div
+											key='contact-info'
+											initial={{ opacity: 0, height: 0 }}
+											animate={{ opacity: 1, height: 'auto' }}
+											exit={{ opacity: 0, height: 0 }}
+											className='space-y-3'>
+											{/* Email */}
+											{owner.email && (
+												<div className='flex items-center justify-between p-3 rounded-lg bg-muted/50'>
+													<div className='flex items-center gap-3'>
+														<Mail className='h-5 w-5 text-primary' />
+														<div>
+															<p className='text-xs text-muted-foreground'>Email</p>
+															<p className='font-medium text-sm'>{owner.email}</p>
+														</div>
+													</div>
+													<Button
+														variant='ghost'
+														size='sm'
+														onClick={() => handleCopy(owner.email, 'email')}>
+														{copiedField === 'email' ? (
+															<Check className='h-4 w-4 text-green-500' />
+														) : (
+															<Copy className='h-4 w-4' />
+														)}
+													</Button>
+												</div>
+											)}
+
+											{/* Phone */}
+											{owner.phone && (
+												<div className='flex items-center justify-between p-3 rounded-lg bg-muted/50'>
+													<div className='flex items-center gap-3'>
+														<Phone className='h-5 w-5 text-primary' />
+														<div>
+															<p className='text-xs text-muted-foreground'>Phone</p>
+															<p className='font-medium text-sm'>{owner.phone}</p>
+														</div>
+													</div>
+													<Button
+														variant='ghost'
+														size='sm'
+														onClick={() => handleCopy(owner.phone!, 'phone')}>
+														{copiedField === 'phone' ? (
+															<Check className='h-4 w-4 text-green-500' />
+														) : (
+															<Copy className='h-4 w-4' />
+														)}
+													</Button>
+												</div>
+											)}
+
+											{!owner.phone && !owner.email && (
+												<p className='text-sm text-muted-foreground text-center py-2'>
+													No contact information available
+												</p>
+											)}
+
+											<Separator />
+										</motion.div>
+									) : (
+										<motion.div
+											key='contact-cta'
+											initial={{ opacity: 0 }}
+											animate={{ opacity: 1 }}
+											exit={{ opacity: 0 }}
+											className='text-center py-4'>
+											{isOwnListing ? (
+												<p className='text-sm text-muted-foreground'>
+													This is your listing
+												</p>
+											) : (
+												<>
+													<div className='p-4 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 mb-4'>
+														<Eye className='h-8 w-8 mx-auto mb-2 text-primary' />
+														<p className='text-sm text-muted-foreground'>
+															Click below to reveal contact information
+														</p>
+														<p className='text-xs text-green-600 mt-1 font-medium'>
+															✓ Free for all users
+														</p>
+													</div>
+													<Button className='w-full' onClick={handleContact}>
+														<MessageCircle className='h-4 w-4 mr-2' />
+														{isAuthenticated ? 'View Contact Info' : 'Login to Contact'}
+													</Button>
+												</>
+											)}
+										</motion.div>
+									)}
+								</AnimatePresence>
+
 								<div className='space-y-3'>
-									<Button className='w-full' onClick={handleContact}>
-										<MessageCircle className='h-4 w-4 mr-2' />
-										Contact
-									</Button>
 									<Button
 										variant='outline'
 										className='w-full'
-										onClick={handleSave}>
-										<Heart className='h-4 w-4 mr-2' />
-										Save
+										onClick={handleSave}
+										disabled={isSaving}>
+										{isSaving ? (
+											<Loader2 className='h-4 w-4 mr-2 animate-spin' />
+										) : (
+											<Heart
+												className={`h-4 w-4 mr-2 ${
+													isSaved ? 'fill-red-500 text-red-500' : ''
+												}`}
+											/>
+										)}
+										{isSaved ? 'Saved' : 'Save'}
 									</Button>
 									<Button
 										variant='outline'

@@ -7,7 +7,6 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { MobileTabBar } from '@/components/layout/MobileTabBar';
 import { Toaster } from '@/components/ui/sonner';
-import { DemoDataInitializer } from '@/components/providers/DemoDataInitializer';
 import { HydrationBoundary } from '@/components/providers/HydrationBoundary';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { EmailVerificationBanner } from '@/components/auth/EmailVerificationBanner';
@@ -61,7 +60,6 @@ export default function RootLayout({
 					<QueryProvider>
 						<HydrationBoundary>
 							<AuthProvider>
-								<DemoDataInitializer />
 								<div className='min-h-screen flex flex-col'>
 									<Navbar />
 									<EmailVerificationBanner />

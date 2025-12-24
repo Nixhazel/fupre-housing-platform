@@ -62,7 +62,8 @@ export const queryKeys = {
 		mine: (filters?: Record<string, unknown>) =>
 			filters
 				? [...queryKeys.roommates.all, 'mine', filters] as const
-				: ([...queryKeys.roommates.all, 'mine'] as const)
+				: ([...queryKeys.roommates.all, 'mine'] as const),
+		saved: () => [...queryKeys.roommates.all, 'saved'] as const
 	},
 
 	// ========== AGENT ==========

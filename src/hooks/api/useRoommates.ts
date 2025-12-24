@@ -121,7 +121,99 @@ export function useRoommate(
 	});
 }
 
+export interface SavedRoommatesResponse {
+	listings: RoommateListing[];
+}
+
+export interface SaveRoommateResponse {
+	message: string;
+	savedRoommateIds: string[];
+}
+
+// ============ QUERIES ============
+
+/**
+ * Hook to fetch current user's saved roommate listings
+ *
+ * @param options - Additional TanStack Query options
+ */
+export function useSavedRoommates(
+	options?: Omit<UseQueryOptions<SavedRoommatesResponse, ApiError>, 'queryKey' | 'queryFn'>
+) {
+	return useQuery({
+		queryKey: queryKeys.roommates.saved(),
+		queryFn: () => api.get<SavedRoommatesResponse>('/users/me/saved-roommates'),
+		staleTime: 30 * 1000, // 30 seconds
+		...options
+	});
+}
+
 // ============ MUTATIONS ============
+
+/**
+ * Hook to save a roommate listing to favorites
+ */
+export function useSaveRoommate() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (roommateId: string) =>
+			api.post<SaveRoommateResponse>('/users/me/saved-roommates', { roommateId }),
+
+		onSuccess: () => {
+			// Invalidate saved roommates
+			queryClient.invalidateQueries({ queryKey: queryKeys.roommates.saved() });
+
+			// Update auth me to reflect new savedRoommateIds
+			queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+		}
+	});
+}
+
+/**
+ * Hook to remove a roommate listing from favorites
+ */
+export function useUnsaveRoommate() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (roommateId: string) =>
+			api.delete<SaveRoommateResponse>(`/users/me/saved-roommates/${roommateId}`),
+
+		onSuccess: () => {
+			// Invalidate saved roommates
+			queryClient.invalidateQueries({ queryKey: queryKeys.roommates.saved() });
+
+			// Update auth me
+			queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+		}
+	});
+}
+
+/**
+ * Hook to toggle save status on a roommate listing
+ *
+ * Determines whether to save or unsave based on current state
+ */
+export function useToggleSaveRoommate() {
+	const saveMutation = useSaveRoommate();
+	const unsaveMutation = useUnsaveRoommate();
+
+	const toggleSave = async (roommateId: string, isSaved: boolean) => {
+		if (isSaved) {
+			return unsaveMutation.mutateAsync(roommateId);
+		} else {
+			return saveMutation.mutateAsync(roommateId);
+		}
+	};
+
+	return {
+		toggleSave,
+		isPending: saveMutation.isPending || unsaveMutation.isPending,
+		isError: saveMutation.isError || unsaveMutation.isError,
+		error: saveMutation.error || unsaveMutation.error
+	};
+}
 
 /**
  * Hook to create a new roommate listing

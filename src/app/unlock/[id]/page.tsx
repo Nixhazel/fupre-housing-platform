@@ -1,19 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-	Upload,
-	X,
 	ArrowLeft,
 	Lock,
 	CheckCircle,
 	Loader2,
-	Building2
+	Building2,
+	AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,28 +32,36 @@ import {
 	CardTitle
 } from '@/components/ui/card';
 import { Badge } from '@/components/shared/Badge';
-import { useListingsStore } from '@/lib/store/listingsSlice';
-import { useAuthStore } from '@/lib/store/authSlice';
-import { usePaymentsStore } from '@/lib/store/paymentsSlice';
-import { Listing } from '@/types';
+import { ImageUpload } from '@/components/ui/ImageUpload';
+import { useListing } from '@/hooks/api/useListings';
+import { useCurrentUser } from '@/hooks/api/useAuth';
+import { useSubmitPaymentProof, useUnlockStatus } from '@/hooks/api/usePayments';
 import {
 	paymentProofSchema,
 	type PaymentProofFormData
 } from '@/lib/validators/payments';
 import { formatNaira } from '@/lib/utils/currency';
 import { toast } from 'sonner';
+import { UPLOAD_FOLDERS, MAX_FILE_SIZES } from '@/lib/cloudinary';
+import Link from 'next/link';
 
 export default function UnlockPage() {
 	const params = useParams();
 	const router = useRouter();
-	const { getListingById } = useListingsStore();
-	const { user } = useAuthStore();
-	const { createPaymentProof } = usePaymentsStore();
+	const listingId = params.id as string;
 
-	const [listing, setListing] = useState<Listing | null>(null);
-	const [isLoading, setIsLoading] = useState(true);
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+	// TanStack Query hooks
+	const { data: user, isLoading: isUserLoading } = useCurrentUser();
+	const { data: listingData, isLoading: isListingLoading, isError: isListingError } = useListing(listingId);
+	const { data: unlockStatus } = useUnlockStatus(listingId);
+	const submitProofMutation = useSubmitPaymentProof();
+
+	// Local state for image URL
+	const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('');
+
+	const listing = listingData?.listing;
+	const isLoading = isListingLoading || isUserLoading;
+	const isAlreadyUnlocked = unlockStatus?.isUnlocked;
 
 	const {
 		register,
@@ -71,59 +78,50 @@ export default function UnlockPage() {
 
 	watch('method');
 
-	useEffect(() => {
-		if (params.id) {
-			const listingData = getListingById(params.id as string);
-			if (listingData) {
-				setListing(listingData);
-			}
-			setIsLoading(false);
-		}
-	}, [params.id, getListingById]);
-
-	const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-		const file = event.target.files?.[0];
-		if (file) {
-			if (file.size > 5 * 1024 * 1024) {
-				// 5MB limit
-				toast.error('Image size must be less than 5MB');
-				return;
-			}
-
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				const result = e.target?.result as string;
-				setUploadedImage(result);
-				setValue('imageUrl', result);
-			};
-			reader.readAsDataURL(file);
-		}
+	// Handle image upload success from Cloudinary
+	const handleImageUploaded = (url: string) => {
+		setUploadedImageUrl(url);
+		setValue('imageUrl', url);
 	};
 
-	const removeImage = () => {
-		setUploadedImage(null);
+	// Handle image removal
+	const handleImageRemove = () => {
+		setUploadedImageUrl('');
 		setValue('imageUrl', '');
 	};
 
 	const onSubmit = async (data: PaymentProofFormData) => {
-		if (!user || !listing) return;
-
-		setIsSubmitting(true);
-		try {
-			await createPaymentProof({
-				...data,
-				listingId: listing.id,
-				userId: user.id
-			});
-
-			toast.success('Payment proof submitted successfully!');
-			router.push(`/listings/${listing.id}`);
-		} catch {
-			toast.error('Failed to submit payment proof. Please try again.');
-		} finally {
-			setIsSubmitting(false);
+		if (!user || !listing) {
+			toast.error('Please log in to submit payment proof');
+			return;
 		}
+
+		if (!uploadedImageUrl) {
+			toast.error('Please upload a payment receipt');
+			return;
+		}
+
+		submitProofMutation.mutate(
+			{
+				listingId: listing.id,
+				amount: data.amount,
+				method: data.method,
+				reference: data.reference,
+				imageUrl: uploadedImageUrl
+			},
+			{
+				onSuccess: () => {
+					toast.success('Payment proof submitted successfully! We will review it shortly.');
+					router.push(`/listings/${listing.id}`);
+				},
+				onError: (error) => {
+					toast.error(error.message || 'Failed to submit payment proof. Please try again.');
+				}
+			}
+		);
 	};
+
+	const isSubmitting = submitProofMutation.isPending;
 
 	if (isLoading) {
 		return (
@@ -136,7 +134,7 @@ export default function UnlockPage() {
 		);
 	}
 
-	if (!listing) {
+	if (isListingError || !listing) {
 		return (
 			<div className='container mx-auto px-4 py-8 text-center'>
 				<h1 className='text-2xl font-bold mb-4'>Listing Not Found</h1>
@@ -146,6 +144,57 @@ export default function UnlockPage() {
 				<Button onClick={() => router.push('/listings')}>
 					Browse All Listings
 				</Button>
+			</div>
+		);
+	}
+
+	// Check if already unlocked
+	if (isAlreadyUnlocked) {
+		return (
+			<div className='container mx-auto px-4 py-8 max-w-2xl'>
+				<Card className='text-center'>
+					<CardContent className='py-12'>
+						<CheckCircle className='h-16 w-16 text-green-500 mx-auto mb-4' />
+						<h2 className='text-2xl font-bold mb-2'>Already Unlocked!</h2>
+						<p className='text-muted-foreground mb-6'>
+							You already have access to this listing&apos;s location details.
+						</p>
+						<Button asChild>
+							<Link href={`/listings/${listing.id}`}>
+								View Listing Details
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
+			</div>
+		);
+	}
+
+	// Check if user is logged in
+	if (!user) {
+		return (
+			<div className='container mx-auto px-4 py-8 max-w-2xl'>
+				<Card className='text-center'>
+					<CardContent className='py-12'>
+						<AlertCircle className='h-16 w-16 text-amber-500 mx-auto mb-4' />
+						<h2 className='text-2xl font-bold mb-2'>Login Required</h2>
+						<p className='text-muted-foreground mb-6'>
+							Please log in to unlock this listing&apos;s location details.
+						</p>
+						<div className='flex justify-center gap-4'>
+							<Button variant='outline' asChild>
+								<Link href={`/listings/${listing.id}`}>
+									Back to Listing
+								</Link>
+							</Button>
+							<Button asChild>
+								<Link href={`/auth/login?returnUrl=/unlock/${listing.id}`}>
+									Log In
+								</Link>
+							</Button>
+						</div>
+					</CardContent>
+				</Card>
 			</div>
 		);
 	}
@@ -185,7 +234,7 @@ export default function UnlockPage() {
 				<Card>
 					<CardContent className='p-4'>
 						<div className='flex items-center space-x-4'>
-							<div className='relative w-16 h-16 flex-shrink-0'>
+							<div className='relative w-16 h-16 shrink-0'>
 								<Image
 									src={listing.coverPhoto}
 									alt={listing.title}
@@ -290,58 +339,28 @@ export default function UnlockPage() {
 								</p>
 							</div>
 
-							{/* Image Upload */}
+							{/* Image Upload - Now using Cloudinary */}
 							<div className='space-y-2'>
 								<Label>Payment Receipt</Label>
-								{!uploadedImage ? (
-									<div className='border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center'>
-										<Upload className='h-8 w-8 mx-auto mb-4 text-muted-foreground' />
-										<p className='text-sm text-muted-foreground mb-2'>
-											Upload a screenshot of your payment receipt
-										</p>
-										<input
-											type='file'
-											accept='image/*'
-											onChange={handleImageUpload}
-											className='hidden'
-											id='image-upload'
-										/>
-										<Button
-											type='button'
-											variant='outline'
-											onClick={() =>
-												document.getElementById('image-upload')?.click()
-											}>
-											Choose File
-										</Button>
-										<p className='text-xs text-muted-foreground mt-2'>
-											PNG, JPG up to 5MB
-										</p>
-									</div>
-								) : (
-									<div className='relative h-48'>
-										<Image
-											src={uploadedImage}
-											alt='Payment receipt'
-											fill
-											sizes="(max-width: 768px) 100vw, 50vw"
-											className='object-cover rounded-lg'
-										/>
-										<Button
-											type='button'
-											variant='destructive'
-											size='sm'
-											className='absolute top-2 right-2'
-											onClick={removeImage}>
-											<X className='h-4 w-4' />
-										</Button>
-									</div>
-								)}
+								<ImageUpload
+									value={uploadedImageUrl}
+									onChange={handleImageUploaded}
+									onRemove={handleImageRemove}
+									onError={(error) => toast.error(error)}
+									folder={UPLOAD_FOLDERS.PAYMENT_PROOFS}
+									maxSize={MAX_FILE_SIZES.PAYMENT_PROOF}
+									placeholder='Upload your payment receipt'
+									aspectRatio='4/3'
+									showInstructions
+								/>
 								{errors.imageUrl && (
 									<p className='text-sm text-red-500'>
 										{errors.imageUrl.message}
 									</p>
 								)}
+								<p className='text-xs text-muted-foreground'>
+									Upload a clear screenshot or photo of your payment receipt
+								</p>
 							</div>
 
 							{/* Submit Button */}
@@ -349,7 +368,7 @@ export default function UnlockPage() {
 								type='submit'
 								className='w-full'
 								size='lg'
-								disabled={isSubmitting || !uploadedImage}>
+								disabled={isSubmitting || !uploadedImageUrl}>
 								{isSubmitting ? (
 									<>
 										<Loader2 className='mr-2 h-4 w-4 animate-spin' />

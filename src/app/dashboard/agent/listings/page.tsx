@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -14,22 +14,23 @@ import {
 	Search,
 	Calendar,
 	MapPin,
-	Users
+	Users,
+	Loader2,
+	AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/shared/Badge';
-
+import { Skeleton } from '@/components/shared/Skeleton';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { useAuthStore } from '@/lib/store/authSlice';
-import { useListingsStore } from '@/lib/store/listingsSlice';
-import { Listing } from '@/types';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useAgentListings, useMarkListingAsTaken, useMarkListingAsAvailable, useDeleteListing } from '@/hooks/api/useAgent';
 import { formatNaira } from '@/lib/utils/currency';
 import { dayjs } from '@/lib/utils/date';
 import { canAccessAgent } from '@/lib/utils/guards';
@@ -37,63 +38,88 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 export default function AgentListingsPage() {
-	const { user } = useAuthStore();
-	const { getListingsByAgent, updateListing, deleteListing } =
-		useListingsStore();
+	const { user, isLoading: authLoading } = useAuth();
 	const router = useRouter();
 
-	const [listings, setListings] = useState<Listing[]>([]);
 	const [searchQuery, setSearchQuery] = useState('');
-	const [statusFilter, setStatusFilter] = useState<
-		'all' | 'available' | 'taken'
-	>('all');
+	const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'taken'>('all');
 
-	useEffect(() => {
-		if (!user || !canAccessAgent(user.role)) {
-			router.push('/');
-			return;
-		}
+	// TanStack Query hooks
+	const { data: listingsData, isLoading: listingsLoading } = useAgentListings(
+		{ status: statusFilter === 'all' ? undefined : statusFilter },
+		{ enabled: !!user && canAccessAgent(user?.role || '') }
+	);
 
-		const agentListings = getListingsByAgent(user.id);
-		setListings(agentListings);
-	}, [user, getListingsByAgent, router]);
+	const markAsTakenMutation = useMarkListingAsTaken();
+	const markAsAvailableMutation = useMarkListingAsAvailable();
+	const deleteMutation = useDeleteListing();
 
-	const filteredListings = listings.filter((listing) => {
-		const matchesSearch =
-			listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			listing.campusArea.toLowerCase().includes(searchQuery.toLowerCase());
-		const matchesStatus =
-			statusFilter === 'all' || listing.status === statusFilter;
-		return matchesSearch && matchesStatus;
-	});
+	const listings = listingsData?.listings ?? [];
 
-	const handleStatusToggle = async (
-		listingId: string,
-		currentStatus: string
-	) => {
-		try {
-			const newStatus = currentStatus === 'available' ? 'taken' : 'available';
-			updateListing(listingId, { status: newStatus as 'available' | 'taken' });
-			toast.success(`Listing marked as ${newStatus}`);
-		} catch {
-			toast.error('Failed to update listing status');
+	// Client-side search filtering
+	const filteredListings = useMemo(() => {
+		if (!searchQuery) return listings;
+		return listings.filter(
+			(listing) =>
+				listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				listing.campusArea.toLowerCase().includes(searchQuery.toLowerCase())
+		);
+	}, [listings, searchQuery]);
+
+	const handleStatusToggle = (listingId: string, currentStatus: string) => {
+		if (currentStatus === 'available') {
+			markAsTakenMutation.mutate(listingId, {
+				onSuccess: () => toast.success('Listing marked as taken'),
+				onError: (err) => toast.error(err.message || 'Failed to update listing status')
+			});
+		} else {
+			markAsAvailableMutation.mutate(listingId, {
+				onSuccess: () => toast.success('Listing marked as available'),
+				onError: (err) => toast.error(err.message || 'Failed to update listing status')
+			});
 		}
 	};
 
-	const handleDeleteListing = async (listingId: string) => {
+	const handleDeleteListing = (listingId: string) => {
 		if (confirm('Are you sure you want to delete this listing?')) {
-			try {
-				deleteListing(listingId);
-				toast.success('Listing deleted successfully');
-			} catch {
-				toast.error('Failed to delete listing');
-			}
+			deleteMutation.mutate(listingId, {
+				onSuccess: () => toast.success('Listing deleted successfully'),
+				onError: (err) => toast.error(err.message || 'Failed to delete listing')
+			});
 		}
 	};
 
-	if (!user || !canAccessAgent(user.role)) {
-		return null;
+	// Loading state
+	if (authLoading) {
+		return (
+			<div className='min-h-screen flex items-center justify-center'>
+				<Loader2 className='h-8 w-8 animate-spin text-primary' />
+			</div>
+		);
 	}
+
+	// Access control
+	if (!user || !canAccessAgent(user.role)) {
+		return (
+			<div className='container mx-auto px-4 py-8 max-w-md'>
+				<Card className='text-center'>
+					<CardContent className='py-12'>
+						<AlertCircle className='h-16 w-16 text-red-500 mx-auto mb-4' />
+						<h2 className='text-2xl font-bold mb-2'>Access Denied</h2>
+						<p className='text-muted-foreground mb-6'>
+							You don&apos;t have permission to access this page.
+						</p>
+						<Button asChild>
+							<Link href='/'>Go Home</Link>
+						</Button>
+					</CardContent>
+				</Card>
+			</div>
+		);
+	}
+
+	const isLoading = listingsLoading;
+	const isMutating = markAsTakenMutation.isPending || markAsAvailableMutation.isPending || deleteMutation.isPending;
 
 	return (
 		<div className='container mx-auto px-4 py-8'>
@@ -158,7 +184,22 @@ export default function AgentListingsPage() {
 			</motion.div>
 
 			{/* Listings Grid */}
-			{filteredListings.length === 0 ? (
+			{isLoading ? (
+				<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+					{[...Array(6)].map((_, i) => (
+						<Card key={i} className='overflow-hidden'>
+							<Skeleton className='h-48 w-full' />
+							<CardContent className='p-4'>
+								<Skeleton className='h-5 w-3/4 mb-3' />
+								<Skeleton className='h-4 w-1/2 mb-2' />
+								<Skeleton className='h-4 w-2/3 mb-2' />
+								<Skeleton className='h-4 w-1/3 mb-3' />
+								<Skeleton className='h-6 w-1/2' />
+							</CardContent>
+						</Card>
+					))}
+				</div>
+			) : filteredListings.length === 0 ? (
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -233,20 +274,22 @@ export default function AgentListingsPage() {
 														Edit
 													</Link>
 												</DropdownMenuItem>
-												<DropdownMenuItem
-													onClick={() =>
-														handleStatusToggle(listing.id, listing.status)
-													}>
-													{listing.status === 'available'
-														? 'Mark as Taken'
-														: 'Mark as Available'}
-												</DropdownMenuItem>
-												<DropdownMenuItem
-													onClick={() => handleDeleteListing(listing.id)}
-													className='text-red-600'>
-													<Trash2 className='h-4 w-4 mr-2' />
-													Delete
-												</DropdownMenuItem>
+										<DropdownMenuItem
+											onClick={() =>
+												handleStatusToggle(listing.id, listing.status)
+											}
+											disabled={isMutating}>
+											{listing.status === 'available'
+												? 'Mark as Taken'
+												: 'Mark as Available'}
+										</DropdownMenuItem>
+										<DropdownMenuItem
+											onClick={() => handleDeleteListing(listing.id)}
+											disabled={isMutating}
+											className='text-red-600'>
+											<Trash2 className='h-4 w-4 mr-2' />
+											Delete
+										</DropdownMenuItem>
 											</DropdownMenuContent>
 										</DropdownMenu>
 									</div>

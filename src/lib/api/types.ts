@@ -108,6 +108,7 @@ export interface SessionUser {
 	isEmailVerified: boolean;
 	isVerified: boolean;
 	savedListingIds: string[];
+	savedRoommateIds: string[];
 	unlockedListingIds: string[];
 	createdAt: string;
 }
@@ -156,6 +157,20 @@ export interface Listing {
 }
 
 /**
+ * Roommate listing owner info (populated)
+ */
+export interface RoommateOwner {
+	id: string;
+	name: string;
+	email: string;
+	phone?: string;
+	avatarUrl?: string;
+	role: string;
+	isVerified: boolean;
+	createdAt: string;
+}
+
+/**
  * Roommate listing type
  */
 export interface RoommateListing {
@@ -174,6 +189,7 @@ export interface RoommateListing {
 		smoking?: 'no' | 'yes' | 'outdoor_only';
 		pets?: 'no' | 'yes';
 	};
+	owner?: RoommateOwner | null;
 	createdAt: string;
 	updatedAt: string;
 }

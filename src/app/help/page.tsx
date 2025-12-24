@@ -22,6 +22,7 @@ import {
 	XCircle,
 	AlertCircle
 } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -289,33 +290,39 @@ function HelpContent() {
 									<Mail className='h-8 w-8 text-primary mx-auto mb-2' />
 									<h3 className='font-semibold mb-1'>Email Support</h3>
 									<p className='text-sm text-muted-foreground mb-2'>
-										Get help via email
+										support@fuprehousing.com
 									</p>
-									<Button variant='outline' size='sm'>
-										<Mail className='h-4 w-4 mr-2' />
-										Send Email
+									<Button variant='outline' size='sm' asChild>
+										<a href='mailto:support@fuprehousing.com'>
+											<Mail className='h-4 w-4 mr-2' />
+											Send Email
+										</a>
 									</Button>
 								</div>
 								<div className='text-center p-4 rounded-lg bg-muted/50'>
 									<Phone className='h-8 w-8 text-primary mx-auto mb-2' />
 									<h3 className='font-semibold mb-1'>Phone Support</h3>
 									<p className='text-sm text-muted-foreground mb-2'>
-										Call us directly
+										+234 812 345 6789
 									</p>
-									<Button variant='outline' size='sm'>
-										<Phone className='h-4 w-4 mr-2' />
-										Call Now
+									<Button variant='outline' size='sm' asChild>
+										<a href='tel:+2348123456789'>
+											<Phone className='h-4 w-4 mr-2' />
+											Call Now
+										</a>
 									</Button>
 								</div>
 								<div className='text-center p-4 rounded-lg bg-muted/50'>
 									<MessageCircle className='h-8 w-8 text-primary mx-auto mb-2' />
-									<h3 className='font-semibold mb-1'>Live Chat</h3>
+									<h3 className='font-semibold mb-1'>WhatsApp</h3>
 									<p className='text-sm text-muted-foreground mb-2'>
-										Chat with support
+										Quick responses
 									</p>
-									<Button variant='outline' size='sm'>
-										<MessageCircle className='h-4 w-4 mr-2' />
-										Start Chat
+									<Button variant='outline' size='sm' asChild>
+										<a href='https://wa.me/2348123456789' target='_blank' rel='noopener noreferrer'>
+											<MessageCircle className='h-4 w-4 mr-2' />
+											Chat on WhatsApp
+										</a>
 									</Button>
 								</div>
 							</div>
@@ -337,27 +344,39 @@ function HelpContent() {
 							<div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
 								<Button
 									variant='outline'
-									className='h-auto p-4 flex flex-col items-center gap-2'>
-									<Building2 className='h-6 w-6' />
-									<span className='text-sm'>Browse Listings</span>
+									className='h-auto p-4 flex flex-col items-center gap-2'
+									asChild>
+									<Link href='/listings'>
+										<Building2 className='h-6 w-6' />
+										<span className='text-sm'>Browse Listings</span>
+									</Link>
 								</Button>
 								<Button
 									variant='outline'
-									className='h-auto p-4 flex flex-col items-center gap-2'>
-									<Users className='h-6 w-6' />
-									<span className='text-sm'>Find Roommates</span>
+									className='h-auto p-4 flex flex-col items-center gap-2'
+									asChild>
+									<Link href='/roommates'>
+										<Users className='h-6 w-6' />
+										<span className='text-sm'>Find Roommates</span>
+									</Link>
 								</Button>
 								<Button
 									variant='outline'
-									className='h-auto p-4 flex flex-col items-center gap-2'>
-									<Shield className='h-6 w-6' />
-									<span className='text-sm'>Become an Agent</span>
+									className='h-auto p-4 flex flex-col items-center gap-2'
+									asChild>
+									<Link href='/auth/register?role=agent'>
+										<Shield className='h-6 w-6' />
+										<span className='text-sm'>Become an Agent</span>
+									</Link>
 								</Button>
 								<Button
 									variant='outline'
-									className='h-auto p-4 flex flex-col items-center gap-2'>
-									<FileText className='h-6 w-6' />
-									<span className='text-sm'>Terms of Service</span>
+									className='h-auto p-4 flex flex-col items-center gap-2'
+									asChild>
+									<Link href='/terms'>
+										<FileText className='h-6 w-6' />
+										<span className='text-sm'>Terms of Service</span>
+									</Link>
 								</Button>
 							</div>
 						</CardContent>

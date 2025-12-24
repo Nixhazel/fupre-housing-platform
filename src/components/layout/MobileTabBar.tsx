@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Home, Building2, Users, BarChart3, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAuthStore } from '@/lib/store/authSlice';
+import { useAuth } from '@/components/providers/AuthProvider';
 import { ClientOnly } from '@/components/providers/ClientOnly';
 
 const tabs = [
@@ -43,7 +43,7 @@ const tabs = [
 
 function MobileTabBarContent() {
 	const pathname = usePathname();
-	const { user, isAuthenticated } = useAuthStore();
+	const { user, isAuthenticated } = useAuth();
 
 	// Don't show on auth pages or if not authenticated
 	if (!isAuthenticated || !user || pathname.startsWith('/auth')) {

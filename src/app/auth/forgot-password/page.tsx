@@ -52,7 +52,10 @@ export default function ForgotPasswordPage() {
 	// Countdown timer for resend button
 	useEffect(() => {
 		if (resendCooldown > 0) {
-			const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+			const timer = setTimeout(
+				() => setResendCooldown(resendCooldown - 1),
+				1000
+			);
 			return () => clearTimeout(timer);
 		}
 	}, [resendCooldown]);
@@ -96,7 +99,7 @@ export default function ForgotPasswordPage() {
 	// Success state - Check your email
 	if (isSubmitted) {
 		return (
-			<div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4'>
+			<div className='min-h-screen flex items-center justify-center bg-linear-to-br from-primary/10 via-background to-secondary/10 p-4'>
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -113,7 +116,9 @@ export default function ForgotPasswordPage() {
 							<CardDescription className='mt-2'>
 								We sent a password reset link to
 							</CardDescription>
-							<p className='font-medium text-foreground mt-1'>{submittedEmail}</p>
+							<p className='font-medium text-foreground mt-1'>
+								{submittedEmail}
+							</p>
 						</CardHeader>
 						<CardContent className='space-y-6'>
 							<div className='p-4 bg-muted rounded-lg'>
@@ -164,7 +169,7 @@ export default function ForgotPasswordPage() {
 
 	// Initial state - Request form
 	return (
-		<div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4'>
+		<div className='min-h-screen flex items-center justify-center bg-linear-to-br from-primary/10 via-background to-secondary/10 p-4'>
 			<motion.div
 				initial={{ opacity: 0, y: 20 }}
 				animate={{ opacity: 1, y: 0 }}
@@ -226,4 +231,3 @@ export default function ForgotPasswordPage() {
 		</div>
 	);
 }
-

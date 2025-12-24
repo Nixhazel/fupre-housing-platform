@@ -2,11 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Upload, X, ArrowLeft, Users, Loader2, Plus } from 'lucide-react';
+import { ArrowLeft, Users, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,20 +24,25 @@ import {
 	CardHeader,
 	CardTitle
 } from '@/components/ui/card';
-import { useAuthStore } from '@/lib/store/authSlice';
-import { useRoommatesStore } from '@/lib/store/roommatesSlice';
+import { ImageGalleryUpload } from '@/components/ui/ImageGalleryUpload';
+import { useCurrentUser } from '@/hooks/api/useAuth';
+import { useCreateRoommate } from '@/hooks/api/useRoommates';
 import {
 	roommateSchema,
 	type RoommateFormData
 } from '@/lib/validators/roommates';
 import { toast } from 'sonner';
+import { UPLOAD_FOLDERS, MAX_FILE_SIZES } from '@/lib/cloudinary';
+import Link from 'next/link';
 
 export default function NewRoommatePage() {
 	const router = useRouter();
-	const { user } = useAuthStore();
-	const { createRoommateListing } = useRoommatesStore();
 
-	const [isSubmitting, setIsSubmitting] = useState(false);
+	// TanStack Query hooks
+	const { data: user, isLoading: isUserLoading, isAuthenticated } = useCurrentUser();
+	const createRoommateMutation = useCreateRoommate();
+
+	// Local state for image URLs
 	const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
 	const {
@@ -50,42 +54,10 @@ export default function NewRoommatePage() {
 		resolver: zodResolver(roommateSchema)
 	});
 
-	const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-		const files = event.target.files;
-		if (files) {
-			const newImages: string[] = [];
-
-			Array.from(files).forEach((file) => {
-				if (file.size > 5 * 1024 * 1024) {
-					// 5MB limit
-					toast.error('Image size must be less than 5MB');
-					return;
-				}
-
-				const reader = new FileReader();
-				reader.onload = (e) => {
-					const result = e.target?.result as string;
-					newImages.push(result);
-
-					if (newImages.length === files.length) {
-						const updatedImages = [...uploadedImages, ...newImages];
-						if (updatedImages.length > 5) {
-							toast.error('Maximum 5 images allowed');
-							return;
-						}
-						setUploadedImages(updatedImages);
-						setValue('photos', updatedImages);
-					}
-				};
-				reader.readAsDataURL(file);
-			});
-		}
-	};
-
-	const removeImage = (index: number) => {
-		const updatedImages = uploadedImages.filter((_, i) => i !== index);
-		setUploadedImages(updatedImages);
-		setValue('photos', updatedImages);
+	// Handle image upload from Cloudinary
+	const handleImagesChange = (urls: string[]) => {
+		setUploadedImages(urls);
+		setValue('photos', urls);
 	};
 
 	const onSubmit = async (data: RoommateFormData) => {
@@ -95,22 +67,67 @@ export default function NewRoommatePage() {
 			return;
 		}
 
-		setIsSubmitting(true);
-		try {
-			await createRoommateListing({
-				...data,
-				ownerId: user.id,
-				ownerType: user.role === 'owner' ? 'owner' : 'student'
-			});
-
-			toast.success('Roommate listing created successfully!');
-			router.push('/roommates');
-		} catch {
-			toast.error('Failed to create listing. Please try again.');
-		} finally {
-			setIsSubmitting(false);
+		if (uploadedImages.length === 0) {
+			toast.error('Please upload at least one photo');
+			return;
 		}
+
+		createRoommateMutation.mutate(
+			{
+				...data,
+				photos: uploadedImages
+			},
+			{
+				onSuccess: () => {
+					toast.success('Roommate listing created successfully!');
+					router.push('/roommates');
+				},
+				onError: (error) => {
+					toast.error(error.message || 'Failed to create listing. Please try again.');
+				}
+			}
+		);
 	};
+
+	const isSubmitting = createRoommateMutation.isPending;
+
+	// Show loading state while checking authentication
+	if (isUserLoading) {
+		return (
+			<div className='container mx-auto px-4 py-8 flex items-center justify-center min-h-[50vh]'>
+				<Loader2 className='h-8 w-8 animate-spin text-primary' />
+			</div>
+		);
+	}
+
+	// Show login prompt if not authenticated
+	if (!isAuthenticated || !user) {
+		return (
+			<div className='container mx-auto px-4 py-8 max-w-md'>
+				<Card className='text-center'>
+					<CardContent className='py-12'>
+						<AlertCircle className='h-16 w-16 text-amber-500 mx-auto mb-4' />
+						<h2 className='text-2xl font-bold mb-2'>Login Required</h2>
+						<p className='text-muted-foreground mb-6'>
+							Please log in to create a roommate listing.
+						</p>
+						<div className='flex justify-center gap-4'>
+							<Button variant='outline' asChild>
+								<Link href='/roommates'>
+									Back to Roommates
+								</Link>
+							</Button>
+							<Button asChild>
+								<Link href='/auth/login?returnUrl=/roommates/new'>
+									Log In
+								</Link>
+							</Button>
+						</div>
+					</CardContent>
+				</Card>
+			</div>
+		);
+	}
 
 	return (
 		<div className='container mx-auto px-4 py-8 max-w-2xl'>
@@ -329,86 +346,27 @@ export default function NewRoommatePage() {
 								</div>
 							</div>
 
-							{/* Photos */}
+							{/* Photos - Now using Cloudinary */}
 							<div className='space-y-2'>
 								<Label>Photos</Label>
-								{uploadedImages.length === 0 ? (
-									<div className='border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center'>
-										<Upload className='h-8 w-8 mx-auto mb-4 text-muted-foreground' />
-										<p className='text-sm text-muted-foreground mb-2'>
-											Upload photos of your space
-										</p>
-										<input
-											type='file'
-											accept='image/*'
-											multiple
-											onChange={handleImageUpload}
-											className='hidden'
-											id='image-upload'
-										/>
-										<Button
-											type='button'
-											variant='outline'
-											onClick={() =>
-												document.getElementById('image-upload')?.click()
-											}>
-											Choose Files
-										</Button>
-										<p className='text-xs text-muted-foreground mt-2'>
-											PNG, JPG up to 5MB each (max 5 images)
-										</p>
-									</div>
-								) : (
-									<div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
-										{uploadedImages.map((image, index) => (
-											<div key={index} className='relative h-32'>
-												<Image
-													src={image}
-													alt={`Upload ${index + 1}`}
-													fill
-													sizes="(max-width: 768px) 50vw, 33vw"
-													className='object-cover rounded-lg'
-												/>
-												<Button
-													type='button'
-													variant='destructive'
-													size='sm'
-													className='absolute top-2 right-2'
-													onClick={() => removeImage(index)}>
-													<X className='h-4 w-4' />
-												</Button>
-											</div>
-										))}
-										{uploadedImages.length < 5 && (
-											<div className='border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center flex items-center justify-center'>
-												<input
-													type='file'
-													accept='image/*'
-													multiple
-													onChange={handleImageUpload}
-													className='hidden'
-													id='image-upload-more'
-												/>
-												<Button
-													type='button'
-													variant='outline'
-													size='sm'
-													onClick={() =>
-														document
-															.getElementById('image-upload-more')
-															?.click()
-													}>
-													<Plus className='h-4 w-4' />
-												</Button>
-											</div>
-										)}
-									</div>
-								)}
+								<ImageGalleryUpload
+									value={uploadedImages}
+									onChange={handleImagesChange}
+									folder={UPLOAD_FOLDERS.ROOMMATES}
+									maxSize={MAX_FILE_SIZES.IMAGE}
+									maxImages={5}
+									minImages={1}
+									showCoverSelection={false}
+									disabled={isSubmitting}
+								/>
 								{errors.photos && (
 									<p className='text-sm text-red-500'>
 										{errors.photos.message}
 									</p>
 								)}
+								<p className='text-xs text-muted-foreground'>
+									Upload photos of your space (max 5 images, 5MB each)
+								</p>
 							</div>
 
 							{/* Submit Button */}

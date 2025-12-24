@@ -107,7 +107,7 @@ function ResetPasswordContent() {
 	// Loading state
 	if (isValidating) {
 		return (
-			<div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4'>
+			<div className='min-h-screen flex items-center justify-center bg-linear-to-br from-primary/10 via-background to-secondary/10 p-4'>
 				<motion.div
 					initial={{ opacity: 0 }}
 					animate={{ opacity: 1 }}
@@ -122,7 +122,7 @@ function ResetPasswordContent() {
 	// Invalid token state
 	if (!isTokenValid) {
 		return (
-			<div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4'>
+			<div className='min-h-screen flex items-center justify-center bg-linear-to-br from-primary/10 via-background to-secondary/10 p-4'>
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -168,7 +168,7 @@ function ResetPasswordContent() {
 	// Success state
 	if (isSuccess) {
 		return (
-			<div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4'>
+			<div className='min-h-screen flex items-center justify-center bg-linear-to-br from-primary/10 via-background to-secondary/10 p-4'>
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -205,7 +205,7 @@ function ResetPasswordContent() {
 
 	// Reset form state
 	return (
-		<div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4'>
+		<div className='min-h-screen flex items-center justify-center bg-linear-to-br from-primary/10 via-background to-secondary/10 p-4'>
 			<motion.div
 				initial={{ opacity: 0, y: 20 }}
 				animate={{ opacity: 1, y: 0 }}
@@ -299,9 +299,7 @@ function ResetPasswordContent() {
 										autoComplete='new-password'
 										{...register('confirmPassword')}
 										className={
-											errors.confirmPassword
-												? 'border-red-500 pr-10'
-												: 'pr-10'
+											errors.confirmPassword ? 'border-red-500 pr-10' : 'pr-10'
 										}
 									/>
 									<Button
@@ -359,7 +357,7 @@ export default function ResetPasswordPage() {
 	return (
 		<Suspense
 			fallback={
-				<div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10'>
+				<div className='min-h-screen flex items-center justify-center bg-linear-to-br from-primary/10 via-background to-secondary/10'>
 					<Loader2 className='h-8 w-8 animate-spin text-primary' />
 				</div>
 			}>
@@ -367,4 +365,3 @@ export default function ResetPasswordPage() {
 		</Suspense>
 	);
 }
-

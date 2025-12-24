@@ -40,6 +40,7 @@ export interface IUser extends Document {
 
 	// Listing relationships
 	savedListingIds: mongoose.Types.ObjectId[];
+	savedRoommateIds: mongoose.Types.ObjectId[];
 	unlockedListingIds: mongoose.Types.ObjectId[];
 
 	// Soft delete
@@ -159,6 +160,13 @@ const UserSchema = new Schema<IUser, IUserModel>(
 			{
 				type: Schema.Types.ObjectId,
 				ref: 'Listing'
+			}
+		],
+
+		savedRoommateIds: [
+			{
+				type: Schema.Types.ObjectId,
+				ref: 'RoommateListing'
 			}
 		],
 

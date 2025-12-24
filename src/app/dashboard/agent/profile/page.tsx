@@ -12,7 +12,9 @@ import {
 	Edit,
 	Save,
 	X,
-	GraduationCap
+	GraduationCap,
+	Loader2,
+	AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,65 +24,73 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/shared/Badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { useAuthStore } from '@/lib/store/authSlice';
-import { useListingsStore } from '@/lib/store/listingsSlice';
+import { Skeleton } from '@/components/shared/Skeleton';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useAgentStats } from '@/hooks/api/useAgent';
+import { useUpdateProfile } from '@/hooks/api/useAuth';
 import { formatNaira } from '@/lib/utils/currency';
 import { dayjs } from '@/lib/utils/date';
 import { canAccessAgent } from '@/lib/utils/guards';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 export default function AgentProfilePage() {
-	const { user, updateUser } = useAuthStore();
-	const { getListingsByAgent } = useListingsStore();
+	const { user, isLoading: authLoading } = useAuth();
 	const router = useRouter();
+
+	// TanStack Query hooks
+	const { data: statsData, isLoading: statsLoading } = useAgentStats({
+		enabled: !!user && canAccessAgent(user?.role || '')
+	});
+	const updateProfileMutation = useUpdateProfile();
+
+	const stats = statsData?.stats;
 
 	const [isEditing, setIsEditing] = useState(false);
 	const [editForm, setEditForm] = useState({
 		name: '',
-		email: '',
 		phone: '',
-		matricNumber: '',
 		bio: '',
 		specialties: '',
 		experience: ''
 	});
 
 	useEffect(() => {
-		if (!user || !canAccessAgent(user.role)) {
-			router.push('/');
-			return;
+		if (user) {
+			setEditForm({
+				name: user.name || '',
+				phone: user.phone || '',
+				bio: 'Experienced real estate agent specializing in student housing near FUPRE campus.',
+				specialties:
+					'Student Housing, Campus Area Properties, Budget-Friendly Rentals',
+				experience: '3+ years'
+			});
 		}
-
-		setEditForm({
-			name: user.name || '',
-			email: user.email || '',
-			phone: user.phone || '',
-			matricNumber: user.matricNumber || '',
-			bio: 'Experienced real estate agent specializing in student housing near FUPRE campus.',
-			specialties:
-				'Student Housing, Campus Area Properties, Budget-Friendly Rentals',
-			experience: '3+ years'
-		});
-	}, [user, router]);
+	}, [user]);
 
 	const handleSave = () => {
-		updateUser({
-			name: editForm.name,
-			email: editForm.email,
-			phone: editForm.phone,
-			matricNumber: editForm.matricNumber
-		});
-		setIsEditing(false);
-		toast.success('Profile updated successfully!');
+		updateProfileMutation.mutate(
+			{
+				name: editForm.name,
+				phone: editForm.phone
+			},
+			{
+				onSuccess: () => {
+					setIsEditing(false);
+					toast.success('Profile updated successfully!');
+				},
+				onError: (err) => {
+					toast.error(err.message || 'Failed to update profile');
+				}
+			}
+		);
 	};
 
 	const handleCancel = () => {
 		setEditForm({
 			name: user?.name || '',
-			email: user?.email || '',
 			phone: user?.phone || '',
-			matricNumber: user?.matricNumber || '',
 			bio: 'Experienced real estate agent specializing in student housing near FUPRE campus.',
 			specialties:
 				'Student Housing, Campus Area Properties, Budget-Friendly Rentals',
@@ -89,20 +99,36 @@ export default function AgentProfilePage() {
 		setIsEditing(false);
 	};
 
-	if (!user || !canAccessAgent(user.role)) {
-		return null;
+	// Loading state
+	if (authLoading) {
+		return (
+			<div className='min-h-screen flex items-center justify-center'>
+				<Loader2 className='h-8 w-8 animate-spin text-primary' />
+			</div>
+		);
 	}
 
-	const agentListings = getListingsByAgent(user.id);
-	const totalEarnings = agentListings.reduce(
-		(sum, listing) => sum + listing.views * 100,
-		0
-	);
-	const averageRating =
-		agentListings.length > 0
-			? agentListings.reduce((sum, listing) => sum + listing.rating, 0) /
-			  agentListings.length
-			: 0;
+	// Access control
+	if (!user || !canAccessAgent(user.role)) {
+		return (
+			<div className='container mx-auto px-4 py-8 max-w-md'>
+				<Card className='text-center'>
+					<CardContent className='py-12'>
+						<AlertCircle className='h-16 w-16 text-red-500 mx-auto mb-4' />
+						<h2 className='text-2xl font-bold mb-2'>Access Denied</h2>
+						<p className='text-muted-foreground mb-6'>
+							You don&apos;t have permission to access this page.
+						</p>
+						<Button asChild>
+							<Link href='/'>Go Home</Link>
+						</Button>
+					</CardContent>
+				</Card>
+			</div>
+		);
+	}
+
+	const isUpdating = updateProfileMutation.isPending;
 
 	return (
 		<div className='container mx-auto px-4 py-8 max-w-4xl'>
@@ -118,12 +144,16 @@ export default function AgentProfilePage() {
 					<div className='flex gap-2'>
 						{isEditing ? (
 							<>
-								<Button variant='outline' onClick={handleCancel}>
+								<Button variant='outline' onClick={handleCancel} disabled={isUpdating}>
 									<X className='h-4 w-4 mr-2' />
 									Cancel
 								</Button>
-								<Button onClick={handleSave}>
-									<Save className='h-4 w-4 mr-2' />
+								<Button onClick={handleSave} disabled={isUpdating}>
+									{isUpdating ? (
+										<Loader2 className='h-4 w-4 mr-2 animate-spin' />
+									) : (
+										<Save className='h-4 w-4 mr-2' />
+									)}
 									Save Changes
 								</Button>
 							</>
@@ -160,7 +190,7 @@ export default function AgentProfilePage() {
 								<CardTitle className='text-xl'>{user.name}</CardTitle>
 								<div className='flex items-center justify-center gap-2 mb-2'>
 									<Badge className='capitalize'>{user.role}</Badge>
-									{user.verified && (
+									{user.isVerified && (
 										<Badge
 											variant='outline'
 											className='text-green-600 border-green-600'>
@@ -175,32 +205,54 @@ export default function AgentProfilePage() {
 							</CardHeader>
 							<CardContent>
 								<div className='space-y-4'>
-									<div className='text-center'>
-										<div className='flex items-center justify-center gap-1 mb-1'>
-											<Star className='h-4 w-4 text-yellow-500 fill-current' />
-											<span className='text-lg font-bold'>
-												{averageRating.toFixed(1)}
-											</span>
-										</div>
-										<p className='text-sm text-muted-foreground'>
-											Based on {agentListings.length} listings
-										</p>
-									</div>
-									<Separator />
-									<div className='grid grid-cols-2 gap-4 text-center'>
-										<div>
-											<div className='text-lg font-bold'>
-												{agentListings.length}
+									{statsLoading ? (
+										<>
+											<div className='text-center'>
+												<Skeleton className='h-6 w-16 mx-auto mb-1' />
+												<Skeleton className='h-4 w-24 mx-auto' />
 											</div>
-											<p className='text-sm text-muted-foreground'>Listings</p>
-										</div>
-										<div>
-											<div className='text-lg font-bold'>
-												{formatNaira(totalEarnings)}
+											<Separator />
+											<div className='grid grid-cols-2 gap-4 text-center'>
+												<div>
+													<Skeleton className='h-6 w-10 mx-auto mb-1' />
+													<Skeleton className='h-4 w-14 mx-auto' />
+												</div>
+												<div>
+													<Skeleton className='h-6 w-16 mx-auto mb-1' />
+													<Skeleton className='h-4 w-14 mx-auto' />
+												</div>
 											</div>
-											<p className='text-sm text-muted-foreground'>Earnings</p>
-										</div>
-									</div>
+										</>
+									) : (
+										<>
+											<div className='text-center'>
+												<div className='flex items-center justify-center gap-1 mb-1'>
+													<Star className='h-4 w-4 text-yellow-500 fill-current' />
+													<span className='text-lg font-bold'>
+														{stats?.totalListings ?? 0}
+													</span>
+												</div>
+												<p className='text-sm text-muted-foreground'>
+													Active listings: {stats?.activeListings ?? 0}
+												</p>
+											</div>
+											<Separator />
+											<div className='grid grid-cols-2 gap-4 text-center'>
+												<div>
+													<div className='text-lg font-bold'>
+														{stats?.totalListings ?? 0}
+													</div>
+													<p className='text-sm text-muted-foreground'>Listings</p>
+												</div>
+												<div>
+													<div className='text-lg font-bold'>
+														{formatNaira(stats?.totalEarnings ?? 0)}
+													</div>
+													<p className='text-sm text-muted-foreground'>Earnings</p>
+												</div>
+											</div>
+										</>
+									)}
 								</div>
 							</CardContent>
 						</Card>
@@ -245,24 +297,10 @@ export default function AgentProfilePage() {
 									</div>
 									<div>
 										<Label htmlFor='email'>Email</Label>
-										{isEditing ? (
-											<Input
-												id='email'
-												type='email'
-												value={editForm.email}
-												onChange={(e) =>
-													setEditForm((prev) => ({
-														...prev,
-														email: e.target.value
-													}))
-												}
-											/>
-										) : (
-											<div className='flex items-center gap-2 p-2 rounded-md bg-muted/50'>
-												<Mail className='h-4 w-4 text-muted-foreground' />
-												<span>{user.email}</span>
-											</div>
-										)}
+										<div className='flex items-center gap-2 p-2 rounded-md bg-muted/50'>
+											<Mail className='h-4 w-4 text-muted-foreground' />
+											<span>{user.email}</span>
+										</div>
 									</div>
 									<div>
 										<Label htmlFor='phone'>Phone</Label>
@@ -286,23 +324,10 @@ export default function AgentProfilePage() {
 									</div>
 									<div>
 										<Label htmlFor='matricNumber'>Matric Number</Label>
-										{isEditing ? (
-											<Input
-												id='matricNumber'
-												value={editForm.matricNumber}
-												onChange={(e) =>
-													setEditForm((prev) => ({
-														...prev,
-														matricNumber: e.target.value
-													}))
-												}
-											/>
-										) : (
-											<div className='flex items-center gap-2 p-2 rounded-md bg-muted/50'>
-												<GraduationCap className='h-4 w-4 text-muted-foreground' />
-												<span>{user.matricNumber}</span>
-											</div>
-										)}
+										<div className='flex items-center gap-2 p-2 rounded-md bg-muted/50'>
+											<GraduationCap className='h-4 w-4 text-muted-foreground' />
+											<span>{user.matricNumber || 'Not provided'}</span>
+										</div>
 									</div>
 								</div>
 							</CardContent>
