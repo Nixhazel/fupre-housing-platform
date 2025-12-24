@@ -10,6 +10,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { DemoDataInitializer } from '@/components/providers/DemoDataInitializer';
 import { HydrationBoundary } from '@/components/providers/HydrationBoundary';
 import { AuthProvider } from '@/components/providers/AuthProvider';
+import { EmailVerificationBanner } from '@/components/auth/EmailVerificationBanner';
 
 const geistSans = Geist({
 	variable: '--font-geist-sans',
@@ -63,6 +64,7 @@ export default function RootLayout({
 								<DemoDataInitializer />
 								<div className='min-h-screen flex flex-col'>
 									<Navbar />
+									<EmailVerificationBanner />
 									<main className='flex-1 pb-16 md:pb-0'>{children}</main>
 									<Footer />
 									<MobileTabBar />

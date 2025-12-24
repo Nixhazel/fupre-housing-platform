@@ -48,9 +48,11 @@ export default function RegisterPage() {
 
 	const onSubmit = async (data: RegisterFormData) => {
 		registerMutation.mutate(data, {
-			onSuccess: () => {
-				toast.success('Account created successfully!');
-				router.push('/');
+			onSuccess: (response) => {
+				toast.success('Account created! Please verify your email.');
+				// Redirect to verification page with email
+				const email = response.user?.email || data.email;
+				router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
 			},
 			onError: (error) => {
 				toast.error(error.message || 'Failed to create account. Please try again.');

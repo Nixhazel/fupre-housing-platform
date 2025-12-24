@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,10 +21,40 @@ import { useLogin } from '@/hooks/api/useAuth';
 import { loginSchema, type LoginFormData } from '@/lib/validators/auth';
 import { toast } from 'sonner';
 
-export default function LoginPage() {
+function LoginContent() {
 	const [showPassword, setShowPassword] = useState(false);
 	const router = useRouter();
+	const searchParams = useSearchParams();
 	const loginMutation = useLogin();
+
+	// Check for verification status from URL
+	const verified = searchParams.get('verified');
+	const error = searchParams.get('error');
+
+	// Show toast messages based on URL params
+	useEffect(() => {
+		if (verified === 'true') {
+			toast.success('Email verified successfully! You can now log in.', {
+				id: 'email-verified',
+				duration: 5000
+			});
+		} else if (error === 'invalid_token') {
+			toast.error('Invalid or expired verification link.', {
+				id: 'invalid-token',
+				duration: 5000
+			});
+		} else if (error === 'verification_failed') {
+			toast.error('Email verification failed. Please try again.', {
+				id: 'verification-failed',
+				duration: 5000
+			});
+		} else if (error === 'missing_token') {
+			toast.error('Verification token is missing.', {
+				id: 'missing-token',
+				duration: 5000
+			});
+		}
+	}, [verified, error]);
 
 	const {
 		register,
@@ -174,5 +204,18 @@ export default function LoginPage() {
 				</Card>
 			</motion.div>
 		</div>
+	);
+}
+
+export default function LoginPage() {
+	return (
+		<Suspense
+			fallback={
+				<div className='min-h-screen flex items-center justify-center bg-linear-to-br from-primary/10 via-background to-secondary/10'>
+					<Loader2 className='h-8 w-8 animate-spin text-primary' />
+				</div>
+			}>
+			<LoginContent />
+		</Suspense>
 	);
 }

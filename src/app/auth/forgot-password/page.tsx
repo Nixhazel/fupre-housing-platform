@@ -18,7 +18,7 @@ import {
 	CardTitle
 } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { requestPasswordReset, resendResetEmail } from '@/lib/auth/mockReset';
+import { useForgotPassword } from '@/hooks/api/useAuth';
 
 // Validation schema
 const forgotPasswordSchema = z.object({
@@ -34,11 +34,12 @@ type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 const RESEND_COOLDOWN = 60;
 
 export default function ForgotPasswordPage() {
-	const [isLoading, setIsLoading] = useState(false);
 	const [isSubmitted, setIsSubmitted] = useState(false);
 	const [submittedEmail, setSubmittedEmail] = useState('');
 	const [resendCooldown, setResendCooldown] = useState(0);
-	const [isResending, setIsResending] = useState(false);
+
+	// TanStack Query mutations
+	const forgotPasswordMutation = useForgotPassword();
 
 	const {
 		register,
@@ -57,33 +58,40 @@ export default function ForgotPasswordPage() {
 	}, [resendCooldown]);
 
 	const onSubmit = async (data: ForgotPasswordFormData) => {
-		setIsLoading(true);
-		try {
-			await requestPasswordReset(data.email);
-			setSubmittedEmail(data.email);
-			setIsSubmitted(true);
-			setResendCooldown(RESEND_COOLDOWN);
-		} catch {
-			toast.error('Something went wrong. Please try again.');
-		} finally {
-			setIsLoading(false);
-		}
+		forgotPasswordMutation.mutate(
+			{ email: data.email },
+			{
+				onSuccess: () => {
+					setSubmittedEmail(data.email);
+					setIsSubmitted(true);
+					setResendCooldown(RESEND_COOLDOWN);
+				},
+				onError: () => {
+					toast.error('Something went wrong. Please try again.');
+				}
+			}
+		);
 	};
 
 	const handleResend = useCallback(async () => {
-		if (resendCooldown > 0 || isResending) return;
+		if (resendCooldown > 0 || forgotPasswordMutation.isPending) return;
 
-		setIsResending(true);
-		try {
-			await resendResetEmail(submittedEmail);
-			toast.success('Reset link resent successfully');
-			setResendCooldown(RESEND_COOLDOWN);
-		} catch {
-			toast.error('Failed to resend. Please try again.');
-		} finally {
-			setIsResending(false);
-		}
-	}, [resendCooldown, isResending, submittedEmail]);
+		forgotPasswordMutation.mutate(
+			{ email: submittedEmail },
+			{
+				onSuccess: () => {
+					toast.success('Reset link resent successfully');
+					setResendCooldown(RESEND_COOLDOWN);
+				},
+				onError: () => {
+					toast.error('Failed to resend. Please try again.');
+				}
+			}
+		);
+	}, [resendCooldown, forgotPasswordMutation, submittedEmail]);
+
+	const isLoading = forgotPasswordMutation.isPending;
+	const isResending = forgotPasswordMutation.isPending && isSubmitted;
 
 	// Success state - Check your email
 	if (isSubmitted) {

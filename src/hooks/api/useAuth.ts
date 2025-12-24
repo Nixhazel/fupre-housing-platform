@@ -293,6 +293,37 @@ export function useResetPassword() {
 }
 
 /**
+ * Hook to validate a password reset token
+ */
+export function useValidateResetToken(
+	token: string,
+	options?: Omit<
+		UseQueryOptions<{ valid: boolean }, ApiError>,
+		'queryKey' | 'queryFn'
+	>
+) {
+	return useQuery({
+		queryKey: ['auth', 'reset-token', token] as const,
+		queryFn: () =>
+			api.get<{ valid: boolean }>(`/auth/reset-password?token=${token}`),
+		enabled: !!token && token.length > 0,
+		staleTime: 5 * 60 * 1000, // Token validity won't change often
+		retry: false, // Don't retry on invalid token
+		...options
+	});
+}
+
+/**
+ * Hook to resend verification email
+ */
+export function useResendVerification() {
+	return useMutation({
+		mutationFn: (email: string) =>
+			api.post<MessageResponse>('/auth/resend-verification', { email })
+	});
+}
+
+/**
  * Hook to verify email using token
  */
 export function useVerifyEmail() {

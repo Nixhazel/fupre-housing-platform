@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -28,7 +28,7 @@ import {
 	CardTitle
 } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { validateResetToken, resetPassword } from '@/lib/auth/mockReset';
+import { useValidateResetToken, useResetPassword } from '@/hooks/api/useAuth';
 
 // Password validation schema
 const resetPasswordSchema = z
@@ -59,12 +59,18 @@ function ResetPasswordContent() {
 	const searchParams = useSearchParams();
 	const token = searchParams.get('token') || '';
 
-	const [isLoading, setIsLoading] = useState(false);
-	const [isValidating, setIsValidating] = useState(true);
-	const [isTokenValid, setIsTokenValid] = useState(false);
 	const [isSuccess, setIsSuccess] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+	// TanStack Query hooks
+	const {
+		data: tokenValidation,
+		isLoading: isValidating,
+		isError: isTokenError
+	} = useValidateResetToken(token);
+
+	const resetPasswordMutation = useResetPassword();
 
 	const {
 		register,
@@ -78,45 +84,25 @@ function ResetPasswordContent() {
 
 	const password = watch('password', '');
 
-	// Validate token on mount
-	useEffect(() => {
-		async function checkToken() {
-			if (!token) {
-				setIsValidating(false);
-				setIsTokenValid(false);
-				return;
-			}
-
-			try {
-				const result = await validateResetToken(token);
-				setIsTokenValid(result.valid);
-			} catch {
-				setIsTokenValid(false);
-			} finally {
-				setIsValidating(false);
-			}
-		}
-
-		checkToken();
-	}, [token]);
+	// Determine if token is valid
+	const isTokenValid = tokenValidation?.valid === true && !isTokenError;
 
 	const onSubmit = async (data: ResetPasswordFormData) => {
-		setIsLoading(true);
-		try {
-			const result = await resetPassword(token, data.password);
-
-			if (result.success) {
-				setIsSuccess(true);
-				toast.success('Password reset successfully!');
-			} else {
-				toast.error(result.error || 'Failed to reset password');
+		resetPasswordMutation.mutate(
+			{ token, password: data.password },
+			{
+				onSuccess: () => {
+					setIsSuccess(true);
+					toast.success('Password reset successfully!');
+				},
+				onError: (error) => {
+					toast.error(error.message || 'Failed to reset password');
+				}
 			}
-		} catch {
-			toast.error('Something went wrong. Please try again.');
-		} finally {
-			setIsLoading(false);
-		}
+		);
 	};
+
+	const isLoading = resetPasswordMutation.isPending;
 
 	// Loading state
 	if (isValidating) {
