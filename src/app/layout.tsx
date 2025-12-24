@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { QueryProvider } from '@/lib/query/provider';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { MobileTabBar } from '@/components/layout/MobileTabBar';
@@ -56,18 +57,20 @@ export default function RootLayout({
 					defaultTheme='system'
 					enableSystem
 					disableTransitionOnChange>
-					<HydrationBoundary>
-						<AuthProvider>
-							<DemoDataInitializer />
-							<div className='min-h-screen flex flex-col'>
-								<Navbar />
-								<main className='flex-1 pb-16 md:pb-0'>{children}</main>
-								<Footer />
-								<MobileTabBar />
-							</div>
-							<Toaster />
-						</AuthProvider>
-					</HydrationBoundary>
+					<QueryProvider>
+						<HydrationBoundary>
+							<AuthProvider>
+								<DemoDataInitializer />
+								<div className='min-h-screen flex flex-col'>
+									<Navbar />
+									<main className='flex-1 pb-16 md:pb-0'>{children}</main>
+									<Footer />
+									<MobileTabBar />
+								</div>
+								<Toaster />
+							</AuthProvider>
+						</HydrationBoundary>
+					</QueryProvider>
 				</ThemeProvider>
 			</body>
 		</html>

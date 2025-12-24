@@ -16,7 +16,8 @@ import {
 	Users,
 	BarChart3,
 	Moon,
-	Sun
+	Sun,
+	Loader2
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -29,14 +30,17 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { useAuthStore } from '@/lib/store/authSlice';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useLogout } from '@/hooks/api/useAuth';
 import { ClientOnly } from '@/components/providers/ClientOnly';
+import { toast } from 'sonner';
 
 function NavbarContent() {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
 	const { theme, setTheme } = useTheme();
-	const { user, isAuthenticated, logout } = useAuthStore();
+	const { user, isAuthenticated } = useAuth();
+	const logoutMutation = useLogout();
 	const router = useRouter();
 
 	const handleSearch = (e: React.FormEvent) => {
@@ -48,8 +52,16 @@ function NavbarContent() {
 	};
 
 	const handleLogout = () => {
-		logout();
-		router.push('/');
+		logoutMutation.mutate(undefined, {
+			onSuccess: () => {
+				toast.success('Logged out successfully');
+				router.push('/');
+			},
+			onError: () => {
+				// Even on error, redirect (cache is cleared)
+				router.push('/');
+			}
+		});
 	};
 
 	const getDashboardLink = () => {
@@ -171,8 +183,13 @@ function NavbarContent() {
 									<DropdownMenuSeparator />
 									<DropdownMenuItem
 										onClick={handleLogout}
-										className='text-red-600'>
-										<LogOut className='h-4 w-4' />
+										className='text-red-600'
+										disabled={logoutMutation.isPending}>
+										{logoutMutation.isPending ? (
+											<Loader2 className='h-4 w-4 animate-spin' />
+										) : (
+											<LogOut className='h-4 w-4' />
+										)}
 										<span className='ml-2'>Logout</span>
 									</DropdownMenuItem>
 								</DropdownMenuContent>
@@ -277,8 +294,13 @@ function NavbarContent() {
 									<Button
 										variant='ghost'
 										className='w-full justify-start text-red-600'
-										onClick={handleLogout}>
-										<LogOut className='h-4 w-4' />
+										onClick={handleLogout}
+										disabled={logoutMutation.isPending}>
+										{logoutMutation.isPending ? (
+											<Loader2 className='h-4 w-4' />
+										) : (
+											<LogOut className='h-4 w-4' />
+										)}
 										<span className='ml-2'>Logout</span>
 									</Button>
 								</div>

@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 
 interface MapBlurProps {
 	mapPreview: string;
-	mapFull: string;
+	mapFull?: string;
 	isUnlocked: boolean;
 	onUnlock?: () => void;
 	className?: string;
@@ -38,7 +38,7 @@ export function MapBlur({
 							transition={{ duration: 0.3 }}
 							className='relative h-64'>
 							<Image
-								src={mapFull}
+								src={mapFull || mapPreview}
 								alt='Property location'
 								fill
 								sizes="(max-width: 1024px) 100vw, 66vw"

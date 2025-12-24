@@ -18,7 +18,7 @@ import { formatNaira } from '@/lib/utils/currency';
 
 interface ListingFiltersProps {
 	filters: FilterType;
-	onFiltersChange: (filters: Partial<FilterType>) => void;
+	onFiltersChange: (filters: FilterType) => void;
 	onClose?: () => void;
 }
 

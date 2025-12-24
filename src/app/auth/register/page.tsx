@@ -24,16 +24,15 @@ import {
 	CardHeader,
 	CardTitle
 } from '@/components/ui/card';
-import { useAuthStore } from '@/lib/store/authSlice';
+import { useRegister } from '@/hooks/api/useAuth';
 import { registerSchema, type RegisterFormData } from '@/lib/validators/auth';
 import { toast } from 'sonner';
 
 export default function RegisterPage() {
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-	const [isLoading, setIsLoading] = useState(false);
-	const { register: registerUser } = useAuthStore();
 	const router = useRouter();
+	const registerMutation = useRegister();
 
 	const {
 		register,
@@ -48,20 +47,19 @@ export default function RegisterPage() {
 	watch('role');
 
 	const onSubmit = async (data: RegisterFormData) => {
-		setIsLoading(true);
-		try {
-			await registerUser(data);
-			toast.success('Account created successfully!');
-			router.push('/');
-		} catch {
-			toast.error('Failed to create account. Please try again.');
-		} finally {
-			setIsLoading(false);
-		}
+		registerMutation.mutate(data, {
+			onSuccess: () => {
+				toast.success('Account created successfully!');
+				router.push('/');
+			},
+			onError: (error) => {
+				toast.error(error.message || 'Failed to create account. Please try again.');
+			}
+		});
 	};
 
 	return (
-		<div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4'>
+		<div className='min-h-screen flex items-center justify-center bg-linear-to-br from-primary/10 via-background to-secondary/10 p-4'>
 			<motion.div
 				initial={{ opacity: 0, y: 20 }}
 				animate={{ opacity: 1, y: 0 }}
@@ -127,7 +125,7 @@ export default function RegisterPage() {
 									onValueChange={(value) =>
 										setValue(
 											'role',
-											value as 'student' | 'agent' | 'owner' | 'admin'
+											value as 'student' | 'agent' | 'owner'
 										)
 									}>
 									<SelectTrigger
@@ -211,8 +209,8 @@ export default function RegisterPage() {
 								)}
 							</div>
 
-							<Button type='submit' className='w-full' disabled={isLoading}>
-								{isLoading ? (
+							<Button type='submit' className='w-full' disabled={registerMutation.isPending}>
+								{registerMutation.isPending ? (
 									<>
 										<Loader2 className='mr-2 h-4 w-4 animate-spin' />
 										Creating account...

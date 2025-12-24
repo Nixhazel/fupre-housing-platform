@@ -1,4 +1,8 @@
 import { listingSchemas, listingPaths } from './schemas/listings';
+import { paymentProofSchemas, paymentProofPaths } from './schemas/payments';
+import { roommateSchemas, roommatePaths } from './schemas/roommates';
+import { agentSchemas, agentPaths } from './schemas/agents';
+import { adminSchemas, adminPaths } from './schemas/admin';
 
 /**
  * OpenAPI Specification Builder
@@ -102,8 +106,31 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 				required: ['success']
 			},
 
+			// Pagination meta
+			PaginationMeta: {
+				type: 'object',
+				properties: {
+					page: { type: 'integer' },
+					limit: { type: 'integer' },
+					total: { type: 'integer' },
+					totalPages: { type: 'integer' }
+				}
+			},
+
 			// Listing schemas
-			...listingSchemas
+			...listingSchemas,
+
+			// Payment schemas
+			...paymentProofSchemas,
+
+			// Roommate schemas
+			...roommateSchemas,
+
+			// Agent schemas
+			...agentSchemas,
+
+			// Admin schemas
+			...adminSchemas
 		},
 		securitySchemes: {
 			cookieAuth: {
@@ -201,7 +228,19 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 		},
 
 		// Listing paths
-		...listingPaths
+		...listingPaths,
+
+		// Payment paths
+		...paymentProofPaths,
+
+		// Roommate paths
+		...roommatePaths,
+
+		// Agent paths
+		...agentPaths,
+
+		// Admin paths
+		...adminPaths
 	}
 };
 

@@ -1,22 +1,50 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useAuthStore } from '@/lib/store/authSlice';
+import { createContext, useContext, ReactNode } from 'react';
+import { useCurrentUser, useIsAuthenticated } from '@/hooks/api/useAuth';
+import type { SessionUser } from '@/lib/api/types';
+import { AuthGuard } from './AuthGuard';
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-	const [isHydrated, setIsHydrated] = useState(false);
-	// Access auth store to ensure it's hydrated
-	useAuthStore();
+/**
+ * Auth Context
+ *
+ * Provides authentication state throughout the app using TanStack Query.
+ * Includes AuthGuard for global auth event handling.
+ */
 
-	useEffect(() => {
-		// Mark as hydrated after client-side mount
-		setIsHydrated(true);
-	}, []);
+interface AuthContextValue {
+	user: SessionUser | null;
+	isAuthenticated: boolean;
+	isLoading: boolean;
+	isError: boolean;
+}
 
-	// Don't render children until hydrated to prevent hydration mismatches
-	if (!isHydrated) {
-		return null;
-	}
+const AuthContext = createContext<AuthContextValue>({
+	user: null,
+	isAuthenticated: false,
+	isLoading: true,
+	isError: false
+});
 
-	return <>{children}</>;
+export function useAuth() {
+	return useContext(AuthContext);
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+	const { data: user, isLoading, isError, isAuthenticated } = useCurrentUser({
+		retry: false,
+		staleTime: 5 * 60 * 1000 // 5 minutes
+	});
+
+	return (
+		<AuthContext.Provider
+			value={{
+				user: user ?? null,
+				isAuthenticated,
+				isLoading,
+				isError
+			}}>
+			<AuthGuard>{children}</AuthGuard>
+		</AuthContext.Provider>
+	);
 }

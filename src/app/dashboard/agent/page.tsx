@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
@@ -10,7 +10,8 @@ import {
 	TrendingUp,
 	Users,
 	Plus,
-	MoreHorizontal
+	MoreHorizontal,
+	Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,54 +22,43 @@ import {
 	CardTitle
 } from '@/components/ui/card';
 import { Badge } from '@/components/shared/Badge';
-import { useAuthStore } from '@/lib/store/authSlice';
-import { useListingsStore } from '@/lib/store/listingsSlice';
-import { Listing } from '@/types';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useAgentStats, useAgentListings } from '@/hooks/api/useAgent';
 import { formatNaira } from '@/lib/utils/currency';
 import { canAccessAgent } from '@/lib/utils/guards';
 import { useRouter } from 'next/navigation';
 
 export default function AgentDashboard() {
-	const { user } = useAuthStore();
-	const { getListingsByAgent } = useListingsStore();
+	const { user, isLoading: authLoading } = useAuth();
 	const router = useRouter();
 
-	const [listings, setListings] = useState<Listing[]>([]);
-	const [stats, setStats] = useState({
-		totalListings: 0,
-		activeListings: 0,
-		totalViews: 0,
-		totalEarnings: 0
+	// Fetch agent data
+	const { data: statsData, isLoading: statsLoading } = useAgentStats({
+		enabled: !!user && canAccessAgent(user.role)
 	});
+	const { data: listingsData, isLoading: listingsLoading } = useAgentListings(
+		{ limit: 5 },
+		{ enabled: !!user && canAccessAgent(user.role) }
+	);
+
+	const stats = statsData?.stats;
+	const listings = listingsData?.listings || [];
 
 	useEffect(() => {
-		if (!user || !canAccessAgent(user.role)) {
+		if (!authLoading && (!user || !canAccessAgent(user.role))) {
 			router.push('/');
-			return;
 		}
+	}, [user, authLoading, router]);
 
-		const agentListings = getListingsByAgent(user.id);
-		setListings(agentListings);
-
-		// Calculate stats
-		const totalListings = agentListings.length;
-		const activeListings = agentListings.filter(
-			(l) => l.status === 'available'
-		).length;
-		const totalViews = agentListings.reduce((sum, l) => sum + l.views, 0);
-		const totalEarnings = totalViews * 100; // Mock earnings calculation
-
-		setStats({
-			totalListings,
-			activeListings,
-			totalViews,
-			totalEarnings
-		});
-	}, [user, getListingsByAgent, router]);
-
-	if (!user || !canAccessAgent(user.role)) {
-		return null;
+	if (authLoading || !user || !canAccessAgent(user.role)) {
+		return (
+			<div className='min-h-screen flex items-center justify-center'>
+				<Loader2 className='h-8 w-8 animate-spin text-primary' />
+			</div>
+		);
 	}
+
+	const isLoading = statsLoading || listingsLoading;
 
 	return (
 		<div className='container mx-auto px-4 py-8'>
@@ -95,10 +85,18 @@ export default function AgentDashboard() {
 							<Building2 className='h-4 w-4 text-muted-foreground' />
 						</CardHeader>
 						<CardContent>
-							<div className='text-2xl font-bold'>{stats.totalListings}</div>
-							<p className='text-xs text-muted-foreground'>
-								{stats.activeListings} active
-							</p>
+							{isLoading ? (
+								<div className='h-8 w-16 bg-muted animate-pulse rounded' />
+							) : (
+								<>
+									<div className='text-2xl font-bold'>
+										{stats?.totalListings ?? 0}
+									</div>
+									<p className='text-xs text-muted-foreground'>
+										{stats?.activeListings ?? 0} active
+									</p>
+								</>
+							)}
 						</CardContent>
 					</Card>
 				</motion.div>
@@ -113,10 +111,18 @@ export default function AgentDashboard() {
 							<Eye className='h-4 w-4 text-muted-foreground' />
 						</CardHeader>
 						<CardContent>
-							<div className='text-2xl font-bold'>{stats.totalViews}</div>
-							<p className='text-xs text-muted-foreground'>
-								+12% from last month
-							</p>
+							{isLoading ? (
+								<div className='h-8 w-16 bg-muted animate-pulse rounded' />
+							) : (
+								<>
+									<div className='text-2xl font-bold'>
+										{stats?.totalViews ?? 0}
+									</div>
+									<p className='text-xs text-muted-foreground'>
+										+12% from last month
+									</p>
+								</>
+							)}
 						</CardContent>
 					</Card>
 				</motion.div>
@@ -131,10 +137,16 @@ export default function AgentDashboard() {
 							<TrendingUp className='h-4 w-4 text-muted-foreground' />
 						</CardHeader>
 						<CardContent>
-							<div className='text-2xl font-bold'>
-								{formatNaira(stats.totalEarnings)}
-							</div>
-							<p className='text-xs text-muted-foreground'>This month</p>
+							{isLoading ? (
+								<div className='h-8 w-24 bg-muted animate-pulse rounded' />
+							) : (
+								<>
+									<div className='text-2xl font-bold'>
+										{formatNaira(stats?.totalEarnings ?? 0)}
+									</div>
+									<p className='text-xs text-muted-foreground'>This month</p>
+								</>
+							)}
 						</CardContent>
 					</Card>
 				</motion.div>
@@ -145,14 +157,22 @@ export default function AgentDashboard() {
 					transition={{ duration: 0.3, delay: 0.3 }}>
 					<Card>
 						<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-							<CardTitle className='text-sm font-medium'>Rating</CardTitle>
+							<CardTitle className='text-sm font-medium'>Unlocks</CardTitle>
 							<BarChart3 className='h-4 w-4 text-muted-foreground' />
 						</CardHeader>
 						<CardContent>
-							<div className='text-2xl font-bold'>4.8</div>
-							<p className='text-xs text-muted-foreground'>
-								Based on 24 reviews
-							</p>
+							{isLoading ? (
+								<div className='h-8 w-16 bg-muted animate-pulse rounded' />
+							) : (
+								<>
+									<div className='text-2xl font-bold'>
+										{stats?.totalUnlocks ?? 0}
+									</div>
+									<p className='text-xs text-muted-foreground'>
+										Total unlocks
+									</p>
+								</>
+							)}
 						</CardContent>
 					</Card>
 				</motion.div>
@@ -220,7 +240,19 @@ export default function AgentDashboard() {
 						</div>
 					</CardHeader>
 					<CardContent>
-						{listings.length === 0 ? (
+						{listingsLoading ? (
+							<div className='space-y-4'>
+								{[...Array(3)].map((_, i) => (
+									<div key={i} className='flex items-center space-x-4 p-4 border rounded-lg'>
+										<div className='w-16 h-16 bg-muted animate-pulse rounded-lg' />
+										<div className='flex-1 space-y-2'>
+											<div className='h-4 w-1/2 bg-muted animate-pulse rounded' />
+											<div className='h-3 w-1/4 bg-muted animate-pulse rounded' />
+										</div>
+									</div>
+								))}
+							</div>
+						) : listings.length === 0 ? (
 							<div className='text-center py-8'>
 								<Building2 className='h-12 w-12 mx-auto mb-4 text-muted-foreground' />
 								<h3 className='text-lg font-semibold mb-2'>No listings yet</h3>
@@ -248,7 +280,7 @@ export default function AgentDashboard() {
 												src={listing.coverPhoto}
 												alt={listing.title}
 												fill
-												sizes="64px"
+												sizes='64px'
 												className='rounded-lg object-cover'
 											/>
 										</div>

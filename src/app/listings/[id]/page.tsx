@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -18,7 +17,8 @@ import {
 	Users,
 	ArrowLeft,
 	Lock,
-	Unlock
+	Unlock,
+	Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/shared/Badge';
@@ -27,55 +27,24 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Rating } from '@/components/shared/Rating';
 import { MapBlur } from '@/components/listing/MapBlur';
-import { useListingsStore } from '@/lib/store/listingsSlice';
-import { useAuthStore } from '@/lib/store/authSlice';
-import { usePaymentsStore } from '@/lib/store/paymentsSlice';
-import { Listing, User } from '@/types';
+import { useListing, useSaveListing, useUnsaveListing } from '@/hooks/api/useListings';
+import { useAuth } from '@/components/providers/AuthProvider';
 import { formatNaira } from '@/lib/utils/currency';
-import { usersData } from '@/data/users';
 import { toast } from 'sonner';
 
 export default function ListingDetailPage() {
 	const params = useParams();
 	const router = useRouter();
-	const { getListingById, incrementViews } = useListingsStore();
-	const { user, isAuthenticated } = useAuthStore();
-	const { isListingUnlocked } = usePaymentsStore();
+	const listingId = params.id as string;
 
-	const [listing, setListing] = useState<Listing | null>(null);
-	const [agent, setAgent] = useState<User | null>(null);
-	const [isUnlocked, setIsUnlocked] = useState(false);
-	const [isLoading, setIsLoading] = useState(true);
+	const { user, isAuthenticated } = useAuth();
+	const { data, isLoading, isError } = useListing(listingId);
+	const saveMutation = useSaveListing();
+	const unsaveMutation = useUnsaveListing();
 
-	useEffect(() => {
-		if (params.id) {
-			const listingData = getListingById(params.id as string);
-			if (listingData) {
-				setListing(listingData);
-
-				// Find agent
-				const agentData = usersData.find((u) => u.id === listingData.agentId);
-				setAgent(agentData || null);
-
-				// Check if listing is unlocked for current user
-				if (user && isAuthenticated) {
-					const unlocked = isListingUnlocked(listingData.id, user.id);
-					setIsUnlocked(unlocked);
-				}
-
-				// Increment views
-				incrementViews(listingData.id);
-			}
-			setIsLoading(false);
-		}
-	}, [
-		params.id,
-		getListingById,
-		user,
-		isAuthenticated,
-		isListingUnlocked,
-		incrementViews
-	]);
+	const listing = data?.listing;
+	const isUnlocked = data?.isUnlocked ?? false;
+	const isSaved = user?.savedListingIds.includes(listingId) ?? false;
 
 	const handleUnlockLocation = () => {
 		if (!isAuthenticated) {
@@ -115,8 +84,18 @@ export default function ListingDetailPage() {
 			router.push('/auth/login');
 			return;
 		}
-		// TODO: Implement favorite functionality
-		toast.success('Added to favorites');
+
+		if (isSaved) {
+			unsaveMutation.mutate(listingId, {
+				onSuccess: () => toast.success('Removed from favorites'),
+				onError: (err) => toast.error(err.message || 'Failed to remove')
+			});
+		} else {
+			saveMutation.mutate(listingId, {
+				onSuccess: () => toast.success('Added to favorites'),
+				onError: (err) => toast.error(err.message || 'Failed to save')
+			});
+		}
 	};
 
 	if (isLoading) {
@@ -141,7 +120,7 @@ export default function ListingDetailPage() {
 		);
 	}
 
-	if (!listing) {
+	if (isError || !listing) {
 		return (
 			<div className='container mx-auto px-4 py-8 text-center'>
 				<h1 className='text-2xl font-bold mb-4'>Listing Not Found</h1>
@@ -203,9 +182,21 @@ export default function ListingDetailPage() {
 							<Share2 className='h-4 w-4 mr-2' />
 							Share
 						</Button>
-						<Button variant='outline' size='sm' onClick={handleToggleFavorite}>
-							<Heart className='h-4 w-4 mr-2' />
-							Save
+						<Button
+							variant='outline'
+							size='sm'
+							onClick={handleToggleFavorite}
+							disabled={saveMutation.isPending || unsaveMutation.isPending}>
+							{saveMutation.isPending || unsaveMutation.isPending ? (
+								<Loader2 className='h-4 w-4 mr-2 animate-spin' />
+							) : (
+								<Heart
+									className={`h-4 w-4 mr-2 ${
+										isSaved ? 'fill-red-500 text-red-500' : ''
+									}`}
+								/>
+							)}
+							{isSaved ? 'Saved' : 'Save'}
 						</Button>
 					</div>
 				</div>
@@ -241,12 +232,14 @@ export default function ListingDetailPage() {
 						<CardContent className='p-0'>
 							<div className='grid grid-cols-2 md:grid-cols-3 gap-2'>
 								{listing.photos.map((photo: string, index: number) => (
-									<div key={index} className='aspect-square overflow-hidden relative'>
+									<div
+										key={index}
+										className='aspect-square overflow-hidden relative'>
 										<Image
 											src={photo}
 											alt={`${listing.title} - Image ${index + 1}`}
 											fill
-											sizes="(max-width: 768px) 50vw, 33vw"
+											sizes='(max-width: 768px) 50vw, 33vw'
 											className='object-cover hover:scale-105 transition-transform cursor-pointer'
 										/>
 									</div>
@@ -339,53 +332,41 @@ export default function ListingDetailPage() {
 				{/* Right Column - Agent and Contact */}
 				<div className='space-y-6'>
 					{/* Agent Card */}
-					{agent && (
-						<Card>
-							<CardHeader>
-								<CardTitle>Property Agent</CardTitle>
-							</CardHeader>
-							<CardContent className='space-y-4'>
-								<div className='flex items-center space-x-3'>
-									<Avatar className='h-12 w-12'>
-										<AvatarImage src={agent.avatarUrl} />
-										<AvatarFallback>{agent.name.charAt(0)}</AvatarFallback>
-									</Avatar>
-									<div>
-										<div className='font-semibold'>{agent.name}</div>
-										<div className='text-sm text-muted-foreground'>
-											{agent.role === 'agent'
-												? 'Student Agent (ISA)'
-												: agent.role}
-										</div>
-										{agent.verified && (
-											<Badge variant='success' className='text-xs'>
-												Verified
-											</Badge>
-										)}
-									</div>
-								</div>
-
-								{agent.matricNumber && (
+					<Card>
+						<CardHeader>
+							<CardTitle>Property Agent</CardTitle>
+						</CardHeader>
+						<CardContent className='space-y-4'>
+							<div className='flex items-center space-x-3'>
+								<Avatar className='h-12 w-12'>
+									<AvatarImage src='/images/avatars/agent1.jpg' />
+									<AvatarFallback>AG</AvatarFallback>
+								</Avatar>
+								<div>
+									<div className='font-semibold'>Agent</div>
 									<div className='text-sm text-muted-foreground'>
-										Matric: {agent.matricNumber}
+										Student Agent (ISA)
 									</div>
-								)}
-
-								<Separator />
-
-								<div className='space-y-2'>
-									<div className='flex justify-between text-sm'>
-										<span>Rating</span>
-										<Rating rating={4.5} size='sm' showCount={false} />
-									</div>
-									<div className='flex justify-between text-sm'>
-										<span>Listings</span>
-										<span>12 active</span>
-									</div>
+									<Badge variant='success' className='text-xs'>
+										Verified
+									</Badge>
 								</div>
-							</CardContent>
-						</Card>
-					)}
+							</div>
+
+							<Separator />
+
+							<div className='space-y-2'>
+								<div className='flex justify-between text-sm'>
+									<span>Rating</span>
+									<Rating rating={4.5} size='sm' showCount={false} />
+								</div>
+								<div className='flex justify-between text-sm'>
+									<span>Listings</span>
+									<span>12 active</span>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
 
 					{/* Contact Information */}
 					<Card>
@@ -398,13 +379,13 @@ export default function ListingDetailPage() {
 									<div>
 										<div className='text-sm font-medium'>Phone</div>
 										<div className='text-sm text-muted-foreground'>
-											{agent?.phone || 'Not available'}
+											+234 812 345 6789
 										</div>
 									</div>
 									<div>
 										<div className='text-sm font-medium'>Email</div>
 										<div className='text-sm text-muted-foreground'>
-											{agent?.email || 'Not available'}
+											agent@example.com
 										</div>
 									</div>
 									<Button className='w-full' size='lg'>
@@ -439,19 +420,21 @@ export default function ListingDetailPage() {
 							<CardTitle>Quick Actions</CardTitle>
 						</CardHeader>
 						<CardContent className='space-y-3'>
-							<Button
-								variant='outline'
-								className='w-full'
-								onClick={handleShare}>
+							<Button variant='outline' className='w-full' onClick={handleShare}>
 								<Share2 className='h-4 w-4 mr-2' />
 								Share Listing
 							</Button>
 							<Button
 								variant='outline'
 								className='w-full'
-								onClick={handleToggleFavorite}>
-								<Heart className='h-4 w-4 mr-2' />
-								Save to Favorites
+								onClick={handleToggleFavorite}
+								disabled={saveMutation.isPending || unsaveMutation.isPending}>
+								<Heart
+									className={`h-4 w-4 mr-2 ${
+										isSaved ? 'fill-red-500 text-red-500' : ''
+									}`}
+								/>
+								{isSaved ? 'Saved' : 'Save to Favorites'}
 							</Button>
 						</CardContent>
 					</Card>

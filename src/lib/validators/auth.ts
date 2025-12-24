@@ -29,7 +29,7 @@ export const registerSchema = z
 				/^\+234\d{10}$/,
 				'Please enter a valid Nigerian phone number (+234XXXXXXXXXX)'
 			),
-		role: z.enum(['student', 'agent', 'owner', 'admin']),
+		role: z.enum(['student', 'agent', 'owner']),
 		password: z
 			.string()
 			.min(1, 'Password is required')

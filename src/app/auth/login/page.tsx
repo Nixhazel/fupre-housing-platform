@@ -17,15 +17,14 @@ import {
 	CardHeader,
 	CardTitle
 } from '@/components/ui/card';
-import { useAuthStore } from '@/lib/store/authSlice';
+import { useLogin } from '@/hooks/api/useAuth';
 import { loginSchema, type LoginFormData } from '@/lib/validators/auth';
 import { toast } from 'sonner';
 
 export default function LoginPage() {
 	const [showPassword, setShowPassword] = useState(false);
-	const [isLoading, setIsLoading] = useState(false);
-	const { login } = useAuthStore();
 	const router = useRouter();
+	const loginMutation = useLogin();
 
 	const {
 		register,
@@ -36,28 +35,27 @@ export default function LoginPage() {
 	});
 
 	const onSubmit = async (data: LoginFormData) => {
-		setIsLoading(true);
-		try {
-			const user = await login(data);
-			toast.success('Login successful!');
+		loginMutation.mutate(data, {
+			onSuccess: (response) => {
+				toast.success('Login successful!');
 
-			// Redirect based on user role
-			if (user?.role === 'admin') {
-				router.push('/dashboard/admin');
-			} else if (user?.role === 'agent') {
-				router.push('/dashboard/agent');
-			} else {
-				router.push('/');
+				// Redirect based on user role
+				if (response.user?.role === 'admin') {
+					router.push('/dashboard/admin');
+				} else if (response.user?.role === 'agent') {
+					router.push('/dashboard/agent');
+				} else {
+					router.push('/');
+				}
+			},
+			onError: (error) => {
+				toast.error(error.message || 'Invalid email or password');
 			}
-		} catch {
-			toast.error('Invalid email or password');
-		} finally {
-			setIsLoading(false);
-		}
+		});
 	};
 
 	return (
-		<div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4'>
+		<div className='min-h-screen flex items-center justify-center bg-linear-to-br from-primary/10 via-background to-secondary/10 p-4'>
 			<motion.div
 				initial={{ opacity: 0, y: 20 }}
 				animate={{ opacity: 1, y: 0 }}
@@ -123,8 +121,19 @@ export default function LoginPage() {
 								)}
 							</div>
 
-							<Button type='submit' className='w-full' disabled={isLoading}>
-								{isLoading ? (
+							<div className='flex justify-end'>
+								<Link
+									href='/auth/forgot-password'
+									className='text-sm text-muted-foreground hover:text-primary'>
+									Forgot password?
+								</Link>
+							</div>
+
+							<Button
+								type='submit'
+								className='w-full'
+								disabled={loginMutation.isPending}>
+								{loginMutation.isPending ? (
 									<>
 										<Loader2 className='mr-2 h-4 w-4 animate-spin' />
 										Signing in...
