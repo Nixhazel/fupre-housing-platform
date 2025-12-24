@@ -26,8 +26,13 @@ declare global {
 			SMTP_FROM_NAME: string;
 
 			// Cloudinary (for frontend upload)
+			// Get from: https://cloudinary.com/console
 			NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: string;
 			NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: string;
+
+			// Optional: Cloudinary API credentials (for server-side operations)
+			CLOUDINARY_API_KEY?: string;
+			CLOUDINARY_API_SECRET?: string;
 
 			// Environment
 			NODE_ENV: 'development' | 'production' | 'test';
@@ -36,4 +41,3 @@ declare global {
 }
 
 export {};
-
