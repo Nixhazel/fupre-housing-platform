@@ -19,13 +19,10 @@ import { usePlatformStats } from '@/hooks/api/useAdmin';
 import { usePendingPaymentProofs, useApprovePaymentProof, useRejectPaymentProof } from '@/hooks/api/usePayments';
 import { formatNaira } from '@/lib/utils/currency';
 import { canAccessAdmin } from '@/lib/utils/guards';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
 export default function AdminDashboard() {
-	const router = useRouter();
-
 	// TanStack Query hooks
 	const { data: user, isLoading: isUserLoading } = useCurrentUser();
 	const { data: statsData, isLoading: isStatsLoading } = usePlatformStats();

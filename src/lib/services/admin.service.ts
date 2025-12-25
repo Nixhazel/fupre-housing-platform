@@ -1,9 +1,8 @@
-import mongoose from 'mongoose';
 import connectDB from '@/lib/db/connect';
 import User from '@/lib/db/models/User';
 import Listing from '@/lib/db/models/Listing';
 import RoommateListing from '@/lib/db/models/RoommateListing';
-import PaymentProof, { PaymentStatus } from '@/lib/db/models/PaymentProof';
+import PaymentProof from '@/lib/db/models/PaymentProof';
 
 /**
  * Admin Service
@@ -46,9 +45,7 @@ export async function getPlatformStats() {
 		RoommateListing.countDocuments({ isDeleted: false }),
 
 		// Payment proofs by status
-		PaymentProof.aggregate([
-			{ $group: { _id: '$status', count: { $sum: 1 } } }
-		])
+		PaymentProof.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }])
 	]);
 
 	// Convert arrays to objects
@@ -137,8 +134,9 @@ export async function getUsers(options: {
 export async function getUserById(userId: string) {
 	await connectDB();
 
-	const user = await User.findById(userId)
-		.select('-password -emailVerificationToken -passwordResetToken');
+	const user = await User.findById(userId).select(
+		'-password -emailVerificationToken -passwordResetToken'
+	);
 
 	if (!user || user.isDeleted) {
 		throw new Error('User not found');
@@ -257,4 +255,3 @@ export async function getRecentActivity(limit: number = 10) {
 		recentProofs
 	};
 }
-

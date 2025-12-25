@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, ReactNode } from 'react';
-import { useCurrentUser, useIsAuthenticated } from '@/hooks/api/useAuth';
+import { useCurrentUser } from '@/hooks/api/useAuth';
 import type { SessionUser } from '@/lib/api/types';
 import { AuthGuard } from './AuthGuard';
 

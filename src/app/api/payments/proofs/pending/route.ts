@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { withAdmin, type AuthContext } from '@/lib/auth/guards';
+import { withAdmin } from '@/lib/auth/guards';
 import { paymentProofsQuerySchema } from '@/lib/validators/payments.server';
 import * as paymentsService from '@/lib/services/payments.service';
 import {
@@ -21,7 +21,7 @@ import {
  * Response: { success, data: { proofs, pagination } }
  */
 export const GET = withAdmin(
-	async (request: NextRequest, _context: AuthContext) => {
+	async (request: NextRequest) => {
 		try {
 			const searchParams = request.nextUrl.searchParams;
 			const queryObj: Record<string, string> = {};

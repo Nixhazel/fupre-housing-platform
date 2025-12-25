@@ -66,7 +66,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
 	const handler = withAdmin(
-		async (req: NextRequest, _context: AuthContext) => {
+		async (req: NextRequest) => {
 			try {
 				const { id: userId } = await params;
 

@@ -60,8 +60,7 @@ export async function POST(request: NextRequest) {
 			return errorResponse('Email is already verified', 400);
 		}
 
-		// Check rate limit (last verification email was sent less than 2 minutes ago)
-		const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+		// Check rate limit (last verification email was sent less than 1 hour ago)
 		if (
 			user.emailVerificationExpires &&
 			user.emailVerificationExpires > new Date(Date.now() + 23 * 60 * 60 * 1000)

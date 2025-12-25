@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { withAdmin, type AuthContext } from '@/lib/auth/guards';
+import { withAdmin } from '@/lib/auth/guards';
 import * as adminService from '@/lib/services/admin.service';
 import {
 	successResponse,
@@ -36,7 +36,7 @@ const querySchema = z.object({
  * Response: { success, data: { users, pagination } }
  */
 export const GET = withAdmin(
-	async (request: NextRequest, _context: AuthContext) => {
+	async (request: NextRequest) => {
 		try {
 			const searchParams = request.nextUrl.searchParams;
 			const queryObj: Record<string, string> = {};

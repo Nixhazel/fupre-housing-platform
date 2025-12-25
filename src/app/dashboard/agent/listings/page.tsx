@@ -30,19 +30,24 @@ import {
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { useAgentListings, useMarkListingAsTaken, useMarkListingAsAvailable, useDeleteListing } from '@/hooks/api/useAgent';
+import {
+	useAgentListings,
+	useMarkListingAsTaken,
+	useMarkListingAsAvailable,
+	useDeleteListing
+} from '@/hooks/api/useAgent';
 import { formatNaira } from '@/lib/utils/currency';
 import { dayjs } from '@/lib/utils/date';
 import { canAccessAgent } from '@/lib/utils/guards';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 export default function AgentListingsPage() {
 	const { user, isLoading: authLoading } = useAuth();
-	const router = useRouter();
 
 	const [searchQuery, setSearchQuery] = useState('');
-	const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'taken'>('all');
+	const [statusFilter, setStatusFilter] = useState<
+		'all' | 'available' | 'taken'
+	>('all');
 
 	// TanStack Query hooks
 	const { data: listingsData, isLoading: listingsLoading } = useAgentListings(
@@ -54,28 +59,29 @@ export default function AgentListingsPage() {
 	const markAsAvailableMutation = useMarkListingAsAvailable();
 	const deleteMutation = useDeleteListing();
 
-	const listings = listingsData?.listings ?? [];
-
 	// Client-side search filtering
 	const filteredListings = useMemo(() => {
+		const listings = listingsData?.listings ?? [];
 		if (!searchQuery) return listings;
 		return listings.filter(
 			(listing) =>
 				listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
 				listing.campusArea.toLowerCase().includes(searchQuery.toLowerCase())
 		);
-	}, [listings, searchQuery]);
+	}, [listingsData?.listings, searchQuery]);
 
 	const handleStatusToggle = (listingId: string, currentStatus: string) => {
 		if (currentStatus === 'available') {
 			markAsTakenMutation.mutate(listingId, {
 				onSuccess: () => toast.success('Listing marked as taken'),
-				onError: (err) => toast.error(err.message || 'Failed to update listing status')
+				onError: (err) =>
+					toast.error(err.message || 'Failed to update listing status')
 			});
 		} else {
 			markAsAvailableMutation.mutate(listingId, {
 				onSuccess: () => toast.success('Listing marked as available'),
-				onError: (err) => toast.error(err.message || 'Failed to update listing status')
+				onError: (err) =>
+					toast.error(err.message || 'Failed to update listing status')
 			});
 		}
 	};
@@ -119,7 +125,10 @@ export default function AgentListingsPage() {
 	}
 
 	const isLoading = listingsLoading;
-	const isMutating = markAsTakenMutation.isPending || markAsAvailableMutation.isPending || deleteMutation.isPending;
+	const isMutating =
+		markAsTakenMutation.isPending ||
+		markAsAvailableMutation.isPending ||
+		deleteMutation.isPending;
 
 	return (
 		<div className='container mx-auto px-4 py-8'>
@@ -236,7 +245,7 @@ export default function AgentListingsPage() {
 										src={listing.coverPhoto}
 										alt={listing.title}
 										fill
-										sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+										sizes='(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw'
 										className='object-cover'
 									/>
 									<div className='absolute top-2 right-2 flex gap-2'>
@@ -274,22 +283,22 @@ export default function AgentListingsPage() {
 														Edit
 													</Link>
 												</DropdownMenuItem>
-										<DropdownMenuItem
-											onClick={() =>
-												handleStatusToggle(listing.id, listing.status)
-											}
-											disabled={isMutating}>
-											{listing.status === 'available'
-												? 'Mark as Taken'
-												: 'Mark as Available'}
-										</DropdownMenuItem>
-										<DropdownMenuItem
-											onClick={() => handleDeleteListing(listing.id)}
-											disabled={isMutating}
-											className='text-red-600'>
-											<Trash2 className='h-4 w-4 mr-2' />
-											Delete
-										</DropdownMenuItem>
+												<DropdownMenuItem
+													onClick={() =>
+														handleStatusToggle(listing.id, listing.status)
+													}
+													disabled={isMutating}>
+													{listing.status === 'available'
+														? 'Mark as Taken'
+														: 'Mark as Available'}
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													onClick={() => handleDeleteListing(listing.id)}
+													disabled={isMutating}
+													className='text-red-600'>
+													<Trash2 className='h-4 w-4 mr-2' />
+													Delete
+												</DropdownMenuItem>
 											</DropdownMenuContent>
 										</DropdownMenu>
 									</div>

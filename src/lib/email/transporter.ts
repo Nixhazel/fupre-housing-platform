@@ -6,7 +6,7 @@
 
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
-import { env, logger, isProduction } from '@/lib/config/env';
+import { env, logger } from '@/lib/config/env';
 
 // Cached transporter instance
 let transporter: Transporter | null = null;

@@ -14,7 +14,6 @@ import {
 	Mail,
 	Loader2,
 	ArrowRight,
-	CheckCircle2,
 	RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

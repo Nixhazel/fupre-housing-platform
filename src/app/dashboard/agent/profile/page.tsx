@@ -31,13 +31,11 @@ import { useUpdateProfile } from '@/hooks/api/useAuth';
 import { formatNaira } from '@/lib/utils/currency';
 import { dayjs } from '@/lib/utils/date';
 import { canAccessAgent } from '@/lib/utils/guards';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
 export default function AgentProfilePage() {
 	const { user, isLoading: authLoading } = useAuth();
-	const router = useRouter();
 
 	// TanStack Query hooks
 	const { data: statsData, isLoading: statsLoading } = useAgentStats({

@@ -26,7 +26,11 @@ import {
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { useAgentEarnings, useAgentStats, useAgentListings } from '@/hooks/api/useAgent';
+import {
+	useAgentEarnings,
+	useAgentStats,
+	useAgentListings
+} from '@/hooks/api/useAgent';
 import { formatNaira } from '@/lib/utils/currency';
 import { canAccessAgent } from '@/lib/utils/guards';
 import {
@@ -34,13 +38,11 @@ import {
 	exportEarningsToPDF,
 	type EarningsExportData
 } from '@/lib/utils/export';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
 export default function AgentEarningsPage() {
 	const { user, isLoading: authLoading } = useAuth();
-	const router = useRouter();
 
 	const [selectedMonths, setSelectedMonths] = useState<number>(6);
 
@@ -48,9 +50,12 @@ export default function AgentEarningsPage() {
 	const { data: statsData, isLoading: statsLoading } = useAgentStats({
 		enabled: !!user && canAccessAgent(user?.role || '')
 	});
-	const { data: earningsData, isLoading: earningsLoading } = useAgentEarnings(selectedMonths, {
-		enabled: !!user && canAccessAgent(user?.role || '')
-	});
+	const { data: earningsData, isLoading: earningsLoading } = useAgentEarnings(
+		selectedMonths,
+		{
+			enabled: !!user && canAccessAgent(user?.role || '')
+		}
+	);
 	const { data: listingsData, isLoading: listingsLoading } = useAgentListings(
 		{ sortBy: 'views', limit: 5 },
 		{ enabled: !!user && canAccessAgent(user?.role || '') }
@@ -260,15 +265,21 @@ export default function AgentEarningsPage() {
 										{growthPercentage >= 0 ? (
 											<>
 												<TrendingUp className='h-3 w-3 text-green-600' />
-												<span className='text-green-600'>+{growthPercentage}%</span>
+												<span className='text-green-600'>
+													+{growthPercentage}%
+												</span>
 											</>
 										) : (
 											<>
 												<TrendingUp className='h-3 w-3 text-red-600 rotate-180' />
-												<span className='text-red-600'>{growthPercentage}%</span>
+												<span className='text-red-600'>
+													{growthPercentage}%
+												</span>
 											</>
 										)}
-										<span className='text-muted-foreground'>vs last period</span>
+										<span className='text-muted-foreground'>
+											vs last period
+										</span>
 									</div>
 								</CardContent>
 							</Card>
@@ -280,11 +291,15 @@ export default function AgentEarningsPage() {
 							transition={{ duration: 0.3, delay: 0.1 }}>
 							<Card>
 								<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-									<CardTitle className='text-sm font-medium'>Total Views</CardTitle>
+									<CardTitle className='text-sm font-medium'>
+										Total Views
+									</CardTitle>
 									<Eye className='h-4 w-4 text-muted-foreground' />
 								</CardHeader>
 								<CardContent>
-									<div className='text-2xl font-bold'>{stats?.totalViews ?? 0}</div>
+									<div className='text-2xl font-bold'>
+										{stats?.totalViews ?? 0}
+									</div>
 									<p className='text-xs text-muted-foreground'>
 										Across all listings
 									</p>
@@ -304,8 +319,12 @@ export default function AgentEarningsPage() {
 									<Building2 className='h-4 w-4 text-muted-foreground' />
 								</CardHeader>
 								<CardContent>
-									<div className='text-2xl font-bold'>{stats?.totalUnlocks ?? 0}</div>
-									<p className='text-xs text-muted-foreground'>₦1,000 per unlock</p>
+									<div className='text-2xl font-bold'>
+										{stats?.totalUnlocks ?? 0}
+									</div>
+									<p className='text-xs text-muted-foreground'>
+										₦1,000 per unlock
+									</p>
 								</CardContent>
 							</Card>
 						</motion.div>
@@ -324,11 +343,17 @@ export default function AgentEarningsPage() {
 								<CardContent>
 									<div className='text-2xl font-bold'>
 										{(stats?.totalViews ?? 0) > 0
-											? Math.round(((stats?.totalUnlocks ?? 0) / (stats?.totalViews ?? 1)) * 100)
+											? Math.round(
+													((stats?.totalUnlocks ?? 0) /
+														(stats?.totalViews ?? 1)) *
+														100
+											  )
 											: 0}
 										%
 									</div>
-									<p className='text-xs text-muted-foreground'>Views to unlocks</p>
+									<p className='text-xs text-muted-foreground'>
+										Views to unlocks
+									</p>
 								</CardContent>
 							</Card>
 						</motion.div>
@@ -350,7 +375,9 @@ export default function AgentEarningsPage() {
 						{earningsLoading ? (
 							<div className='space-y-4'>
 								{[...Array(3)].map((_, i) => (
-									<div key={i} className='flex items-center justify-between p-4 rounded-lg bg-muted/50'>
+									<div
+										key={i}
+										className='flex items-center justify-between p-4 rounded-lg bg-muted/50'>
 										<div className='flex items-center gap-3'>
 											<Skeleton className='h-5 w-5' />
 											<div>
@@ -365,7 +392,9 @@ export default function AgentEarningsPage() {
 						) : earnings.length === 0 ? (
 							<div className='text-center py-8'>
 								<BarChart3 className='h-12 w-12 mx-auto mb-4 text-muted-foreground' />
-								<h3 className='text-lg font-semibold mb-2'>No earnings data yet</h3>
+								<h3 className='text-lg font-semibold mb-2'>
+									No earnings data yet
+								</h3>
 								<p className='text-muted-foreground'>
 									Start listing properties to see your earnings here
 								</p>
@@ -420,7 +449,9 @@ export default function AgentEarningsPage() {
 						{listingsLoading ? (
 							<div className='space-y-4'>
 								{[...Array(3)].map((_, i) => (
-									<div key={i} className='flex items-center justify-between p-4 rounded-lg bg-muted/50'>
+									<div
+										key={i}
+										className='flex items-center justify-between p-4 rounded-lg bg-muted/50'>
 										<div className='flex items-center gap-3'>
 											<Skeleton className='w-8 h-8 rounded-full' />
 											<div>
@@ -443,7 +474,9 @@ export default function AgentEarningsPage() {
 									Create your first listing to start tracking performance
 								</p>
 								<Button asChild>
-									<Link href='/dashboard/agent/listings/new'>Create Listing</Link>
+									<Link href='/dashboard/agent/listings/new'>
+										Create Listing
+									</Link>
 								</Button>
 							</div>
 						) : (

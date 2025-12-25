@@ -15,7 +15,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence, Reorder } from 'framer-motion';
+import { AnimatePresence, Reorder } from 'framer-motion';
 import {
 	Upload,
 	X,
