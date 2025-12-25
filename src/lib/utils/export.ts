@@ -64,7 +64,9 @@ export function generateEarningsCSV(data: EarningsExportData): string {
 		const escapedTitle = listing.title.includes(',')
 			? `"${listing.title}"`
 			: listing.title;
-		lines.push(`${escapedTitle},${listing.area},${listing.price},${listing.views}`);
+		lines.push(
+			`${escapedTitle},${listing.area},${listing.price},${listing.views}`
+		);
 	});
 
 	return lines.join('\n');
@@ -78,9 +80,15 @@ export function generateEarningsPDFHTML(data: EarningsExportData): string {
 		.map(
 			(row) => `
         <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">${row.month}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${row.unlocks}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatNaira(row.amount)}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${
+							row.month
+						}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${
+							row.unlocks
+						}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatNaira(
+							row.amount
+						)}</td>
         </tr>
     `
 		)
@@ -90,11 +98,21 @@ export function generateEarningsPDFHTML(data: EarningsExportData): string {
 		.map(
 			(listing, index) => `
         <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">${index + 1}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">${listing.title}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">${listing.area}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatNaira(listing.price)}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${listing.views}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${
+							index + 1
+						}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${
+							listing.title
+						}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${
+							listing.area
+						}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${formatNaira(
+							listing.price
+						)}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${
+							listing.views
+						}</td>
         </tr>
     `
 		)
@@ -188,7 +206,7 @@ export function generateEarningsPDFHTML(data: EarningsExportData): string {
 </head>
 <body>
     <div class="header">
-        <h1>🏠 Student Housing Platform</h1>
+        <h1>🏠 EasyVille Estates</h1>
         <h2>Agent Earnings Report</h2>
         <p><strong>${data.agentName}</strong> (${data.agentEmail})</p>
         <p>Period: ${data.period}</p>
@@ -220,7 +238,10 @@ export function generateEarningsPDFHTML(data: EarningsExportData): string {
                 </tr>
             </thead>
             <tbody>
-                ${monthlyRows || '<tr><td colspan="3" style="padding: 20px; text-align: center; color: #666;">No earnings data available</td></tr>'}
+                ${
+									monthlyRows ||
+									'<tr><td colspan="3" style="padding: 20px; text-align: center; color: #666;">No earnings data available</td></tr>'
+								}
             </tbody>
         </table>
     </div>
@@ -238,14 +259,17 @@ export function generateEarningsPDFHTML(data: EarningsExportData): string {
                 </tr>
             </thead>
             <tbody>
-                ${listingsRows || '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #666;">No listings data available</td></tr>'}
+                ${
+									listingsRows ||
+									'<tr><td colspan="5" style="padding: 20px; text-align: center; color: #666;">No listings data available</td></tr>'
+								}
             </tbody>
         </table>
     </div>
 
     <div class="footer">
         <p>Generated on ${data.exportDate}</p>
-        <p>Student Housing Platform - Helping students find their perfect home</p>
+        <p>EasyVille Estates - Helping students find their perfect home</p>
     </div>
 </body>
 </html>
@@ -255,7 +279,11 @@ export function generateEarningsPDFHTML(data: EarningsExportData): string {
 /**
  * Download a file with the given content
  */
-export function downloadFile(content: string, filename: string, mimeType: string) {
+export function downloadFile(
+	content: string,
+	filename: string,
+	mimeType: string
+) {
 	const blob = new Blob([content], { type: mimeType });
 	const url = URL.createObjectURL(blob);
 	const link = document.createElement('a');
@@ -272,7 +300,9 @@ export function downloadFile(content: string, filename: string, mimeType: string
  */
 export function exportEarningsToCSV(data: EarningsExportData) {
 	const csv = generateEarningsCSV(data);
-	const filename = `earnings-report-${data.period.replace(/\s/g, '-').toLowerCase()}.csv`;
+	const filename = `earnings-report-${data.period
+		.replace(/\s/g, '-')
+		.toLowerCase()}.csv`;
 	downloadFile(csv, filename, 'text/csv');
 }
 
@@ -282,15 +312,14 @@ export function exportEarningsToCSV(data: EarningsExportData) {
 export function exportEarningsToPDF(data: EarningsExportData) {
 	const html = generateEarningsPDFHTML(data);
 	const printWindow = window.open('', '_blank');
-	
+
 	if (printWindow) {
 		printWindow.document.write(html);
 		printWindow.document.close();
-		
+
 		// Wait for content to load, then print
 		printWindow.onload = () => {
 			printWindow.print();
 		};
 	}
 }
-

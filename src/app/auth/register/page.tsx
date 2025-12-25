@@ -75,7 +75,7 @@ export default function RegisterPage() {
 							</div>
 						</div>
 						<CardTitle className='text-2xl'>Create Account</CardTitle>
-						<CardDescription>Join FUPRE Housing platform today</CardDescription>
+						<CardDescription>Join EasyVille Estates today</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>

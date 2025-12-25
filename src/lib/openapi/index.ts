@@ -13,9 +13,9 @@ import { adminSchemas, adminPaths } from './schemas/admin';
 export const openApiSpec = {
 	openapi: '3.0.3',
 	info: {
-		title: 'FUPRE Student Housing Platform API',
+		title: 'EasyVille Estates API',
 		description: `
-API documentation for the FUPRE Student Housing Platform.
+API documentation for the EasyVille Estates Platform.
 
 ## Authentication
 
@@ -41,7 +41,7 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 		`.trim(),
 		version: '1.0.0',
 		contact: {
-			name: 'FUPRE Housing Support',
+			name: 'EasyVille Estates Support',
 			email: 'info@easyvilleestates.com'
 		}
 	},

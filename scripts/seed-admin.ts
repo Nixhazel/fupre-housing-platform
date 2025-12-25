@@ -5,8 +5,8 @@
  * Run with: npm run seed:admin
  *
  * Default Admin Credentials:
- * - Email: admin@fuprehousing.com
- * - Password: 
+ * - Email: admin@easyvilleestates.com
+ * - Password:
  *
  * IMPORTANT: Change these credentials after first login!
  */
@@ -19,7 +19,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
 // Admin credentials (change these in production!)
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@fuprehousing.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@easyvilleestates.com';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@123456';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'Platform Staging Admin';
 const ADMIN_PHONE = process.env.ADMIN_PHONE || '+2348123456789';
@@ -47,16 +47,20 @@ const UserSchema = new mongoose.Schema(
 		isEmailVerified: { type: Boolean, default: false },
 		isVerified: { type: Boolean, default: false },
 		savedListingIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Listing' }],
-		savedRoommateIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'RoommateListing' }],
-		unlockedListingIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Listing' }],
+		savedRoommateIds: [
+			{ type: mongoose.Schema.Types.ObjectId, ref: 'RoommateListing' }
+		],
+		unlockedListingIds: [
+			{ type: mongoose.Schema.Types.ObjectId, ref: 'Listing' }
+		],
 		isDeleted: { type: Boolean, default: false }
 	},
 	{ timestamps: true }
 );
 
 async function seedAdmin() {
-	console.log('\n🌱 FUPRE Housing Platform - Admin Seeder\n');
-	console.log('=' .repeat(50));
+	console.log('\n🌱 EasyVille Estates - Admin Seeder\n');
+	console.log('='.repeat(50));
 
 	try {
 		// Connect to MongoDB
@@ -75,7 +79,9 @@ async function seedAdmin() {
 			console.log(`   Email: ${ADMIN_EMAIL}`);
 			console.log(`   Role: ${existingAdmin.role}`);
 			console.log(`   Created: ${existingAdmin.createdAt}`);
-			console.log('\n💡 If you need to reset the password, delete the user manually and run this script again.');
+			console.log(
+				'\n💡 If you need to reset the password, delete the user manually and run this script again.'
+			);
 		} else {
 			// Hash password
 			console.log('🔐 Hashing password...');
@@ -95,16 +101,20 @@ async function seedAdmin() {
 			});
 
 			console.log('\n✅ Admin user created successfully!\n');
-			console.log('=' .repeat(50));
+			console.log('='.repeat(50));
 			console.log('📋 ADMIN CREDENTIALS');
-			console.log('=' .repeat(50));
+			console.log('='.repeat(50));
 			console.log(`   Email:    ${ADMIN_EMAIL}`);
 			console.log(`   Password: ${ADMIN_PASSWORD}`);
 			console.log(`   Name:     ${ADMIN_NAME}`);
 			console.log(`   ID:       ${admin._id}`);
-			console.log('=' .repeat(50));
-			console.log('\n⚠️  IMPORTANT: Change these credentials after first login!');
-			console.log('   Go to Profile → Edit Profile to update your information.\n');
+			console.log('='.repeat(50));
+			console.log(
+				'\n⚠️  IMPORTANT: Change these credentials after first login!'
+			);
+			console.log(
+				'   Go to Profile → Edit Profile to update your information.\n'
+			);
 		}
 	} catch (error) {
 		console.error('\n❌ Error seeding admin:', error);
@@ -119,4 +129,3 @@ async function seedAdmin() {
 
 // Run the seeder
 seedAdmin();
-

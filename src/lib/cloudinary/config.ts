@@ -39,10 +39,10 @@ export function isCloudinaryConfigured(): boolean {
  * Upload folders for different content types
  */
 export const UPLOAD_FOLDERS = {
-	LISTINGS: 'fupre-housing/listings',
-	PAYMENT_PROOFS: 'fupre-housing/payment-proofs',
-	ROOMMATES: 'fupre-housing/roommates',
-	AVATARS: 'fupre-housing/avatars'
+	LISTINGS: 'easyville-estates/listings',
+	PAYMENT_PROOFS: 'easyville-estates/payment-proofs',
+	ROOMMATES: 'easyville-estates/roommates',
+	AVATARS: 'easyville-estates/avatars'
 } as const;
 
 export type UploadFolder = (typeof UPLOAD_FOLDERS)[keyof typeof UPLOAD_FOLDERS];
@@ -75,7 +75,11 @@ export function validateImageFile(
 	maxSize: number = MAX_FILE_SIZES.IMAGE
 ): { valid: boolean; error?: string } {
 	// Check file type
-	if (!ALLOWED_IMAGE_TYPES.includes(file.type as (typeof ALLOWED_IMAGE_TYPES)[number])) {
+	if (
+		!ALLOWED_IMAGE_TYPES.includes(
+			file.type as (typeof ALLOWED_IMAGE_TYPES)[number]
+		)
+	) {
 		return {
 			valid: false,
 			error: 'Invalid file type. Please upload a JPEG, PNG, WebP, or GIF image.'
@@ -113,7 +117,13 @@ export function buildCloudinaryUrl(
 		return publicId; // Return original if not configured
 	}
 
-	const { width, height, crop = 'fill', quality = 'auto', format = 'auto' } = options;
+	const {
+		width,
+		height,
+		crop = 'fill',
+		quality = 'auto',
+		format = 'auto'
+	} = options;
 
 	const transformations: string[] = [];
 
@@ -123,8 +133,8 @@ export function buildCloudinaryUrl(
 	if (quality) transformations.push(`q_${quality}`);
 	if (format) transformations.push(`f_${format}`);
 
-	const transformationString = transformations.length > 0 ? transformations.join(',') + '/' : '';
+	const transformationString =
+		transformations.length > 0 ? transformations.join(',') + '/' : '';
 
 	return `https://res.cloudinary.com/${config.cloudName}/image/upload/${transformationString}${publicId}`;
 }
-

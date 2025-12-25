@@ -59,7 +59,7 @@ export default function AgentProfilePage() {
 			setEditForm({
 				name: user.name || '',
 				phone: user.phone || '',
-				bio: 'Experienced real estate agent specializing in student housing near FUPRE campus.',
+				bio: 'Experienced real estate agent specializing in student housing near campus.',
 				specialties:
 					'Student Housing, Campus Area Properties, Budget-Friendly Rentals',
 				experience: '3+ years'
@@ -89,7 +89,7 @@ export default function AgentProfilePage() {
 		setEditForm({
 			name: user?.name || '',
 			phone: user?.phone || '',
-			bio: 'Experienced real estate agent specializing in student housing near FUPRE campus.',
+			bio: 'Experienced real estate agent specializing in student housing near campus.',
 			specialties:
 				'Student Housing, Campus Area Properties, Budget-Friendly Rentals',
 			experience: '3+ years'

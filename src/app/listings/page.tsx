@@ -146,9 +146,9 @@ function ListingsContent() {
 					{showSavedOnly ? 'Saved Listings' : 'Browse Listings'}
 				</h1>
 				<p className='text-muted-foreground'>
-					{showSavedOnly
-						? 'Your saved student accommodations near FUPRE campus'
-						: 'Find your perfect student accommodation near FUPRE campus'}
+				{showSavedOnly
+					? 'Your saved student accommodations'
+					: 'Find your perfect student accommodation near campus'}
 				</p>
 			</div>
 

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import {
 	Search,
 	Menu,
@@ -98,11 +99,17 @@ function NavbarContent() {
 		<nav className='sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
 			<div className='container mx-auto px-4'>
 				<div className='flex h-16 items-center justify-between'>
-					{/* Logo */}
-					<Link href='/' className='flex items-center space-x-2'>
-						<Building2 className='h-8 w-8 text-primary' />
-						<span className='text-xl font-bold'>FUPRE Housing</span>
-					</Link>
+				{/* Logo */}
+				<Link href='/' className='flex items-center space-x-2'>
+					<Image
+						src='/images/easyvill-logo.png'
+						alt='EasyVille Estates'
+						width={40}
+						height={40}
+						className='h-10 w-10 object-contain'
+					/>
+					<span className='text-xl font-bold hidden sm:inline'>EasyVille Estates</span>
+				</Link>
 
 					{/* Desktop Search */}
 					<form

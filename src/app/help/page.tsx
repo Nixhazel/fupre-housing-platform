@@ -40,7 +40,7 @@ interface FAQItem {
 const faqData: FAQItem[] = [
 	{
 		id: '1',
-		question: 'How do I find housing near FUPRE?',
+		question: 'How do I find housing near campus?',
 		answer:
 			'Use our search filters to find listings by location (Ugbomro, Effurun, Enerhen, PTI Road), price range, and amenities. You can also browse featured listings on our homepage.',
 		category: 'Finding Housing',
@@ -66,7 +66,7 @@ const faqData: FAQItem[] = [
 		id: '4',
 		question: 'How do I become a verified agent?',
 		answer:
-			'To become a verified agent, you need to be a current FUPRE student with a valid matric number and student ID. Contact our admin team for verification.',
+			'To become a verified agent, you need to be a current student with a valid matric number and student ID. Contact our admin team for verification.',
 		category: 'Agents',
 		icon: Shield
 	},
@@ -159,10 +159,10 @@ function HelpContent() {
 					animate={{ opacity: 1, y: 0 }}
 					className='text-center mb-12'>
 					<h1 className='text-4xl font-bold mb-4'>Help & Support</h1>
-					<p className='text-xl text-muted-foreground max-w-2xl mx-auto'>
-						Find answers to common questions and get help with using the FUPRE
-						Housing Platform.
-					</p>
+				<p className='text-xl text-muted-foreground max-w-2xl mx-auto'>
+					Find answers to common questions and get help with using
+					EasyVille Estates.
+				</p>
 				</motion.div>
 
 				{/* Search */}
@@ -289,11 +289,11 @@ function HelpContent() {
 								<div className='text-center p-4 rounded-lg bg-muted/50'>
 									<Mail className='h-8 w-8 text-primary mx-auto mb-2' />
 									<h3 className='font-semibold mb-1'>Email Support</h3>
-									<p className='text-sm text-muted-foreground mb-2'>
-										support@fuprehousing.com
-									</p>
-									<Button variant='outline' size='sm' asChild>
-										<a href='mailto:support@fuprehousing.com'>
+								<p className='text-sm text-muted-foreground mb-2'>
+									support@easyvilleestates.com
+								</p>
+								<Button variant='outline' size='sm' asChild>
+									<a href='mailto:support@easyvilleestates.com'>
 											<Mail className='h-4 w-4 mr-2' />
 											Send Email
 										</a>

@@ -99,9 +99,9 @@ function LoginContent() {
 							</div>
 						</div>
 						<CardTitle className='text-2xl'>Welcome Back</CardTitle>
-						<CardDescription>
-							Sign in to your FUPRE Housing account
-						</CardDescription>
+					<CardDescription>
+						Sign in to your EasyVille Estates account
+					</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>

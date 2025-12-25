@@ -22,22 +22,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	title: 'FUPRE Housing - Student Accommodation Platform',
+	title: 'EasyVille Estates - Student Accommodation Platform',
 	description:
-		'Find quality housing and roommates near Federal University of Petroleum Resources, Effurun. Connect with verified agents and fellow students.',
+		'Find quality housing and roommates near campus. Connect with verified agents and fellow students for affordable student accommodation.',
 	keywords: [
-		'FUPRE',
+		'EasyVille Estates',
 		'student housing',
 		'accommodation',
 		'roommates',
 		'Warri',
-		'Delta State'
+		'Delta State',
+		'FUPRE',
+		'student apartments',
+		'campus housing'
 	],
-	authors: [{ name: 'FUPRE Housing Team' }],
+	authors: [{ name: 'EasyVille Estates' }],
 	openGraph: {
-		title: 'FUPRE Housing - Student Accommodation Platform',
+		title: 'EasyVille Estates - Student Accommodation Platform',
 		description:
-			'Find quality housing and roommates near Federal University of Petroleum Resources, Effurun.',
+			'Find quality housing and roommates near campus. Your trusted platform for student accommodation.',
 		type: 'website',
 		locale: 'en_NG'
 	}

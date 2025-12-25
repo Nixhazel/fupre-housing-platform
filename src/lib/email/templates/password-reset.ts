@@ -125,7 +125,7 @@ This link will expire in ${expiresInMinutes} minutes.
 If you didn't request a password reset, please ignore this email.
 
 ---
-This email was sent by FUPRE Housing Platform.
+This email was sent by EasyVille Estates.
 `.trim();
 }
 

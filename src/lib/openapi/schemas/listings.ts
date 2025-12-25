@@ -332,7 +332,7 @@ export const listingPaths = {
 					'application/json': {
 						schema: { $ref: '#/components/schemas/CreateListingInput' },
 						example: {
-							title: 'Modern 2-Bedroom Apartment near FUPRE',
+							title: 'Modern 2-Bedroom Apartment near campus',
 							description:
 								'Spacious and well-furnished apartment with modern amenities, perfect for students.',
 							campusArea: 'Ugbomro',

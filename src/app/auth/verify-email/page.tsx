@@ -10,12 +10,7 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import {
-	Mail,
-	Loader2,
-	ArrowRight,
-	RefreshCw
-} from 'lucide-react';
+import { Mail, Loader2, ArrowRight, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
 	Card,
@@ -54,7 +49,7 @@ function VerifyEmailContent() {
 	// Redirect if already verified
 	useEffect(() => {
 		if (user?.isEmailVerified) {
-			toast.success('Email verified! Welcome to FUPRE Housing Platform.');
+			toast.success('Email verified! Welcome to EasyVille Estates.');
 			router.push('/');
 		}
 	}, [user?.isEmailVerified, router]);

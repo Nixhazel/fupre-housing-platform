@@ -1,6 +1,6 @@
-# FUPRE Student Housing Platform - Complete Process Flow Guide
+# EasyVille Estates - Complete Process Flow Guide
 
-This document provides a comprehensive step-by-step guide of all features and user flows for each user type in the FUPRE Student Housing Platform.
+This document provides a comprehensive step-by-step guide of all features and user flows for each user type in EasyVille Estates.
 
 ---
 
@@ -50,13 +50,13 @@ EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-app-password
-EMAIL_FROM=FUPRE Housing <your-email@gmail.com>
+EMAIL_FROM=EasyVille Estates <your-email@gmail.com>
 
 # App URL
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 # Optional: Custom Admin Credentials
-ADMIN_EMAIL=admin@fuprehousing.com
+ADMIN_EMAIL=admin@easyvilleestates.com
 ADMIN_PASSWORD=Admin@123456
 ADMIN_NAME=Platform Admin
 ```
@@ -71,11 +71,11 @@ npm run seed:admin
 
 This will create an admin user with the following default credentials:
 
-| Field    | Value                  |
-| -------- | ---------------------- |
-| Email    | admin@fuprehousing.com |
-| Password | Admin@123456           |
-| Name     | Platform Admin         |
+| Field    | Value                      |
+| -------- | -------------------------- |
+| Email    | admin@easyvilleestates.com |
+| Password | Admin@123456               |
+| Name     | Platform Admin             |
 
 **⚠️ IMPORTANT:** Change these credentials after first login!
 
@@ -94,7 +94,7 @@ npm start
 
 ## Platform Overview
 
-The FUPRE Student Housing Platform is a web application designed to help students of the Federal University of Petroleum Resources, Effurun (FUPRE) find quality accommodation near campus. It connects students with verified student agents who list properties, and also provides roommate matching functionality.
+EasyVille Estates is a web application designed to help students find quality accommodation near campus. It connects students with verified student agents who list properties, and also provides roommate matching functionality.
 
 **Key Features:**
 
@@ -167,7 +167,7 @@ The FUPRE Student Housing Platform is a web application designed to help student
 5. HELP PAGE (/help)
    ├── FAQ section
    ├── Contact information
-   │   ├── Email: fuprehousing@gmail.com
+   │   ├── Email: info@easyvilleestates.com
    │   ├── Phone: +234 123 456 7890
    │   └── WhatsApp link
    └── Quick action buttons
@@ -694,4 +694,4 @@ User Action → React Component → TanStack Query Hook → API Route → Servic
 
 _Document Version: 1.0_
 _Last Updated: December 2024_
-_Platform: FUPRE Student Housing Platform_
+_Platform: EasyVille Estates_

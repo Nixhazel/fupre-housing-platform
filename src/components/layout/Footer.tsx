@@ -1,22 +1,29 @@
 import Link from 'next/link';
-import { Building2, Mail, Phone, MapPin } from 'lucide-react';
+import Image from 'next/image';
+import { Mail, Phone, MapPin } from 'lucide-react';
 
 export function Footer() {
 	return (
 		<footer className='bg-muted/50 border-t'>
 			<div className='container mx-auto px-4 py-12'>
 				<div className='grid grid-cols-1 md:grid-cols-4 gap-8'>
-					{/* Brand */}
-					<div className='space-y-4'>
-						<Link href='/' className='flex items-center space-x-2'>
-							<Building2 className='h-8 w-8 text-primary' />
-							<span className='text-xl font-bold'>FUPRE Housing</span>
-						</Link>
-						<p className='text-sm text-muted-foreground'>
-							Connecting FUPRE students with quality housing and roommates. Your
-							trusted platform for student accommodation in Warri.
-						</p>
-					</div>
+				{/* Brand */}
+				<div className='space-y-4'>
+					<Link href='/' className='flex items-center space-x-2'>
+						<Image
+							src='/images/easyvill-logo.png'
+							alt='EasyVille Estates'
+							width={40}
+							height={40}
+							className='h-10 w-10 object-contain'
+						/>
+						<span className='text-xl font-bold'>EasyVille Estates</span>
+					</Link>
+					<p className='text-sm text-muted-foreground'>
+						Your trusted platform for quality student housing and roommates
+						near campus. Find your perfect accommodation today.
+					</p>
+				</div>
 
 					{/* Quick Links */}
 					<div className='space-y-4'>
@@ -105,10 +112,10 @@ export function Footer() {
 								<span className='text-muted-foreground'>+234 801 234 5678</span>
 							</div>
 							<div className='flex items-center space-x-2'>
-								<Mail className='h-4 w-4 text-muted-foreground' />
-								<span className='text-muted-foreground'>
-									support@fuprehousing.com
-								</span>
+						<Mail className='h-4 w-4 text-muted-foreground' />
+							<span className='text-muted-foreground'>
+								support@easyvilleestates.com
+							</span>
 							</div>
 						</div>
 					</div>
@@ -116,7 +123,7 @@ export function Footer() {
 
 				<div className='border-t mt-8 pt-8 flex flex-col md:flex-row justify-between items-center'>
 					<p className='text-sm text-muted-foreground'>
-						© 2024 FUPRE Housing Platform. All rights reserved.
+						© 2024 EasyVille Estates. All rights reserved.
 					</p>
 					<div className='flex space-x-6 mt-4 md:mt-0'>
 						<Link

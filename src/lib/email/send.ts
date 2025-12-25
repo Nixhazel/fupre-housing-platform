@@ -109,7 +109,7 @@ export async function sendPasswordResetEmail(
 
 	return sendEmail({
 		to,
-		subject: 'Reset Your Password - FUPRE Housing Platform',
+		subject: 'Reset Your Password - EasyVille Estates',
 		html,
 		text
 	});
@@ -126,7 +126,7 @@ export async function sendPasswordResetConfirmationEmail(
 
 	return sendEmail({
 		to,
-		subject: 'Password Changed Successfully - FUPRE Housing Platform',
+		subject: 'Password Changed Successfully - EasyVille Estates',
 		html
 	});
 }
@@ -143,7 +143,7 @@ export async function sendVerificationEmail(
 
 	return sendEmail({
 		to,
-		subject: 'Verify Your Email - FUPRE Housing Platform',
+		subject: 'Verify Your Email - EasyVille Estates',
 		html,
 		text
 	});
@@ -160,7 +160,7 @@ export async function sendWelcomeEmail(
 
 	return sendEmail({
 		to,
-		subject: 'Welcome to FUPRE Housing Platform! 🏠',
+		subject: 'Welcome to EasyVille Estates! 🏠',
 		html
 	});
 }
@@ -199,7 +199,7 @@ export async function sendPaymentApprovedEmail(
       </a>
     </p>
     <p style="color: #71717a; font-size: 14px;">
-      Thank you for using FUPRE Housing Platform!
+      Thank you for using EasyVille Estates!
     </p>
   </div>
 </body>

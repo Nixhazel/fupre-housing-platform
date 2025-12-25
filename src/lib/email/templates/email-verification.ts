@@ -28,7 +28,7 @@ export function emailVerificationEmail({
 </p>
 
 <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.6; color: #3f3f46;">
-  Welcome to FUPRE Housing Platform! 🎉 Please verify your email address to complete your registration and access all features.
+  Welcome to EasyVille Estates! 🎉 Please verify your email address to complete your registration and access all features.
 </p>
 
 ${emailButton('Verify Email Address', verifyUrl, '#22c55e')}
@@ -69,7 +69,7 @@ export function welcomeEmail({
 }): string {
 	const content = `
 <h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 600; color: #18181b;">
-  Welcome to FUPRE Housing Platform! 🎉
+  Welcome to EasyVille Estates! 🎉
 </h2>
 
 <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.6; color: #3f3f46;">
@@ -88,7 +88,7 @@ export function welcomeEmail({
   <tr>
     <td style="padding: 8px 0;">
       <span style="color: #22c55e; font-size: 18px;">✓</span>
-      <span style="margin-left: 8px; color: #3f3f46;">Browse available listings near FUPRE</span>
+      <span style="margin-left: 8px; color: #3f3f46;">Browse available listings near campus</span>
     </td>
   </tr>
   <tr>
@@ -120,7 +120,7 @@ ${emailInfoBox(
 `.trim();
 
 	return baseTemplate({
-		title: 'Welcome to FUPRE Housing Platform',
+		title: 'Welcome to EasyVille Estates',
 		previewText: 'Your account is verified! Start finding your perfect student housing.',
 		content,
 		footerText: 'Happy house hunting!'
@@ -140,7 +140,7 @@ Verify Your Email Address
 
 Hi ${name},
 
-Welcome to FUPRE Housing Platform!
+Welcome to EasyVille Estates!
 
 Please verify your email address by clicking this link:
 ${verifyUrl}
@@ -150,7 +150,7 @@ This link will expire in ${expiresInHours} hours.
 Once verified, you'll be able to save listings, submit payment proofs, and access exclusive features.
 
 ---
-This email was sent by FUPRE Housing Platform.
+This email was sent by EasyVille Estates.
 `.trim();
 }
 

@@ -58,7 +58,7 @@ function HomeContent() {
 			icon: MapPin,
 			title: 'Prime Locations',
 			description:
-				'Properties located in safe, student-friendly areas near FUPRE campus.'
+				'Properties located in safe, student-friendly areas near campus.'
 		},
 		{
 			icon: Users,
@@ -103,12 +103,12 @@ function HomeContent() {
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.6 }}
 							className='space-y-4'>
-							<Badge
-								variant='secondary'
-								className='inline-flex items-center space-x-2'>
-								<Heart className='h-3 w-3' />
-								<span>Trusted by 500+ FUPRE Students</span>
-							</Badge>
+						<Badge
+							variant='secondary'
+							className='inline-flex items-center space-x-2'>
+							<Heart className='h-3 w-3' />
+							<span>Trusted by 500+ Students</span>
+						</Badge>
 
 							<h1 className='text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent'>
 								Find Your Perfect
@@ -209,9 +209,9 @@ function HomeContent() {
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.6 }}
 						className='text-center space-y-4 mb-16'>
-						<h2 className='text-3xl md:text-4xl font-bold'>
-							Why Choose FUPRE Housing?
-						</h2>
+					<h2 className='text-3xl md:text-4xl font-bold'>
+						Why Choose EasyVille Estates?
+					</h2>
 						<p className='text-xl text-muted-foreground max-w-2xl mx-auto'>
 							We make finding student accommodation simple, safe, and
 							affordable.
@@ -253,9 +253,9 @@ function HomeContent() {
 						<h2 className='text-3xl md:text-4xl font-bold'>
 							Featured Listings
 						</h2>
-						<p className='text-xl text-muted-foreground max-w-2xl mx-auto'>
-							Discover our top-rated properties near FUPRE campus.
-						</p>
+					<p className='text-xl text-muted-foreground max-w-2xl mx-auto'>
+						Discover our top-rated properties near campus.
+					</p>
 					</motion.div>
 
 					{/* Loading State */}
@@ -438,10 +438,10 @@ function HomeContent() {
 						<h2 className='text-3xl md:text-4xl font-bold'>
 							Ready to Find Your Perfect Home?
 						</h2>
-						<p className='text-xl opacity-90 max-w-2xl mx-auto'>
-							Join hundreds of FUPRE students who have found their ideal
-							accommodation through our trusted platform.
-						</p>
+					<p className='text-xl opacity-90 max-w-2xl mx-auto'>
+						Join hundreds of students who have found their ideal
+						accommodation through our trusted platform.
+					</p>
 						<div className='flex flex-col sm:flex-row gap-4 justify-center'>
 							<Link href='/auth/register'>
 								<Button size='lg' variant='secondary'>

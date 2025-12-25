@@ -15,14 +15,9 @@ export const isTest = process.env.NODE_ENV === 'test';
 /**
  * Required environment variables for different contexts
  */
-const REQUIRED_SERVER_VARS = [
-	'MONGODB_URI',
-	'JWT_SECRET'
-] as const;
+const REQUIRED_SERVER_VARS = ['MONGODB_URI', 'JWT_SECRET'] as const;
 
-const REQUIRED_PUBLIC_VARS = [
-	'NEXT_PUBLIC_APP_URL'
-] as const;
+const REQUIRED_PUBLIC_VARS = ['NEXT_PUBLIC_APP_URL'] as const;
 
 /**
  * Validated environment configuration
@@ -62,8 +57,10 @@ class EnvConfig {
 
 		if (missing.length > 0) {
 			throw new Error(
-				`Missing required environment variables:\n${missing.map((v) => `  - ${v}`).join('\n')}\n\n` +
-				'Please check your .env.local file or deployment configuration.'
+				`Missing required environment variables:\n${missing
+					.map((v) => `  - ${v}`)
+					.join('\n')}\n\n` +
+					'Please check your .env.local file or deployment configuration.'
 			);
 		}
 
@@ -174,4 +171,3 @@ export const logger = {
 		}
 	}
 };
-

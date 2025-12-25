@@ -257,7 +257,7 @@ function RoommateDetailContent() {
 						</div>
 						<div className='flex items-center gap-1'>
 							<MapPin className='h-4 w-4' />
-							<span>FUPRE Area</span>
+							<span>Campus Area</span>
 						</div>
 					</div>
 				</motion.div>
