@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "seed:reset": "echo 'Open the app and clear localStorage to reset data'"
+    "seed:admin": "npx tsx scripts/seed-admin.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -41,6 +41,7 @@
     "clsx": "^2.1.1",
     "cookies-next": "^6.1.1",
     "dayjs": "^1.11.18",
+    "dotenv": "^17.2.3",
     "framer-motion": "^12.23.12",
     "jose": "^6.1.3",
     "lucide-react": "^0.542.0",
@@ -72,6 +73,7 @@
     "eslint": "^9",
     "eslint-config-next": "^15.5.9",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "tw-animate-css": "^1.3.7",
     "typescript": "^5"
   }
