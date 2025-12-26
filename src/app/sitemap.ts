@@ -3,7 +3,11 @@ import connectDB from '@/lib/db/connect';
 import Listing from '@/lib/db/models/Listing';
 import RoommateListing from '@/lib/db/models/RoommateListing';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://easyvilleestates.com';
+// Force dynamic rendering - this route requires database access
+export const dynamic = 'force-dynamic';
+
+const BASE_URL =
+	process.env.NEXT_PUBLIC_APP_URL || 'https://easyvilleestates.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 	// Connect to database
@@ -65,4 +69,3 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
 	return [...staticPages, ...listingPages, ...roommatePages];
 }
-

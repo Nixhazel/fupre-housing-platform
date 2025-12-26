@@ -186,7 +186,7 @@ function LoginContent() {
 						</div>
 
 						{/* Demo Credentials */}
-						<div className='mt-6 p-4 bg-muted rounded-lg'>
+						{/* <div className='mt-6 p-4 bg-muted rounded-lg'>
 							<h4 className='text-sm font-semibold mb-2'>Demo Credentials:</h4>
 							<div className='space-y-1 text-xs text-muted-foreground'>
 								<p>
@@ -199,7 +199,7 @@ function LoginContent() {
 									<strong>Admin:</strong> admin@fupre.edu.ng / password123
 								</p>
 							</div>
-						</div>
+						</div> */}
 					</CardContent>
 				</Card>
 			</motion.div>
