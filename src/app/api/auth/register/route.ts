@@ -32,7 +32,8 @@ export async function POST(request: NextRequest) {
 			return validationErrorResponse(validation.error);
 		}
 
-		const { email, password, name, phone, role, matricNumber } = validation.data;
+		const { email, password, name, phone, role, matricNumber } =
+			validation.data;
 
 		// Connect to database
 		await connectDB();
@@ -67,25 +68,26 @@ export async function POST(request: NextRequest) {
 		const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 		const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${emailVerificationToken}`;
 
-		// Send verification email (non-blocking)
-		sendVerificationEmail(user.email, {
-			name: user.name,
-			verifyUrl,
-			expiresInHours: 24
-		})
-			.then((result) => {
-				if (result.success) {
-					logger.info('Verification email sent', { email: user.email });
-				} else {
-					logger.error('Failed to send verification email', {
-						email: user.email,
-						error: result.error
-					});
-				}
-			})
-			.catch((error) => {
-				logger.error('Error sending verification email', error);
+		// Send verification email (awaited to ensure it sends on serverless platforms)
+		try {
+			const emailResult = await sendVerificationEmail(user.email, {
+				name: user.name,
+				verifyUrl,
+				expiresInHours: 24
 			});
+
+			if (emailResult.success) {
+				logger.info('Verification email sent', { email: user.email });
+			} else {
+				logger.error('Failed to send verification email', {
+					email: user.email,
+					error: emailResult.error
+				});
+			}
+		} catch (emailError) {
+			// Don't fail registration if email fails, user can resend
+			logger.error('Error sending verification email', emailError);
+		}
 
 		// Generate JWT tokens
 		const tokens = await createTokenPair({
@@ -110,14 +112,10 @@ export async function POST(request: NextRequest) {
 		return setAuthCookies(response, tokens.accessToken, tokens.refreshToken);
 	} catch (error) {
 		// Handle MongoDB duplicate key error
-		if (
-			error instanceof Error &&
-			error.message.includes('duplicate key')
-		) {
+		if (error instanceof Error && error.message.includes('duplicate key')) {
 			return conflictResponse('An account with this email already exists');
 		}
 
 		return serverErrorResponse(error);
 	}
 }
-

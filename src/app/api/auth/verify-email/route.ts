@@ -52,21 +52,20 @@ export async function POST(request: NextRequest) {
 
 		await user.save();
 
-		// Send welcome email (non-blocking)
-		sendWelcomeEmail(user.email, user.name)
-			.then((result) => {
-				if (result.success) {
-					logger.info('Welcome email sent', { email: user.email });
-				} else {
-					logger.error('Failed to send welcome email', {
-						email: user.email,
-						error: result.error
-					});
-				}
-			})
-			.catch((error) => {
-				logger.error('Error sending welcome email', error);
-			});
+		// Send welcome email (awaited to ensure it sends on serverless platforms)
+		try {
+			const emailResult = await sendWelcomeEmail(user.email, user.name);
+			if (emailResult.success) {
+				logger.info('Welcome email sent', { email: user.email });
+			} else {
+				logger.error('Failed to send welcome email', {
+					email: user.email,
+					error: emailResult.error
+				});
+			}
+		} catch (emailError) {
+			logger.error('Error sending welcome email', emailError);
+		}
 
 		return successResponse({
 			message: 'Email verified successfully'
@@ -115,16 +114,15 @@ export async function GET(request: NextRequest) {
 
 		await user.save();
 
-		// Send welcome email (non-blocking)
-		sendWelcomeEmail(user.email, user.name)
-			.then((result) => {
-				if (result.success) {
-					logger.info('Welcome email sent (via link)', { email: user.email });
-				}
-			})
-			.catch(() => {
-				// Silently fail - user still verified
-			});
+		// Send welcome email (awaited to ensure it sends on serverless platforms)
+		try {
+			const emailResult = await sendWelcomeEmail(user.email, user.name);
+			if (emailResult.success) {
+				logger.info('Welcome email sent (via link)', { email: user.email });
+			}
+		} catch {
+			// Silently fail - user still verified
+		}
 
 		// Redirect to success page
 		return Response.redirect(`${baseUrl}/auth/login?verified=true`);

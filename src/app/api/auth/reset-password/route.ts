@@ -52,21 +52,20 @@ export async function POST(request: NextRequest) {
 
 		await user.save();
 
-		// Send confirmation email (non-blocking)
-		sendPasswordResetConfirmationEmail(user.email, user.name)
-			.then((result) => {
-				if (result.success) {
-					logger.info('Password reset confirmation email sent', { email: user.email });
-				} else {
-					logger.error('Failed to send password reset confirmation email', {
-						email: user.email,
-						error: result.error
-					});
-				}
-			})
-			.catch((error) => {
-				logger.error('Error sending password reset confirmation email', error);
-			});
+		// Send confirmation email (awaited to ensure it sends on serverless platforms)
+		try {
+			const emailResult = await sendPasswordResetConfirmationEmail(user.email, user.name);
+			if (emailResult.success) {
+				logger.info('Password reset confirmation email sent', { email: user.email });
+			} else {
+				logger.error('Failed to send password reset confirmation email', {
+					email: user.email,
+					error: emailResult.error
+				});
+			}
+		} catch (emailError) {
+			logger.error('Error sending password reset confirmation email', emailError);
+		}
 
 		return successResponse({
 			message: 'Password reset successfully. You can now log in with your new password.'
