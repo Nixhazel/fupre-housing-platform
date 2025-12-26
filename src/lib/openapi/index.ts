@@ -94,7 +94,14 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 						description: 'Validation errors by field'
 					}
 				},
-				required: ['success']
+				required: ['success'],
+				example: {
+					success: false,
+					error: 'Invalid request data',
+					errors: {
+						email: ['Email is required', 'Email must be valid']
+					}
+				}
 			},
 
 			SuccessResponse: {
@@ -110,11 +117,48 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 			PaginationMeta: {
 				type: 'object',
 				properties: {
-					page: { type: 'integer' },
-					limit: { type: 'integer' },
-					total: { type: 'integer' },
-					totalPages: { type: 'integer' }
+					page: { type: 'integer', example: 1 },
+					limit: { type: 'integer', example: 12 },
+					total: { type: 'integer', example: 48 },
+					totalPages: { type: 'integer', example: 4 }
 				}
+			},
+
+			// User/Session schemas
+			SessionUser: {
+				type: 'object',
+				properties: {
+					id: { type: 'string', example: '507f1f77bcf86cd799439011' },
+					email: { type: 'string', format: 'email', example: 'student@example.com' },
+					name: { type: 'string', example: 'John Doe' },
+					role: { 
+						type: 'string', 
+						enum: ['student', 'agent', 'owner', 'admin'],
+						example: 'student'
+					},
+					phone: { type: 'string', example: '+2348012345678' },
+					avatarUrl: { type: 'string', format: 'uri', example: 'https://res.cloudinary.com/demo/image/upload/avatar.jpg' },
+					matricNumber: { type: 'string', example: 'FUP/20/0001' },
+					isEmailVerified: { type: 'boolean', example: true },
+					isVerified: { type: 'boolean', example: false, description: 'Admin-verified status' },
+					savedListingIds: {
+						type: 'array',
+						items: { type: 'string' },
+						example: ['507f1f77bcf86cd799439011', '507f1f77bcf86cd799439012']
+					},
+					savedRoommateIds: {
+						type: 'array',
+						items: { type: 'string' },
+						example: []
+					},
+					unlockedListingIds: {
+						type: 'array',
+						items: { type: 'string' },
+						example: ['507f1f77bcf86cd799439015']
+					},
+					createdAt: { type: 'string', format: 'date-time', example: '2024-01-15T10:30:00.000Z' }
+				},
+				required: ['id', 'email', 'name', 'role', 'isEmailVerified', 'isVerified', 'savedListingIds', 'savedRoommateIds', 'unlockedListingIds', 'createdAt']
 			},
 
 			// Listing schemas
@@ -142,12 +186,12 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 		}
 	},
 	paths: {
-		// Auth paths (documented but not implemented in Phase 6A)
+		// Auth paths
 		'/api/auth/register': {
 			post: {
 				tags: ['Auth'],
 				summary: 'Register a new user',
-				description: 'Create a new user account',
+				description: 'Create a new user account. A verification email will be sent.',
 				operationId: 'register',
 				requestBody: {
 					required: true,
@@ -156,22 +200,95 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 							schema: {
 								type: 'object',
 								properties: {
-									email: { type: 'string', format: 'email' },
-									password: { type: 'string', minLength: 6 },
-									name: { type: 'string', minLength: 2, maxLength: 50 },
-									phone: { type: 'string', pattern: '^\\+234\\d{10}$' },
-									role: { type: 'string', enum: ['student', 'agent', 'owner'] },
-									matricNumber: { type: 'string' }
+									email: { type: 'string', format: 'email', example: 'student@example.com' },
+									password: { type: 'string', minLength: 6, example: 'SecurePass123!' },
+									name: { type: 'string', minLength: 2, maxLength: 50, example: 'John Doe' },
+									phone: { type: 'string', pattern: '^\\+234\\d{10}$', example: '+2348012345678' },
+									role: { type: 'string', enum: ['student', 'agent', 'owner'], example: 'student' },
+									matricNumber: { type: 'string', example: 'FUP/20/0001' }
 								},
 								required: ['email', 'password', 'name', 'role']
+							},
+							example: {
+								email: 'student@example.com',
+								password: 'SecurePass123!',
+								name: 'John Doe',
+								phone: '+2348012345678',
+								role: 'student',
+								matricNumber: 'FUP/20/0001'
 							}
 						}
 					}
 				},
 				responses: {
-					'201': { description: 'User registered successfully' },
-					'400': { description: 'Validation error' },
-					'409': { description: 'Email already exists' }
+					'201': {
+						description: 'User registered successfully',
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										success: { type: 'boolean', example: true },
+										data: {
+											type: 'object',
+											properties: {
+												user: { $ref: '#/components/schemas/SessionUser' },
+												message: { type: 'string', example: 'Verification email sent. Please check your inbox.' }
+											}
+										}
+									}
+								},
+								example: {
+									success: true,
+									data: {
+										user: {
+											id: '507f1f77bcf86cd799439011',
+											email: 'student@example.com',
+											name: 'John Doe',
+											role: 'student',
+											phone: '+2348012345678',
+											matricNumber: 'FUP/20/0001',
+											isEmailVerified: false,
+											isVerified: false,
+											savedListingIds: [],
+											savedRoommateIds: [],
+											unlockedListingIds: [],
+											createdAt: '2024-01-15T10:30:00.000Z'
+										},
+										message: 'Verification email sent. Please check your inbox.'
+									}
+								}
+							}
+						}
+					},
+					'400': {
+						description: 'Validation error',
+						content: {
+							'application/json': {
+								schema: { $ref: '#/components/schemas/ErrorResponse' },
+								example: {
+									success: false,
+									error: 'Validation failed',
+									errors: {
+										email: ['Email is required'],
+										password: ['Password must be at least 6 characters']
+									}
+								}
+							}
+						}
+					},
+					'409': {
+						description: 'Email already exists',
+						content: {
+							'application/json': {
+								schema: { $ref: '#/components/schemas/ErrorResponse' },
+								example: {
+									success: false,
+									error: 'An account with this email already exists'
+								}
+							}
+						}
+					}
 				}
 			}
 		},
@@ -179,7 +296,7 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 			post: {
 				tags: ['Auth'],
 				summary: 'Login',
-				description: 'Authenticate and receive session cookies',
+				description: 'Authenticate with email and password. Sets HttpOnly session cookies.',
 				operationId: 'login',
 				requestBody: {
 					required: true,
@@ -188,17 +305,75 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 							schema: {
 								type: 'object',
 								properties: {
-									email: { type: 'string', format: 'email' },
-									password: { type: 'string' }
+									email: { type: 'string', format: 'email', example: 'student@example.com' },
+									password: { type: 'string', example: 'SecurePass123!' }
 								},
 								required: ['email', 'password']
+							},
+							example: {
+								email: 'student@example.com',
+								password: 'SecurePass123!'
 							}
 						}
 					}
 				},
 				responses: {
-					'200': { description: 'Login successful, cookies set' },
-					'401': { description: 'Invalid credentials' }
+					'200': {
+						description: 'Login successful. Session cookies are set in the response.',
+						headers: {
+							'Set-Cookie': {
+								description: 'Session cookies (access_token, refresh_token)',
+								schema: { type: 'string' }
+							}
+						},
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										success: { type: 'boolean', example: true },
+										data: {
+											type: 'object',
+											properties: {
+												user: { $ref: '#/components/schemas/SessionUser' }
+											}
+										}
+									}
+								},
+								example: {
+									success: true,
+									data: {
+										user: {
+											id: '507f1f77bcf86cd799439011',
+											email: 'student@example.com',
+											name: 'John Doe',
+											role: 'student',
+											phone: '+2348012345678',
+											matricNumber: 'FUP/20/0001',
+											isEmailVerified: true,
+											isVerified: false,
+											savedListingIds: ['507f1f77bcf86cd799439012'],
+											savedRoommateIds: [],
+											unlockedListingIds: ['507f1f77bcf86cd799439015'],
+											createdAt: '2024-01-15T10:30:00.000Z'
+										}
+									}
+								}
+							}
+						}
+					},
+					'401': {
+						description: 'Invalid credentials',
+						content: {
+							'application/json': {
+								schema: { $ref: '#/components/schemas/ErrorResponse' },
+								example: {
+									success: false,
+									error: 'Invalid email or password'
+								}
+							}
+						}
+					}
 				}
 			}
 		},
@@ -206,10 +381,35 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 			post: {
 				tags: ['Auth'],
 				summary: 'Logout',
-				description: 'Clear session cookies',
+				description: 'Clear session cookies and end the current session.',
 				operationId: 'logout',
+				security: [{ cookieAuth: [] }],
 				responses: {
-					'200': { description: 'Logged out successfully' }
+					'200': {
+						description: 'Logged out successfully',
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										success: { type: 'boolean', example: true },
+										data: {
+											type: 'object',
+											properties: {
+												message: { type: 'string', example: 'Logged out successfully' }
+											}
+										}
+									}
+								},
+								example: {
+									success: true,
+									data: {
+										message: 'Logged out successfully'
+									}
+								}
+							}
+						}
+					}
 				}
 			}
 		},
@@ -217,12 +417,350 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 			get: {
 				tags: ['Auth'],
 				summary: 'Get current user',
-				description: 'Get authenticated user profile',
+				description: 'Get the authenticated user\'s profile information.',
 				operationId: 'getCurrentUser',
 				security: [{ cookieAuth: [] }],
 				responses: {
-					'200': { description: 'User profile' },
-					'401': { description: 'Not authenticated' }
+					'200': {
+						description: 'User profile retrieved successfully',
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										success: { type: 'boolean', example: true },
+										data: {
+											type: 'object',
+											properties: {
+												user: { $ref: '#/components/schemas/SessionUser' }
+											}
+										}
+									}
+								},
+								example: {
+									success: true,
+									data: {
+										user: {
+											id: '507f1f77bcf86cd799439011',
+											email: 'student@example.com',
+											name: 'John Doe',
+											role: 'student',
+											phone: '+2348012345678',
+											avatarUrl: 'https://res.cloudinary.com/demo/image/upload/avatar.jpg',
+											matricNumber: 'FUP/20/0001',
+											isEmailVerified: true,
+											isVerified: false,
+											savedListingIds: ['507f1f77bcf86cd799439012', '507f1f77bcf86cd799439013'],
+											savedRoommateIds: ['507f1f77bcf86cd799439020'],
+											unlockedListingIds: ['507f1f77bcf86cd799439015'],
+											createdAt: '2024-01-15T10:30:00.000Z'
+										}
+									}
+								}
+							}
+						}
+					},
+					'401': {
+						description: 'Not authenticated - no valid session',
+						content: {
+							'application/json': {
+								schema: { $ref: '#/components/schemas/ErrorResponse' },
+								example: {
+									success: false,
+									error: 'Authentication required'
+								}
+							}
+						}
+					}
+				}
+			},
+			patch: {
+				tags: ['Auth'],
+				summary: 'Update current user',
+				description: 'Update the authenticated user\'s profile information.',
+				operationId: 'updateCurrentUser',
+				security: [{ cookieAuth: [] }],
+				requestBody: {
+					required: true,
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									name: { type: 'string', minLength: 2, maxLength: 50, example: 'John Smith' },
+									phone: { type: 'string', example: '+2348012345679' },
+									avatarUrl: { type: 'string', format: 'uri', example: 'https://res.cloudinary.com/demo/image/upload/new-avatar.jpg' },
+									matricNumber: { type: 'string', example: 'FUP/20/0002' }
+								}
+							},
+							example: {
+								name: 'John Smith',
+								phone: '+2348012345679'
+							}
+						}
+					}
+				},
+				responses: {
+					'200': {
+						description: 'Profile updated successfully',
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										success: { type: 'boolean', example: true },
+										data: {
+											type: 'object',
+											properties: {
+												user: { $ref: '#/components/schemas/SessionUser' }
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					'401': {
+						description: 'Not authenticated',
+						content: {
+							'application/json': {
+								schema: { $ref: '#/components/schemas/ErrorResponse' }
+							}
+						}
+					}
+				}
+			}
+		},
+		'/api/auth/refresh': {
+			post: {
+				tags: ['Auth'],
+				summary: 'Refresh access token',
+				description: 'Use refresh token to get a new access token.',
+				operationId: 'refreshToken',
+				responses: {
+					'200': {
+						description: 'Token refreshed successfully',
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										success: { type: 'boolean', example: true },
+										data: {
+											type: 'object',
+											properties: {
+												message: { type: 'string', example: 'Token refreshed' }
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					'401': {
+						description: 'Invalid or expired refresh token',
+						content: {
+							'application/json': {
+								schema: { $ref: '#/components/schemas/ErrorResponse' },
+								example: {
+									success: false,
+									error: 'Invalid refresh token'
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		'/api/auth/forgot-password': {
+			post: {
+				tags: ['Auth'],
+				summary: 'Request password reset',
+				description: 'Send password reset email to user.',
+				operationId: 'forgotPassword',
+				requestBody: {
+					required: true,
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									email: { type: 'string', format: 'email', example: 'student@example.com' }
+								},
+								required: ['email']
+							}
+						}
+					}
+				},
+				responses: {
+					'200': {
+						description: 'Reset email sent (if account exists)',
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										success: { type: 'boolean', example: true },
+										data: {
+											type: 'object',
+											properties: {
+												message: { type: 'string', example: 'If an account exists with this email, a password reset link has been sent.' }
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		'/api/auth/reset-password': {
+			post: {
+				tags: ['Auth'],
+				summary: 'Reset password',
+				description: 'Reset password using token from email.',
+				operationId: 'resetPassword',
+				requestBody: {
+					required: true,
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									token: { type: 'string', example: 'abc123xyz...' },
+									password: { type: 'string', minLength: 6, example: 'NewSecurePass123!' }
+								},
+								required: ['token', 'password']
+							}
+						}
+					}
+				},
+				responses: {
+					'200': {
+						description: 'Password reset successfully',
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										success: { type: 'boolean', example: true },
+										data: {
+											type: 'object',
+											properties: {
+												message: { type: 'string', example: 'Password reset successfully. Please log in with your new password.' }
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					'400': {
+						description: 'Invalid or expired token',
+						content: {
+							'application/json': {
+								schema: { $ref: '#/components/schemas/ErrorResponse' },
+								example: {
+									success: false,
+									error: 'Invalid or expired reset token'
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		'/api/auth/verify-email': {
+			post: {
+				tags: ['Auth'],
+				summary: 'Verify email address',
+				description: 'Verify email using token from verification email.',
+				operationId: 'verifyEmail',
+				requestBody: {
+					required: true,
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									token: { type: 'string', example: 'verification-token-123...' }
+								},
+								required: ['token']
+							}
+						}
+					}
+				},
+				responses: {
+					'200': {
+						description: 'Email verified successfully',
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										success: { type: 'boolean', example: true },
+										data: {
+											type: 'object',
+											properties: {
+												message: { type: 'string', example: 'Email verified successfully' }
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					'400': {
+						description: 'Invalid or expired token',
+						content: {
+							'application/json': {
+								schema: { $ref: '#/components/schemas/ErrorResponse' }
+							}
+						}
+					}
+				}
+			}
+		},
+		'/api/auth/resend-verification': {
+			post: {
+				tags: ['Auth'],
+				summary: 'Resend verification email',
+				description: 'Resend email verification link.',
+				operationId: 'resendVerification',
+				security: [{ cookieAuth: [] }],
+				responses: {
+					'200': {
+						description: 'Verification email sent',
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										success: { type: 'boolean', example: true },
+										data: {
+											type: 'object',
+											properties: {
+												message: { type: 'string', example: 'Verification email sent' }
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					'400': {
+						description: 'Email already verified',
+						content: {
+							'application/json': {
+								schema: { $ref: '#/components/schemas/ErrorResponse' },
+								example: {
+									success: false,
+									error: 'Email is already verified'
+								}
+							}
+						}
+					}
 				}
 			}
 		},

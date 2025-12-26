@@ -88,13 +88,24 @@ function normalizeError(error: AxiosError<ApiResponse>): ApiError {
 
 	const { status, data } = error.response;
 
-	// Handle auth errors
+	// Handle auth errors - dispatch session-expired only on protected routes
+	// and only for API calls other than /auth/me (which is handled by useCurrentUser)
 	if (status === 401 && typeof window !== 'undefined') {
-		// Dispatch session expired event
-		const publicPaths = ['/auth/login', '/auth/register', '/auth/forgot-password', '/auth/reset-password'];
+		const requestUrl = error.config?.url || '';
 		const currentPath = window.location.pathname;
 
-		if (!publicPaths.some((p) => currentPath.startsWith(p))) {
+		// Protected routes that require authentication
+		const protectedPaths = ['/profile', '/dashboard', '/unlock'];
+		const isOnProtectedRoute = protectedPaths.some(
+			(route) => currentPath === route || currentPath.startsWith(`${route}/`)
+		);
+
+		// Don't dispatch for /auth/me - useCurrentUser handles that gracefully
+		const isAuthMeRequest = requestUrl.includes('/auth/me');
+
+		// Only dispatch session-expired when on a protected route and NOT for auth/me
+		// This prevents false redirects on public pages where 401 is expected for guests
+		if (isOnProtectedRoute && !isAuthMeRequest) {
 			dispatchAuthEvent('auth:session-expired', {
 				returnUrl: currentPath
 			});
@@ -224,4 +235,3 @@ export function buildQueryString(params: Record<string, unknown>): string {
  * Export the raw Axios instance for advanced use cases
  */
 export { apiClient };
-

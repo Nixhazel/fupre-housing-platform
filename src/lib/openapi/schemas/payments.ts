@@ -152,9 +152,37 @@ export const paymentProofPaths = {
 				{ name: 'limit', in: 'query', schema: { type: 'integer', default: 20, maximum: 50 } }
 			],
 			responses: {
-				'200': { description: 'List of pending proofs' },
-				'401': { description: 'Not authenticated' },
-				'403': { description: 'Admin access required' }
+				'200': {
+					description: 'List of pending proofs',
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									success: { type: 'boolean', example: true },
+									data: {
+										type: 'object',
+										properties: {
+											proofs: {
+												type: 'array',
+												items: { $ref: '#/components/schemas/PaymentProof' }
+											},
+											pagination: { $ref: '#/components/schemas/PaginationMeta' }
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				'401': {
+					description: 'Not authenticated',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				},
+				'403': {
+					description: 'Admin access required',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				}
 			}
 		}
 	},
@@ -168,9 +196,33 @@ export const paymentProofPaths = {
 				{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }
 			],
 			responses: {
-				'200': { description: 'Payment proof details' },
-				'403': { description: 'Access denied' },
-				'404': { description: 'Proof not found' }
+				'200': {
+					description: 'Payment proof details',
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									success: { type: 'boolean', example: true },
+									data: {
+										type: 'object',
+										properties: {
+											proof: { $ref: '#/components/schemas/PaymentProof' }
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				'403': {
+					description: 'Access denied',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				},
+				'404': {
+					description: 'Proof not found',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				}
 			}
 		},
 		patch: {
@@ -185,15 +237,53 @@ export const paymentProofPaths = {
 				required: true,
 				content: {
 					'application/json': {
-						schema: { $ref: '#/components/schemas/ReviewPaymentProofRequest' }
+						schema: { $ref: '#/components/schemas/ReviewPaymentProofRequest' },
+						examples: {
+							approve: {
+								summary: 'Approve payment',
+								value: { status: 'approved' }
+							},
+							reject: {
+								summary: 'Reject payment',
+								value: { status: 'rejected', rejectionReason: 'Payment reference does not match our records' }
+							}
+						}
 					}
 				}
 			},
 			responses: {
-				'200': { description: 'Proof reviewed successfully' },
-				'400': { description: 'Validation error or already reviewed' },
-				'403': { description: 'Admin access required' },
-				'404': { description: 'Proof not found' }
+				'200': {
+					description: 'Proof reviewed successfully',
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									success: { type: 'boolean', example: true },
+									data: {
+										type: 'object',
+										properties: {
+											proof: { $ref: '#/components/schemas/PaymentProof' },
+											message: { type: 'string', example: 'Payment proof approved' }
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				'400': {
+					description: 'Validation error or already reviewed',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				},
+				'403': {
+					description: 'Admin access required',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				},
+				'404': {
+					description: 'Proof not found',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				}
 			}
 		}
 	},
@@ -204,8 +294,32 @@ export const paymentProofPaths = {
 			description: 'Get all listings saved by the current user.',
 			security: [{ cookieAuth: [] }],
 			responses: {
-				'200': { description: 'List of saved listings' },
-				'401': { description: 'Not authenticated' }
+				'200': {
+					description: 'List of saved listings',
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									success: { type: 'boolean', example: true },
+									data: {
+										type: 'object',
+										properties: {
+											listings: {
+												type: 'array',
+												items: { $ref: '#/components/schemas/PublicListing' }
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				'401': {
+					description: 'Not authenticated',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				}
 			}
 		},
 		post: {
@@ -221,16 +335,45 @@ export const paymentProofPaths = {
 							type: 'object',
 							required: ['listingId'],
 							properties: {
-								listingId: { type: 'string' }
+								listingId: { type: 'string', example: '507f1f77bcf86cd799439011' }
 							}
 						}
 					}
 				}
 			},
 			responses: {
-				'200': { description: 'Listing saved successfully' },
-				'404': { description: 'Listing not found' },
-				'409': { description: 'Already saved' }
+				'200': {
+					description: 'Listing saved successfully',
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									success: { type: 'boolean', example: true },
+									data: {
+										type: 'object',
+										properties: {
+											message: { type: 'string', example: 'Listing saved successfully' },
+											savedListingIds: {
+												type: 'array',
+												items: { type: 'string' },
+												example: ['507f1f77bcf86cd799439011', '507f1f77bcf86cd799439012']
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				'404': {
+					description: 'Listing not found',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				},
+				'409': {
+					description: 'Already saved',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				}
 			}
 		}
 	},
@@ -244,8 +387,34 @@ export const paymentProofPaths = {
 				{ name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'Listing ID' }
 			],
 			responses: {
-				'200': { description: 'Listing removed from saved' },
-				'404': { description: 'Listing not in saved list' }
+				'200': {
+					description: 'Listing removed from saved',
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									success: { type: 'boolean', example: true },
+									data: {
+										type: 'object',
+										properties: {
+											message: { type: 'string', example: 'Listing removed from saved' },
+											savedListingIds: {
+												type: 'array',
+												items: { type: 'string' },
+												example: ['507f1f77bcf86cd799439012']
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				'404': {
+					description: 'Listing not in saved list',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				}
 			}
 		}
 	}

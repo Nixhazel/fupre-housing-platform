@@ -131,15 +131,56 @@ export const roommatePaths = {
 				required: true,
 				content: {
 					'application/json': {
-						schema: { $ref: '#/components/schemas/CreateRoommateListingRequest' }
+						schema: { $ref: '#/components/schemas/CreateRoommateListingRequest' },
+						example: {
+							title: 'Looking for a quiet roommate near Ugbomro',
+							budgetMonthly: 25000,
+							moveInDate: '2024-03-01',
+							description: 'I am a final year student looking for a neat and studious roommate to share a 2-bedroom apartment.',
+							photos: ['https://res.cloudinary.com/demo/image/upload/room1.jpg'],
+							preferences: {
+								gender: 'male',
+								cleanliness: 'high',
+								studyHours: 'night',
+								smoking: 'no',
+								pets: 'no'
+							}
+						}
 					}
 				}
 			},
 			responses: {
-				'201': { description: 'Listing created successfully' },
-				'400': { description: 'Validation error' },
-				'401': { description: 'Not authenticated' },
-				'403': { description: 'Only students and owners allowed' }
+				'201': {
+					description: 'Listing created successfully',
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									success: { type: 'boolean', example: true },
+									data: {
+										type: 'object',
+										properties: {
+											listing: { $ref: '#/components/schemas/RoommateListing' }
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				'400': {
+					description: 'Validation error',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				},
+				'401': {
+					description: 'Not authenticated',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				},
+				'403': {
+					description: 'Only students and owners allowed',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				}
 			}
 		}
 	},
@@ -154,8 +195,33 @@ export const roommatePaths = {
 				{ name: 'limit', in: 'query', schema: { type: 'integer', default: 20 } }
 			],
 			responses: {
-				'200': { description: 'User\'s roommate listings' },
-				'401': { description: 'Not authenticated' }
+				'200': {
+					description: 'User\'s roommate listings',
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									success: { type: 'boolean', example: true },
+									data: {
+										type: 'object',
+										properties: {
+											listings: {
+												type: 'array',
+												items: { $ref: '#/components/schemas/RoommateListing' }
+											},
+											pagination: { $ref: '#/components/schemas/PaginationMeta' }
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				'401': {
+					description: 'Not authenticated',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				}
 			}
 		}
 	},
@@ -168,8 +234,29 @@ export const roommatePaths = {
 				{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }
 			],
 			responses: {
-				'200': { description: 'Roommate listing details' },
-				'404': { description: 'Listing not found' }
+				'200': {
+					description: 'Roommate listing details',
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									success: { type: 'boolean', example: true },
+									data: {
+										type: 'object',
+										properties: {
+											listing: { $ref: '#/components/schemas/RoommateListing' }
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				'404': {
+					description: 'Listing not found',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				}
 			}
 		},
 		patch: {
@@ -189,10 +276,37 @@ export const roommatePaths = {
 				}
 			},
 			responses: {
-				'200': { description: 'Listing updated' },
-				'400': { description: 'Validation error' },
-				'403': { description: 'Not owner' },
-				'404': { description: 'Listing not found' }
+				'200': {
+					description: 'Listing updated',
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									success: { type: 'boolean', example: true },
+									data: {
+										type: 'object',
+										properties: {
+											listing: { $ref: '#/components/schemas/RoommateListing' }
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				'400': {
+					description: 'Validation error',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				},
+				'403': {
+					description: 'Not owner',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				},
+				'404': {
+					description: 'Listing not found',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				}
 			}
 		},
 		delete: {
@@ -204,9 +318,158 @@ export const roommatePaths = {
 				{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }
 			],
 			responses: {
-				'200': { description: 'Listing deleted' },
-				'403': { description: 'Not owner' },
-				'404': { description: 'Listing not found' }
+				'200': {
+					description: 'Listing deleted',
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									success: { type: 'boolean', example: true },
+									data: {
+										type: 'object',
+										properties: {
+											message: { type: 'string', example: 'Roommate listing deleted successfully' }
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				'403': {
+					description: 'Not owner',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				},
+				'404': {
+					description: 'Listing not found',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				}
+			}
+		}
+	},
+	'/api/users/me/saved-roommates': {
+		get: {
+			tags: ['Users', 'Roommates'],
+			summary: 'Get saved roommate listings',
+			description: 'Get all roommate listings saved by the current user.',
+			security: [{ cookieAuth: [] }],
+			responses: {
+				'200': {
+					description: 'List of saved roommate listings',
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									success: { type: 'boolean', example: true },
+									data: {
+										type: 'object',
+										properties: {
+											listings: {
+												type: 'array',
+												items: { $ref: '#/components/schemas/RoommateListing' }
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				'401': {
+					description: 'Not authenticated',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				}
+			}
+		},
+		post: {
+			tags: ['Users', 'Roommates'],
+			summary: 'Save a roommate listing',
+			description: 'Add a roommate listing to saved favorites.',
+			security: [{ cookieAuth: [] }],
+			requestBody: {
+				required: true,
+				content: {
+					'application/json': {
+						schema: {
+							type: 'object',
+							required: ['listingId'],
+							properties: {
+								listingId: { type: 'string', example: '507f1f77bcf86cd799439011' }
+							}
+						}
+					}
+				}
+			},
+			responses: {
+				'200': {
+					description: 'Roommate listing saved successfully',
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									success: { type: 'boolean', example: true },
+									data: {
+										type: 'object',
+										properties: {
+											message: { type: 'string', example: 'Roommate listing saved' },
+											savedRoommateIds: {
+												type: 'array',
+												items: { type: 'string' }
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				'404': {
+					description: 'Listing not found',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				}
+			}
+		}
+	},
+	'/api/users/me/saved-roommates/{id}': {
+		delete: {
+			tags: ['Users', 'Roommates'],
+			summary: 'Unsave a roommate listing',
+			description: 'Remove a roommate listing from saved favorites.',
+			security: [{ cookieAuth: [] }],
+			parameters: [
+				{ name: 'id', in: 'path', required: true, schema: { type: 'string' }, description: 'Roommate listing ID' }
+			],
+			responses: {
+				'200': {
+					description: 'Roommate listing removed from saved',
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									success: { type: 'boolean', example: true },
+									data: {
+										type: 'object',
+										properties: {
+											message: { type: 'string', example: 'Roommate listing removed from saved' },
+											savedRoommateIds: {
+												type: 'array',
+												items: { type: 'string' }
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				'404': {
+					description: 'Listing not in saved list',
+					content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+				}
 			}
 		}
 	}

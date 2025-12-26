@@ -123,7 +123,7 @@ export function Footer() {
 
 				<div className='border-t mt-8 pt-8 flex flex-col md:flex-row justify-between items-center'>
 					<p className='text-sm text-muted-foreground'>
-						© 2024 EasyVille Estates. All rights reserved.
+						© 2025 EasyVille Estates. All rights reserved.
 					</p>
 					<div className='flex space-x-6 mt-4 md:mt-0'>
 						<Link

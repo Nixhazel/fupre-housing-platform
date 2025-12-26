@@ -99,17 +99,19 @@ function NavbarContent() {
 		<nav className='sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60'>
 			<div className='container mx-auto px-4'>
 				<div className='flex h-16 items-center justify-between'>
-				{/* Logo */}
-				<Link href='/' className='flex items-center space-x-2'>
-					<Image
-						src='/images/easyvill-logo.png'
-						alt='EasyVille Estates'
-						width={40}
-						height={40}
-						className='h-10 w-10 object-contain'
-					/>
-					<span className='text-xl font-bold hidden sm:inline'>EasyVille Estates</span>
-				</Link>
+					{/* Logo */}
+					<Link href='/' className='flex items-center space-x-2'>
+						<Image
+							src='/images/easyvill-logo.png'
+							alt='EasyVille Estates'
+							width={40}
+							height={40}
+							className='h-10 w-10 object-contain'
+						/>
+						<span className='text-xl font-bold hidden sm:inline'>
+							EasyVille Estates
+						</span>
+					</Link>
 
 					{/* Desktop Search */}
 					<form
@@ -155,7 +157,7 @@ function NavbarContent() {
 						</Button>
 
 						{/* Auth Menu */}
-						{isAuthenticated && user ? (
+						{isAuthenticated && user?.name ? (
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
 									<Button
@@ -279,7 +281,7 @@ function NavbarContent() {
 							</Button>
 
 							{/* Mobile Auth */}
-							{isAuthenticated && user ? (
+							{isAuthenticated && user?.name ? (
 								<div className='space-y-2 pt-2 border-t'>
 									<div className='px-3 py-2 text-sm text-muted-foreground'>
 										Signed in as {user.name}

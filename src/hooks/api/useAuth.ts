@@ -83,7 +83,11 @@ export function useCurrentUser(
 
 	const query = useQuery({
 		queryKey: queryKeys.auth.me(),
-		queryFn: () => api.get<SessionUser>('/auth/me'),
+		queryFn: async () => {
+			// API returns { user: SessionUser }, we need to extract just the user
+			const response = await api.get<{ user: SessionUser }>('/auth/me');
+			return response.user;
+		},
 		staleTime: 5 * 60 * 1000, // 5 minutes
 		gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
 		retry: (failureCount, error) => {
@@ -95,13 +99,10 @@ export function useCurrentUser(
 	});
 
 	// Subscribe to auth events for cache sync
+	// Note: auth:session-expired is handled by AuthGuard (with redirect)
+	// We only handle auth:logout here for cache cleanup
 	useEffect(() => {
 		const unsubscribe = subscribeToAuthEvents({
-			'auth:session-expired': () => {
-				// Clear user cache on session expiry
-				queryClient.setQueryData(queryKeys.auth.me(), null);
-				queryClient.invalidateQueries({ queryKey: queryKeys.auth.all });
-			},
 			'auth:logout': () => {
 				// Clear all caches on logout
 				queryClient.clear();
