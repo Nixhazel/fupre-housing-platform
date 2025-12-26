@@ -276,7 +276,7 @@ export default function AgentDashboard() {
 										animate={{ opacity: 1, x: 0 }}
 										transition={{ duration: 0.3, delay: index * 0.1 }}
 										className='flex items-center space-x-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors'>
-										<div className='relative w-16 h-16 flex-shrink-0'>
+										<div className='relative w-16 h-16 shrink-0'>
 											<Image
 												src={listing.coverPhoto}
 												alt={listing.title}

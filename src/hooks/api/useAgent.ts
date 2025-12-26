@@ -35,8 +35,6 @@ export type AgentStatsResponse = AgentStats;
 
 export interface AgentEarningsResponse {
 	earnings: MonthlyEarning[];
-	total: number;
-	monthsIncluded: number;
 }
 
 export interface AgentListingsResponse {
