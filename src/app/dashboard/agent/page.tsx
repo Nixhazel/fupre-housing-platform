@@ -41,7 +41,8 @@ export default function AgentDashboard() {
 		{ enabled: !!user && canAccessAgent(user.role) }
 	);
 
-	const stats = statsData?.stats;
+	// statsData is now AgentStats directly (not { stats: AgentStats })
+	const stats = statsData;
 	const listings = listingsData?.listings || [];
 
 	useEffect(() => {
@@ -168,9 +169,7 @@ export default function AgentDashboard() {
 									<div className='text-2xl font-bold'>
 										{stats?.totalUnlocks ?? 0}
 									</div>
-									<p className='text-xs text-muted-foreground'>
-										Total unlocks
-									</p>
+									<p className='text-xs text-muted-foreground'>Total unlocks</p>
 								</>
 							)}
 						</CardContent>
@@ -243,7 +242,9 @@ export default function AgentDashboard() {
 						{listingsLoading ? (
 							<div className='space-y-4'>
 								{[...Array(3)].map((_, i) => (
-									<div key={i} className='flex items-center space-x-4 p-4 border rounded-lg'>
+									<div
+										key={i}
+										className='flex items-center space-x-4 p-4 border rounded-lg'>
 										<div className='w-16 h-16 bg-muted animate-pulse rounded-lg' />
 										<div className='flex-1 space-y-2'>
 											<div className='h-4 w-1/2 bg-muted animate-pulse rounded' />

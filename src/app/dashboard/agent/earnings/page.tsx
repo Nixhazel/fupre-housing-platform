@@ -61,7 +61,8 @@ export default function AgentEarningsPage() {
 		{ enabled: !!user && canAccessAgent(user?.role || '') }
 	);
 
-	const stats = statsData?.stats;
+	// statsData is now AgentStats directly (not { stats: AgentStats })
+	const stats = statsData;
 	const earnings = earningsData?.earnings ?? [];
 	const listings = listingsData?.listings ?? [];
 

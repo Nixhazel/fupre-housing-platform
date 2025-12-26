@@ -43,7 +43,8 @@ export default function AgentProfilePage() {
 	});
 	const updateProfileMutation = useUpdateProfile();
 
-	const stats = statsData?.stats;
+	// statsData is now AgentStats directly (not { stats: AgentStats })
+	const stats = statsData;
 
 	const [isEditing, setIsEditing] = useState(false);
 	const [editForm, setEditForm] = useState({

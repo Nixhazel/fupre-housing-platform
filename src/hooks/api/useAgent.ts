@@ -6,7 +6,12 @@ import {
 } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
 import { queryKeys } from '@/lib/query/keys';
-import type { Listing, AgentStats, MonthlyEarning, PaginationMeta } from '@/lib/api/types';
+import type {
+	Listing,
+	AgentStats,
+	MonthlyEarning,
+	PaginationMeta
+} from '@/lib/api/types';
 import { ApiError } from '@/lib/api/types';
 
 /**
@@ -25,9 +30,8 @@ export interface AgentListingsFilters {
 	[key: string]: unknown;
 }
 
-export interface AgentStatsResponse {
-	stats: AgentStats;
-}
+// The API returns AgentStats directly (not wrapped in { stats: ... })
+export type AgentStatsResponse = AgentStats;
 
 export interface AgentEarningsResponse {
 	earnings: MonthlyEarning[];
@@ -80,7 +84,10 @@ export interface DeleteListingResponse {
  * @param options - Additional TanStack Query options
  */
 export function useAgentStats(
-	options?: Omit<UseQueryOptions<AgentStatsResponse, ApiError>, 'queryKey' | 'queryFn'>
+	options?: Omit<
+		UseQueryOptions<AgentStatsResponse, ApiError>,
+		'queryKey' | 'queryFn'
+	>
 ) {
 	return useQuery({
 		queryKey: queryKeys.agent.stats(),
@@ -98,11 +105,15 @@ export function useAgentStats(
  */
 export function useAgentEarnings(
 	months: number = 12,
-	options?: Omit<UseQueryOptions<AgentEarningsResponse, ApiError>, 'queryKey' | 'queryFn'>
+	options?: Omit<
+		UseQueryOptions<AgentEarningsResponse, ApiError>,
+		'queryKey' | 'queryFn'
+	>
 ) {
 	return useQuery({
 		queryKey: queryKeys.agent.earnings(months),
-		queryFn: () => api.get<AgentEarningsResponse>('/agents/me/earnings', { months }),
+		queryFn: () =>
+			api.get<AgentEarningsResponse>('/agents/me/earnings', { months }),
 		staleTime: 5 * 60 * 1000, // 5 minutes
 		...options
 	});
@@ -116,11 +127,15 @@ export function useAgentEarnings(
  */
 export function useAgentListings(
 	filters: AgentListingsFilters = {},
-	options?: Omit<UseQueryOptions<AgentListingsResponse, ApiError>, 'queryKey' | 'queryFn'>
+	options?: Omit<
+		UseQueryOptions<AgentListingsResponse, ApiError>,
+		'queryKey' | 'queryFn'
+	>
 ) {
 	return useQuery({
 		queryKey: queryKeys.agent.listings(filters),
-		queryFn: () => api.get<AgentListingsResponse>('/agents/me/listings', filters),
+		queryFn: () =>
+			api.get<AgentListingsResponse>('/agents/me/listings', filters),
 		staleTime: 30 * 1000, // 30 seconds
 		...options
 	});
@@ -163,12 +178,15 @@ export function useUpdateListing() {
 
 		onMutate: async ({ id, data }) => {
 			// Cancel outgoing refetches
-			await queryClient.cancelQueries({ queryKey: queryKeys.listings.detail(id) });
+			await queryClient.cancelQueries({
+				queryKey: queryKeys.listings.detail(id)
+			});
 
 			// Snapshot previous value
-			const previousListing = queryClient.getQueryData<{ listing: Listing; isUnlocked: boolean }>(
-				queryKeys.listings.detail(id)
-			);
+			const previousListing = queryClient.getQueryData<{
+				listing: Listing;
+				isUnlocked: boolean;
+			}>(queryKeys.listings.detail(id));
 
 			// Optimistically update
 			if (previousListing) {
@@ -214,9 +232,10 @@ export function useMarkListingAsTaken() {
 
 		onSuccess: (_data, listingId) => {
 			// Update detail cache
-			const existing = queryClient.getQueryData<{ listing: Listing; isUnlocked: boolean }>(
-				queryKeys.listings.detail(listingId)
-			);
+			const existing = queryClient.getQueryData<{
+				listing: Listing;
+				isUnlocked: boolean;
+			}>(queryKeys.listings.detail(listingId));
 			if (existing) {
 				queryClient.setQueryData(queryKeys.listings.detail(listingId), {
 					...existing,
@@ -240,13 +259,16 @@ export function useMarkListingAsAvailable() {
 
 	return useMutation({
 		mutationFn: (listingId: string) =>
-			api.patch<ListingResponse>(`/listings/${listingId}`, { status: 'available' }),
+			api.patch<ListingResponse>(`/listings/${listingId}`, {
+				status: 'available'
+			}),
 
 		onSuccess: (_data, listingId) => {
 			// Update detail cache
-			const existing = queryClient.getQueryData<{ listing: Listing; isUnlocked: boolean }>(
-				queryKeys.listings.detail(listingId)
-			);
+			const existing = queryClient.getQueryData<{
+				listing: Listing;
+				isUnlocked: boolean;
+			}>(queryKeys.listings.detail(listingId));
 			if (existing) {
 				queryClient.setQueryData(queryKeys.listings.detail(listingId), {
 					...existing,
@@ -283,14 +305,19 @@ export function useDeleteListing() {
 
 			// Optimistically remove from list
 			if (previousListings) {
-				queryClient.setQueryData<AgentListingsResponse>(queryKeys.agent.listings(), {
-					...previousListings,
-					listings: previousListings.listings.filter((l) => l.id !== listingId),
-					pagination: {
-						...previousListings.pagination,
-						total: previousListings.pagination.total - 1
+				queryClient.setQueryData<AgentListingsResponse>(
+					queryKeys.agent.listings(),
+					{
+						...previousListings,
+						listings: previousListings.listings.filter(
+							(l) => l.id !== listingId
+						),
+						pagination: {
+							...previousListings.pagination,
+							total: previousListings.pagination.total - 1
+						}
 					}
-				});
+				);
 			}
 
 			return { previousListings };
@@ -299,13 +326,18 @@ export function useDeleteListing() {
 		onError: (_error, _listingId, context) => {
 			// Rollback on error
 			if (context?.previousListings) {
-				queryClient.setQueryData(queryKeys.agent.listings(), context.previousListings);
+				queryClient.setQueryData(
+					queryKeys.agent.listings(),
+					context.previousListings
+				);
 			}
 		},
 
 		onSettled: (_data, _error, listingId) => {
 			// Remove detail from cache
-			queryClient.removeQueries({ queryKey: queryKeys.listings.detail(listingId) });
+			queryClient.removeQueries({
+				queryKey: queryKeys.listings.detail(listingId)
+			});
 
 			// Refetch lists and stats
 			queryClient.invalidateQueries({ queryKey: queryKeys.agent.listings() });
@@ -333,8 +365,8 @@ export function useInvalidateAgent() {
  */
 export function useAgentStatsFromCache(): AgentStats | undefined {
 	const queryClient = useQueryClient();
-	const data = queryClient.getQueryData<AgentStatsResponse>(queryKeys.agent.stats());
-	return data?.stats;
+	// AgentStatsResponse is now AgentStats directly
+	return queryClient.getQueryData<AgentStatsResponse>(queryKeys.agent.stats());
 }
 
 /**

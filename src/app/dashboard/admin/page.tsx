@@ -32,7 +32,8 @@ export default function AdminDashboard() {
 	const rejectMutation = useRejectPaymentProof();
 
 	const pendingProofs = pendingProofsData?.proofs ?? [];
-	const stats = statsData?.stats;
+	// statsData is now PlatformStats directly (not { stats: PlatformStats })
+	const stats = statsData;
 
 	const handleApproveProof = (proofId: string) => {
 		approveMutation.mutate(proofId, {

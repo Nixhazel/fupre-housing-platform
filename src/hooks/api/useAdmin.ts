@@ -28,9 +28,8 @@ export interface UsersFilters {
 	[key: string]: unknown;
 }
 
-export interface PlatformStatsResponse {
-	stats: PlatformStats;
-}
+// The API returns PlatformStats directly (not wrapped in { stats: ... })
+export type PlatformStatsResponse = PlatformStats;
 
 export interface UsersResponse {
 	users: SessionUser[];
@@ -295,8 +294,8 @@ export function useInvalidateAdmin() {
  */
 export function usePlatformStatsFromCache(): PlatformStats | undefined {
 	const queryClient = useQueryClient();
-	const data = queryClient.getQueryData<PlatformStatsResponse>(queryKeys.admin.stats());
-	return data?.stats;
+	// PlatformStatsResponse is now PlatformStats directly
+	return queryClient.getQueryData<PlatformStatsResponse>(queryKeys.admin.stats());
 }
 
 /**
