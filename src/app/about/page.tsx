@@ -17,6 +17,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
+import { PLATFORM_CONFIG } from '@/lib/config/env';
+
+// Calculate agent commission for display
+const AGENT_EARNINGS_PER_UNLOCK = Math.round(PLATFORM_CONFIG.UNLOCK_FEE * PLATFORM_CONFIG.AGENT_COMMISSION_RATE);
 
 export default function AboutPage() {
 	const values = [
@@ -237,7 +241,7 @@ export default function AboutPage() {
 							<ul className='space-y-2'>
 								<li className='flex items-center gap-2'>
 									<CheckCircle className='h-4 w-4 text-green-500' />
-									Earn ₦700 for every listing unlock
+									Earn ₦{AGENT_EARNINGS_PER_UNLOCK.toLocaleString()} for every listing unlock
 								</li>
 								<li className='flex items-center gap-2'>
 									<CheckCircle className='h-4 w-4 text-green-500' />

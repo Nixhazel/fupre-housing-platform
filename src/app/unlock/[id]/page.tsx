@@ -41,6 +41,7 @@ import {
 	type PaymentProofFormData
 } from '@/lib/validators/payments';
 import { formatNaira } from '@/lib/utils/currency';
+import { PLATFORM_CONFIG } from '@/lib/config/env';
 import { toast } from 'sonner';
 import { UPLOAD_FOLDERS, MAX_FILE_SIZES } from '@/lib/cloudinary';
 import Link from 'next/link';
@@ -72,7 +73,7 @@ export default function UnlockPage() {
 	} = useForm<PaymentProofFormData>({
 		resolver: zodResolver(paymentProofSchema),
 		defaultValues: {
-			amount: 1000
+			amount: PLATFORM_CONFIG.UNLOCK_FEE
 		}
 	});
 
@@ -283,7 +284,7 @@ export default function UnlockPage() {
 								<Input
 									id='amount'
 									type='number'
-									value={1000}
+									value={PLATFORM_CONFIG.UNLOCK_FEE}
 									readOnly
 									className='bg-muted'
 								/>

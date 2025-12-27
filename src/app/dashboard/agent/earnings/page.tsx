@@ -26,6 +26,7 @@ import {
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/components/providers/AuthProvider';
+import { formatUnlockFee } from '@/lib/config/env';
 import {
 	useAgentEarnings,
 	useAgentStats,
@@ -324,7 +325,7 @@ export default function AgentEarningsPage() {
 										{stats?.totalUnlocks ?? 0}
 									</div>
 									<p className='text-xs text-muted-foreground'>
-										₦1,000 per unlock
+										{formatUnlockFee()} per unlock
 									</p>
 								</CardContent>
 							</Card>

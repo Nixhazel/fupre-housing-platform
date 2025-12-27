@@ -11,7 +11,9 @@ import type { SubmitPaymentProofInput, ReviewPaymentProofInput } from '@/lib/val
  * Business logic for payment proof operations
  */
 
-const UNLOCK_FEE = 1000; // ₦1,000 per unlock
+import { PLATFORM_CONFIG } from '@/lib/config/env';
+
+const UNLOCK_FEE = PLATFORM_CONFIG.UNLOCK_FEE;
 
 /**
  * Submit a new payment proof

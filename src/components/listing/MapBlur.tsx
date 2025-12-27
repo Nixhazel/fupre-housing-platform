@@ -7,6 +7,7 @@ import { Lock, MapPin, Unlock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/shared/Badge';
 import { cn } from '@/lib/utils';
+import { formatUnlockFee } from '@/lib/config/env';
 
 interface MapBlurProps {
 	mapPreview: string;
@@ -111,7 +112,7 @@ export function MapBlur({
 										transition={{ type: 'spring', stiffness: 400, damping: 10 }}
 										className='flex items-center space-x-2'>
 										<MapPin className='h-4 w-4' />
-										<span>Unlock Location (₦1,000)</span>
+										<span>Unlock Location ({formatUnlockFee()})</span>
 									</motion.div>
 								</Button>
 							</motion.div>

@@ -333,13 +333,17 @@ function ListingsContent() {
 													<span className='text-lg font-bold text-primary'>
 														{formatNaira(listing.priceMonthly)}/month
 													</span>
-													<div className='flex items-center space-x-1'>
-														<Star className='h-4 w-4 fill-yellow-400 text-yellow-400' />
-														<span className='text-sm'>{listing.rating}</span>
-														<span className='text-xs text-muted-foreground'>
-															({listing.reviewsCount})
-														</span>
-													</div>
+													{listing.reviewsCount > 0 ? (
+														<div className='flex items-center space-x-1'>
+															<Star className='h-4 w-4 fill-yellow-400 text-yellow-400' />
+															<span className='text-sm'>{listing.rating.toFixed(1)}</span>
+															<span className='text-xs text-muted-foreground'>
+																({listing.reviewsCount})
+															</span>
+														</div>
+													) : (
+														<span className='text-xs text-muted-foreground'>No reviews</span>
+													)}
 												</div>
 
 												{/* Amenities */}

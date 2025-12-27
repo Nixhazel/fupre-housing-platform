@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PLATFORM_CONFIG } from '@/lib/config/env';
 
 /**
  * Server-side Payment Validators
@@ -12,6 +13,8 @@ export const paymentMethodEnum = z.enum(['bank_transfer', 'ussd', 'pos']);
 // Payment status enum
 export const paymentStatusEnum = z.enum(['pending', 'approved', 'rejected']);
 
+const UNLOCK_FEE = PLATFORM_CONFIG.UNLOCK_FEE;
+
 /**
  * Submit payment proof schema
  */
@@ -20,9 +23,9 @@ export const submitPaymentProofSchema = z.object({
 
 	amount: z
 		.number()
-		.min(1000, 'Amount must be exactly ₦1,000')
-		.max(1000, 'Amount must be exactly ₦1,000')
-		.default(1000),
+		.min(UNLOCK_FEE, `Amount must be exactly ₦${UNLOCK_FEE.toLocaleString()}`)
+		.max(UNLOCK_FEE, `Amount must be exactly ₦${UNLOCK_FEE.toLocaleString()}`)
+		.default(UNLOCK_FEE),
 
 	method: paymentMethodEnum,
 

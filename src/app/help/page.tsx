@@ -29,6 +29,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/shared/Badge';
 import { Separator } from '@/components/ui/separator';
 
+import { formatUnlockFee } from '@/lib/config/env';
+
+// Support contact configuration
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@easyvilleestates.com';
+const SUPPORT_PHONE = process.env.NEXT_PUBLIC_SUPPORT_PHONE || '';
+const SUPPORT_WHATSAPP = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP || '';
+
 interface FAQItem {
 	id: string;
 	question: string;
@@ -50,7 +57,7 @@ const faqData: FAQItem[] = [
 		id: '2',
 		question: 'How does the location unlock feature work?',
 		answer:
-			'To see the full address and contact details of a listing, you need to pay ₦1,000 and submit payment proof. Our admin team will review and approve your request within 24 hours.',
+			`To see the full address and contact details of a listing, you need to pay ${formatUnlockFee()} and submit payment proof. Our admin team will review and approve your request within 24 hours.`,
 		category: 'Finding Housing',
 		icon: CreditCard
 	},
@@ -285,46 +292,50 @@ function HelpContent() {
 								Can&apos;t find what you&apos;re looking for? Our support team
 								is here to help.
 							</p>
-							<div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+							<div className={`grid grid-cols-1 gap-4 ${SUPPORT_PHONE || SUPPORT_WHATSAPP ? 'md:grid-cols-3' : 'md:grid-cols-1 max-w-md mx-auto'}`}>
 								<div className='text-center p-4 rounded-lg bg-muted/50'>
 									<Mail className='h-8 w-8 text-primary mx-auto mb-2' />
 									<h3 className='font-semibold mb-1'>Email Support</h3>
-								<p className='text-sm text-muted-foreground mb-2'>
-									support@easyvilleestates.com
-								</p>
-								<Button variant='outline' size='sm' asChild>
-									<a href='mailto:support@easyvilleestates.com'>
+									<p className='text-sm text-muted-foreground mb-2'>
+										{SUPPORT_EMAIL}
+									</p>
+									<Button variant='outline' size='sm' asChild>
+										<a href={`mailto:${SUPPORT_EMAIL}`}>
 											<Mail className='h-4 w-4 mr-2' />
 											Send Email
 										</a>
 									</Button>
 								</div>
-								<div className='text-center p-4 rounded-lg bg-muted/50'>
-									<Phone className='h-8 w-8 text-primary mx-auto mb-2' />
-									<h3 className='font-semibold mb-1'>Phone Support</h3>
-									<p className='text-sm text-muted-foreground mb-2'>
-										+234 812 345 6789
-									</p>
-									<Button variant='outline' size='sm' asChild>
-										<a href='tel:+2348123456789'>
-											<Phone className='h-4 w-4 mr-2' />
-											Call Now
-										</a>
-									</Button>
-								</div>
-								<div className='text-center p-4 rounded-lg bg-muted/50'>
-									<MessageCircle className='h-8 w-8 text-primary mx-auto mb-2' />
-									<h3 className='font-semibold mb-1'>WhatsApp</h3>
-									<p className='text-sm text-muted-foreground mb-2'>
-										Quick responses
-									</p>
-									<Button variant='outline' size='sm' asChild>
-										<a href='https://wa.me/2348123456789' target='_blank' rel='noopener noreferrer'>
-											<MessageCircle className='h-4 w-4 mr-2' />
-											Chat on WhatsApp
-										</a>
-									</Button>
-								</div>
+								{SUPPORT_PHONE && (
+									<div className='text-center p-4 rounded-lg bg-muted/50'>
+										<Phone className='h-8 w-8 text-primary mx-auto mb-2' />
+										<h3 className='font-semibold mb-1'>Phone Support</h3>
+										<p className='text-sm text-muted-foreground mb-2'>
+											{SUPPORT_PHONE}
+										</p>
+										<Button variant='outline' size='sm' asChild>
+											<a href={`tel:${SUPPORT_PHONE.replace(/\s/g, '')}`}>
+												<Phone className='h-4 w-4 mr-2' />
+												Call Now
+											</a>
+										</Button>
+									</div>
+								)}
+								{SUPPORT_WHATSAPP && (
+									<div className='text-center p-4 rounded-lg bg-muted/50'>
+										<MessageCircle className='h-8 w-8 text-primary mx-auto mb-2' />
+										<h3 className='font-semibold mb-1'>WhatsApp</h3>
+										<p className='text-sm text-muted-foreground mb-2'>
+											Quick responses
+										</p>
+										<Button variant='outline' size='sm' asChild>
+											<a href={`https://wa.me/${SUPPORT_WHATSAPP.replace(/\D/g, '')}`} target='_blank' rel='noopener noreferrer'>
+												<MessageCircle className='h-4 w-4 mr-2' />
+												Chat on WhatsApp
+											</a>
+										</Button>
+									</div>
+								)}
 							</div>
 						</CardContent>
 					</Card>

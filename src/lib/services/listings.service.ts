@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import connectDB from '@/lib/db/connect';
 import Listing, { type IListing } from '@/lib/db/models/Listing';
+import User from '@/lib/db/models/User';
 import type {
 	CreateListingInput,
 	UpdateListingInput,
@@ -12,6 +13,25 @@ import type {
  *
  * Business logic for listing operations
  */
+
+/**
+ * Agent info included in listing response
+ */
+export interface ListingAgent {
+	id: string;
+	name: string;
+	avatarUrl?: string;
+	isVerified: boolean;
+	listingsCount?: number;
+}
+
+/**
+ * Agent info with contact details (for unlocked listings)
+ */
+export interface ListingAgentUnlocked extends ListingAgent {
+	phone: string;
+	email: string;
+}
 
 /**
  * Listing response (public, no private fields)
@@ -31,6 +51,7 @@ export interface PublicListing {
 	coverPhoto: string;
 	mapPreview: string;
 	agentId: string;
+	agent?: ListingAgent;
 	status: string;
 	rating: number;
 	reviewsCount: number;
@@ -42,9 +63,10 @@ export interface PublicListing {
 /**
  * Unlocked listing response (includes private fields)
  */
-export interface UnlockedListing extends PublicListing {
+export interface UnlockedListing extends Omit<PublicListing, 'agent'> {
 	addressFull: string;
 	mapFull: string;
+	agent?: ListingAgentUnlocked;
 }
 
 /**
@@ -215,7 +237,30 @@ export async function getListingById(
 		await listing.save();
 	}
 
-	return toPublicListing(listing);
+	// Fetch agent info
+	const agent = await User.findActiveById(listing.agentId.toString());
+	let agentInfo: ListingAgent | undefined;
+
+	if (agent) {
+		// Get agent's listings count
+		const listingsCount = await Listing.countDocuments({
+			agentId: listing.agentId,
+			isDeleted: false
+		});
+
+		agentInfo = {
+			id: agent._id.toString(),
+			name: agent.name,
+			avatarUrl: agent.avatarUrl,
+			isVerified: agent.isVerified,
+			listingsCount
+		};
+	}
+
+	return {
+		...toPublicListing(listing),
+		agent: agentInfo
+	};
 }
 
 /**
@@ -235,7 +280,32 @@ export async function getUnlockedListing(
 		return null;
 	}
 
-	return toUnlockedListing(listing);
+	// Fetch agent info with contact details
+	const agent = await User.findActiveById(listing.agentId.toString());
+	let agentInfo: ListingAgentUnlocked | undefined;
+
+	if (agent) {
+		// Get agent's listings count
+		const listingsCount = await Listing.countDocuments({
+			agentId: listing.agentId,
+			isDeleted: false
+		});
+
+		agentInfo = {
+			id: agent._id.toString(),
+			name: agent.name,
+			avatarUrl: agent.avatarUrl,
+			isVerified: agent.isVerified,
+			listingsCount,
+			phone: agent.phone,
+			email: agent.email
+		};
+	}
+
+	return {
+		...toUnlockedListing(listing),
+		agent: agentInfo
+	};
 }
 
 /**

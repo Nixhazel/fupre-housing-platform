@@ -27,9 +27,14 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Rating } from '@/components/shared/Rating';
 import { MapBlur } from '@/components/listing/MapBlur';
-import { useListing, useSaveListing, useUnsaveListing } from '@/hooks/api/useListings';
+import {
+	useListing,
+	useSaveListing,
+	useUnsaveListing
+} from '@/hooks/api/useListings';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { formatNaira } from '@/lib/utils/currency';
+import { formatUnlockFee } from '@/lib/config/env';
 import { toast } from 'sonner';
 
 interface ListingDetailClientProps {
@@ -341,17 +346,23 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 						<CardContent className='space-y-4'>
 							<div className='flex items-center space-x-3'>
 								<Avatar className='h-12 w-12'>
-									<AvatarImage src='/images/avatars/agent1.jpg' />
-									<AvatarFallback>AG</AvatarFallback>
+									<AvatarImage src={listing.agent?.avatarUrl} />
+									<AvatarFallback>
+										{listing.agent?.name?.charAt(0).toUpperCase() || 'A'}
+									</AvatarFallback>
 								</Avatar>
 								<div>
-									<div className='font-semibold'>Agent</div>
+									<div className='font-semibold'>
+										{listing.agent?.name || 'Agent'}
+									</div>
 									<div className='text-sm text-muted-foreground'>
 										Student Agent (ISA)
 									</div>
-									<Badge variant='success' className='text-xs'>
-										Verified
-									</Badge>
+									{listing.agent?.isVerified && (
+										<Badge variant='success' className='text-xs'>
+											Verified
+										</Badge>
+									)}
 								</div>
 							</div>
 
@@ -360,11 +371,21 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 							<div className='space-y-2'>
 								<div className='flex justify-between text-sm'>
 									<span>Rating</span>
-									<Rating rating={4.5} size='sm' showCount={false} />
+									{listing.rating > 0 ? (
+										<Rating
+											rating={listing.rating}
+											size='sm'
+											showCount={false}
+										/>
+									) : (
+										<span className='text-muted-foreground'>
+											No ratings yet
+										</span>
+									)}
 								</div>
 								<div className='flex justify-between text-sm'>
 									<span>Listings</span>
-									<span>12 active</span>
+									<span>{listing.agent?.listingsCount ?? 0} active</span>
 								</div>
 							</div>
 						</CardContent>
@@ -376,21 +397,32 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 							<CardTitle>Contact Information</CardTitle>
 						</CardHeader>
 						<CardContent>
-							{isUnlocked ? (
+							{isUnlocked && listing.agent ? (
 								<div className='space-y-3'>
-									<div>
-										<div className='text-sm font-medium'>Phone</div>
-										<div className='text-sm text-muted-foreground'>
-											+234 812 345 6789
+									{listing.agent.phone && (
+										<div>
+											<div className='text-sm font-medium'>Phone</div>
+											<div className='text-sm text-muted-foreground'>
+												{listing.agent.phone}
+											</div>
 										</div>
-									</div>
-									<div>
-										<div className='text-sm font-medium'>Email</div>
-										<div className='text-sm text-muted-foreground'>
-											agent@example.com
+									)}
+									{listing.agent.email && (
+										<div>
+											<div className='text-sm font-medium'>Email</div>
+											<div className='text-sm text-muted-foreground'>
+												{listing.agent.email}
+											</div>
 										</div>
-									</div>
-									<Button className='w-full' size='lg'>
+									)}
+									<Button
+										className='w-full'
+										size='lg'
+										onClick={() => {
+											if (listing.agent?.phone) {
+												window.open(`tel:${listing.agent.phone}`, '_self');
+											}
+										}}>
 										<Users className='h-4 w-4 mr-2' />
 										Contact Agent
 									</Button>
@@ -409,7 +441,7 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 										size='lg'
 										onClick={handleUnlockLocation}>
 										<Unlock className='h-4 w-4 mr-2' />
-										Unlock Location (₦1,000)
+										Unlock Location ({formatUnlockFee()})
 									</Button>
 								</div>
 							)}
@@ -422,7 +454,10 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 							<CardTitle>Quick Actions</CardTitle>
 						</CardHeader>
 						<CardContent className='space-y-3'>
-							<Button variant='outline' className='w-full' onClick={handleShare}>
+							<Button
+								variant='outline'
+								className='w-full'
+								onClick={handleShare}>
 								<Share2 className='h-4 w-4 mr-2' />
 								Share Listing
 							</Button>
@@ -445,4 +480,3 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 		</div>
 	);
 }
-

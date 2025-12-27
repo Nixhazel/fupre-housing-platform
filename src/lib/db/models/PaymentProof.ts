@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
+import { PLATFORM_CONFIG } from '@/lib/config/env';
 
 /**
  * Payment Status Enum
@@ -88,9 +89,9 @@ const PaymentProofSchema = new Schema<IPaymentProof, IPaymentProofModel>(
 		amount: {
 			type: Number,
 			required: [true, 'Amount is required'],
-			min: [1000, 'Amount must be exactly ₦1,000'],
-			max: [1000, 'Amount must be exactly ₦1,000'],
-			default: 1000
+			min: [PLATFORM_CONFIG.UNLOCK_FEE, `Amount must be exactly ₦${PLATFORM_CONFIG.UNLOCK_FEE.toLocaleString()}`],
+			max: [PLATFORM_CONFIG.UNLOCK_FEE, `Amount must be exactly ₦${PLATFORM_CONFIG.UNLOCK_FEE.toLocaleString()}`],
+			default: PLATFORM_CONFIG.UNLOCK_FEE
 		},
 
 		method: {

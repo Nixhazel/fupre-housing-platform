@@ -129,6 +129,20 @@ export interface RegisterResponse {
 }
 
 /**
+ * Listing agent info (public view)
+ */
+export interface ListingAgent {
+	id: string;
+	name: string;
+	avatarUrl?: string;
+	isVerified: boolean;
+	listingsCount?: number;
+	// Contact info only available when listing is unlocked
+	phone?: string;
+	email?: string;
+}
+
+/**
  * Listing type (public view)
  */
 export interface Listing {
@@ -146,6 +160,7 @@ export interface Listing {
 	photos: string[];
 	coverPhoto: string;
 	agentId: string;
+	agent?: ListingAgent; // Populated agent info
 	status: 'available' | 'taken';
 	rating: number;
 	reviewsCount: number;

@@ -13,6 +13,26 @@ export const isDevelopment = process.env.NODE_ENV === 'development';
 export const isTest = process.env.NODE_ENV === 'test';
 
 /**
+ * Platform configuration constants
+ * These can be used on both client and server
+ */
+export const PLATFORM_CONFIG = {
+	/** Fee charged to unlock a listing location (in Naira) */
+	UNLOCK_FEE: 1000,
+	/** Agent's share of the unlock fee (percentage as decimal) */
+	AGENT_COMMISSION_RATE: 0.7,
+	/** Platform name */
+	APP_NAME: 'EasyVille Estates'
+} as const;
+
+/**
+ * Format unlock fee for display
+ */
+export function formatUnlockFee(): string {
+	return `₦${PLATFORM_CONFIG.UNLOCK_FEE.toLocaleString()}`;
+}
+
+/**
  * Required environment variables for different contexts
  */
 const REQUIRED_SERVER_VARS = ['MONGODB_URI', 'JWT_SECRET'] as const;
@@ -136,6 +156,16 @@ class EnvConfig {
 		return {
 			cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || '',
 			uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ''
+		};
+	}
+
+	/**
+	 * Get platform support contact info
+	 */
+	get support() {
+		return {
+			email: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@easyvilleestates.com',
+			phone: process.env.NEXT_PUBLIC_SUPPORT_PHONE || ''
 		};
 	}
 }

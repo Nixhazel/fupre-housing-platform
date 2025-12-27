@@ -14,6 +14,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
+import { PLATFORM_CONFIG, formatUnlockFee } from '@/lib/config/env';
+
+// Calculate agent commission percentage for display
+const AGENT_COMMISSION_PERCENT = Math.round(PLATFORM_CONFIG.AGENT_COMMISSION_RATE * 100);
 
 export default function TermsOfServicePage() {
 	return (
@@ -120,7 +124,7 @@ export default function TermsOfServicePage() {
 							<h4>Listing Unlock Fees</h4>
 							<ul>
 								<li>
-									A fee of ₦1,000 is required to unlock the full address and
+									A fee of {formatUnlockFee()} is required to unlock the full address and
 									contact information for each listing
 								</li>
 								<li>
@@ -135,7 +139,7 @@ export default function TermsOfServicePage() {
 
 							<h4>Agent Earnings</h4>
 							<ul>
-								<li>Agents receive 70% of the unlock fee for their listings</li>
+								<li>Agents receive {AGENT_COMMISSION_PERCENT}% of the unlock fee for their listings</li>
 								<li>
 									Earnings are tracked and can be viewed in the agent dashboard
 								</li>
