@@ -116,8 +116,12 @@ function toPublicListing(listing: IListing): PublicListing {
  * Convert Mongoose document to unlocked listing object
  */
 function toUnlockedListing(listing: IListing): UnlockedListing {
+	// Destructure to omit agent from spread (agent will be added separately with contact info)
+	const { agent: _agent, ...publicListing } = toPublicListing(listing);
+	void _agent; // Explicitly mark as intentionally unused
+
 	return {
-		...toPublicListing(listing),
+		...publicListing,
 		addressFull: listing.addressFull,
 		mapFull: listing.mapFull
 	};
@@ -297,7 +301,7 @@ export async function getUnlockedListing(
 			avatarUrl: agent.avatarUrl,
 			isVerified: agent.isVerified,
 			listingsCount,
-			phone: agent.phone,
+			phone: agent.phone || '',
 			email: agent.email
 		};
 	}
@@ -467,4 +471,3 @@ export async function listingExists(listingId: string): Promise<boolean> {
 	const listing = await Listing.findActiveById(listingId);
 	return listing !== null;
 }
-
