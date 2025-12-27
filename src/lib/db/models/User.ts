@@ -191,14 +191,18 @@ const UserSchema = new Schema<IUser, IUserModel>(
 	{
 		timestamps: true,
 		toJSON: {
+			virtuals: true,
 			transform: function (_doc, ret: Record<string, unknown>) {
+				// Convert _id to id
+				ret.id = ret._id?.toString();
+				delete ret._id;
 				// Remove sensitive fields from JSON output
-				ret.password = undefined;
-				ret.emailVerificationToken = undefined;
-				ret.emailVerificationExpires = undefined;
-				ret.passwordResetToken = undefined;
-				ret.passwordResetExpires = undefined;
-				ret.__v = undefined;
+				delete ret.password;
+				delete ret.emailVerificationToken;
+				delete ret.emailVerificationExpires;
+				delete ret.passwordResetToken;
+				delete ret.passwordResetExpires;
+				delete ret.__v;
 				return ret;
 			}
 		}

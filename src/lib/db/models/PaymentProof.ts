@@ -89,8 +89,14 @@ const PaymentProofSchema = new Schema<IPaymentProof, IPaymentProofModel>(
 		amount: {
 			type: Number,
 			required: [true, 'Amount is required'],
-			min: [PLATFORM_CONFIG.UNLOCK_FEE, `Amount must be exactly ₦${PLATFORM_CONFIG.UNLOCK_FEE.toLocaleString()}`],
-			max: [PLATFORM_CONFIG.UNLOCK_FEE, `Amount must be exactly ₦${PLATFORM_CONFIG.UNLOCK_FEE.toLocaleString()}`],
+			min: [
+				PLATFORM_CONFIG.UNLOCK_FEE,
+				`Amount must be exactly ₦${PLATFORM_CONFIG.UNLOCK_FEE.toLocaleString()}`
+			],
+			max: [
+				PLATFORM_CONFIG.UNLOCK_FEE,
+				`Amount must be exactly ₦${PLATFORM_CONFIG.UNLOCK_FEE.toLocaleString()}`
+			],
 			default: PLATFORM_CONFIG.UNLOCK_FEE
 		},
 
@@ -151,7 +157,10 @@ const PaymentProofSchema = new Schema<IPaymentProof, IPaymentProofModel>(
 	{
 		timestamps: true,
 		toJSON: {
+			virtuals: true,
 			transform: function (_doc, ret: Record<string, unknown>) {
+				ret.id = ret._id?.toString();
+				delete ret._id;
 				delete ret.__v;
 				return ret;
 			}
@@ -292,4 +301,3 @@ const PaymentProof: IPaymentProofModel =
 	);
 
 export default PaymentProof;
-

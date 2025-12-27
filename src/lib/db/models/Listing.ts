@@ -8,7 +8,8 @@ export const ListingStatus = {
 	TAKEN: 'taken'
 } as const;
 
-export type ListingStatusType = (typeof ListingStatus)[keyof typeof ListingStatus];
+export type ListingStatusType =
+	(typeof ListingStatus)[keyof typeof ListingStatus];
 
 /**
  * Campus Area Enum
@@ -247,8 +248,11 @@ const ListingSchema = new Schema<IListing, IListingModel>(
 	{
 		timestamps: true,
 		toJSON: {
+			virtuals: true,
 			transform: function (_doc, ret: Record<string, unknown>) {
-				ret.__v = undefined;
+				ret.id = ret._id?.toString();
+				delete ret._id;
+				delete ret.__v;
 				return ret;
 			}
 		}
@@ -366,4 +370,3 @@ const Listing: IListingModel =
 	mongoose.model<IListing, IListingModel>('Listing', ListingSchema);
 
 export default Listing;
-
