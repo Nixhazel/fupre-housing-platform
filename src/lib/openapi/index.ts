@@ -1,6 +1,7 @@
 import { listingSchemas, listingPaths } from './schemas/listings';
 import { paymentProofSchemas, paymentProofPaths } from './schemas/payments';
 import { roommateSchemas, roommatePaths } from './schemas/roommates';
+import { reviewSchemas, reviewPaths } from './schemas/reviews';
 import { agentSchemas, agentPaths } from './schemas/agents';
 import { adminSchemas, adminPaths } from './schemas/admin';
 
@@ -69,6 +70,10 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 			description: 'Roommate listing management'
 		},
 		{
+			name: 'Reviews',
+			description: 'Listing review management'
+		},
+		{
 			name: 'Agent',
 			description: 'Agent dashboard and metrics'
 		},
@@ -129,18 +134,30 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 				type: 'object',
 				properties: {
 					id: { type: 'string', example: '507f1f77bcf86cd799439011' },
-					email: { type: 'string', format: 'email', example: 'student@example.com' },
+					email: {
+						type: 'string',
+						format: 'email',
+						example: 'student@example.com'
+					},
 					name: { type: 'string', example: 'John Doe' },
-					role: { 
-						type: 'string', 
+					role: {
+						type: 'string',
 						enum: ['student', 'agent', 'owner', 'admin'],
 						example: 'student'
 					},
 					phone: { type: 'string', example: '+2348012345678' },
-					avatarUrl: { type: 'string', format: 'uri', example: 'https://res.cloudinary.com/demo/image/upload/avatar.jpg' },
+					avatarUrl: {
+						type: 'string',
+						format: 'uri',
+						example: 'https://res.cloudinary.com/demo/image/upload/avatar.jpg'
+					},
 					matricNumber: { type: 'string', example: 'FUP/20/0001' },
 					isEmailVerified: { type: 'boolean', example: true },
-					isVerified: { type: 'boolean', example: false, description: 'Admin-verified status' },
+					isVerified: {
+						type: 'boolean',
+						example: false,
+						description: 'Admin-verified status'
+					},
 					savedListingIds: {
 						type: 'array',
 						items: { type: 'string' },
@@ -156,9 +173,24 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 						items: { type: 'string' },
 						example: ['507f1f77bcf86cd799439015']
 					},
-					createdAt: { type: 'string', format: 'date-time', example: '2024-01-15T10:30:00.000Z' }
+					createdAt: {
+						type: 'string',
+						format: 'date-time',
+						example: '2024-01-15T10:30:00.000Z'
+					}
 				},
-				required: ['id', 'email', 'name', 'role', 'isEmailVerified', 'isVerified', 'savedListingIds', 'savedRoommateIds', 'unlockedListingIds', 'createdAt']
+				required: [
+					'id',
+					'email',
+					'name',
+					'role',
+					'isEmailVerified',
+					'isVerified',
+					'savedListingIds',
+					'savedRoommateIds',
+					'unlockedListingIds',
+					'createdAt'
+				]
 			},
 
 			// Listing schemas
@@ -169,6 +201,9 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 
 			// Roommate schemas
 			...roommateSchemas,
+
+			// Review schemas
+			...reviewSchemas,
 
 			// Agent schemas
 			...agentSchemas,
@@ -191,7 +226,8 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 			post: {
 				tags: ['Auth'],
 				summary: 'Register a new user',
-				description: 'Create a new user account. A verification email will be sent.',
+				description:
+					'Create a new user account. A verification email will be sent.',
 				operationId: 'register',
 				requestBody: {
 					required: true,
@@ -200,11 +236,32 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 							schema: {
 								type: 'object',
 								properties: {
-									email: { type: 'string', format: 'email', example: 'student@example.com' },
-									password: { type: 'string', minLength: 6, example: 'SecurePass123!' },
-									name: { type: 'string', minLength: 2, maxLength: 50, example: 'John Doe' },
-									phone: { type: 'string', pattern: '^\\+234\\d{10}$', example: '+2348012345678' },
-									role: { type: 'string', enum: ['student', 'agent', 'owner'], example: 'student' },
+									email: {
+										type: 'string',
+										format: 'email',
+										example: 'student@example.com'
+									},
+									password: {
+										type: 'string',
+										minLength: 6,
+										example: 'SecurePass123!'
+									},
+									name: {
+										type: 'string',
+										minLength: 2,
+										maxLength: 50,
+										example: 'John Doe'
+									},
+									phone: {
+										type: 'string',
+										pattern: '^\\+234\\d{10}$',
+										example: '+2348012345678'
+									},
+									role: {
+										type: 'string',
+										enum: ['student', 'agent', 'owner'],
+										example: 'student'
+									},
 									matricNumber: { type: 'string', example: 'FUP/20/0001' }
 								},
 								required: ['email', 'password', 'name', 'role']
@@ -233,7 +290,11 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 											type: 'object',
 											properties: {
 												user: { $ref: '#/components/schemas/SessionUser' },
-												message: { type: 'string', example: 'Verification email sent. Please check your inbox.' }
+												message: {
+													type: 'string',
+													example:
+														'Verification email sent. Please check your inbox.'
+												}
 											}
 										}
 									}
@@ -296,7 +357,8 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 			post: {
 				tags: ['Auth'],
 				summary: 'Login',
-				description: 'Authenticate with email and password. Sets HttpOnly session cookies.',
+				description:
+					'Authenticate with email and password. Sets HttpOnly session cookies.',
 				operationId: 'login',
 				requestBody: {
 					required: true,
@@ -305,7 +367,11 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 							schema: {
 								type: 'object',
 								properties: {
-									email: { type: 'string', format: 'email', example: 'student@example.com' },
+									email: {
+										type: 'string',
+										format: 'email',
+										example: 'student@example.com'
+									},
 									password: { type: 'string', example: 'SecurePass123!' }
 								},
 								required: ['email', 'password']
@@ -319,7 +385,8 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 				},
 				responses: {
 					'200': {
-						description: 'Login successful. Session cookies are set in the response.',
+						description:
+							'Login successful. Session cookies are set in the response.',
 						headers: {
 							'Set-Cookie': {
 								description: 'Session cookies (access_token, refresh_token)',
@@ -396,7 +463,10 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 										data: {
 											type: 'object',
 											properties: {
-												message: { type: 'string', example: 'Logged out successfully' }
+												message: {
+													type: 'string',
+													example: 'Logged out successfully'
+												}
 											}
 										}
 									}
@@ -417,7 +487,7 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 			get: {
 				tags: ['Auth'],
 				summary: 'Get current user',
-				description: 'Get the authenticated user\'s profile information.',
+				description: "Get the authenticated user's profile information.",
 				operationId: 'getCurrentUser',
 				security: [{ cookieAuth: [] }],
 				responses: {
@@ -446,11 +516,15 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 											name: 'John Doe',
 											role: 'student',
 											phone: '+2348012345678',
-											avatarUrl: 'https://res.cloudinary.com/demo/image/upload/avatar.jpg',
+											avatarUrl:
+												'https://res.cloudinary.com/demo/image/upload/avatar.jpg',
 											matricNumber: 'FUP/20/0001',
 											isEmailVerified: true,
 											isVerified: false,
-											savedListingIds: ['507f1f77bcf86cd799439012', '507f1f77bcf86cd799439013'],
+											savedListingIds: [
+												'507f1f77bcf86cd799439012',
+												'507f1f77bcf86cd799439013'
+											],
 											savedRoommateIds: ['507f1f77bcf86cd799439020'],
 											unlockedListingIds: ['507f1f77bcf86cd799439015'],
 											createdAt: '2024-01-15T10:30:00.000Z'
@@ -477,7 +551,7 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 			patch: {
 				tags: ['Auth'],
 				summary: 'Update current user',
-				description: 'Update the authenticated user\'s profile information.',
+				description: "Update the authenticated user's profile information.",
 				operationId: 'updateCurrentUser',
 				security: [{ cookieAuth: [] }],
 				requestBody: {
@@ -487,9 +561,19 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 							schema: {
 								type: 'object',
 								properties: {
-									name: { type: 'string', minLength: 2, maxLength: 50, example: 'John Smith' },
+									name: {
+										type: 'string',
+										minLength: 2,
+										maxLength: 50,
+										example: 'John Smith'
+									},
 									phone: { type: 'string', example: '+2348012345679' },
-									avatarUrl: { type: 'string', format: 'uri', example: 'https://res.cloudinary.com/demo/image/upload/new-avatar.jpg' },
+									avatarUrl: {
+										type: 'string',
+										format: 'uri',
+										example:
+											'https://res.cloudinary.com/demo/image/upload/new-avatar.jpg'
+									},
 									matricNumber: { type: 'string', example: 'FUP/20/0002' }
 								}
 							},
@@ -585,7 +669,11 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 							schema: {
 								type: 'object',
 								properties: {
-									email: { type: 'string', format: 'email', example: 'student@example.com' }
+									email: {
+										type: 'string',
+										format: 'email',
+										example: 'student@example.com'
+									}
 								},
 								required: ['email']
 							}
@@ -604,7 +692,11 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 										data: {
 											type: 'object',
 											properties: {
-												message: { type: 'string', example: 'If an account exists with this email, a password reset link has been sent.' }
+												message: {
+													type: 'string',
+													example:
+														'If an account exists with this email, a password reset link has been sent.'
+												}
 											}
 										}
 									}
@@ -629,7 +721,11 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 								type: 'object',
 								properties: {
 									token: { type: 'string', example: 'abc123xyz...' },
-									password: { type: 'string', minLength: 6, example: 'NewSecurePass123!' }
+									password: {
+										type: 'string',
+										minLength: 6,
+										example: 'NewSecurePass123!'
+									}
 								},
 								required: ['token', 'password']
 							}
@@ -648,7 +744,11 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 										data: {
 											type: 'object',
 											properties: {
-												message: { type: 'string', example: 'Password reset successfully. Please log in with your new password.' }
+												message: {
+													type: 'string',
+													example:
+														'Password reset successfully. Please log in with your new password.'
+												}
 											}
 										}
 									}
@@ -684,7 +784,10 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 							schema: {
 								type: 'object',
 								properties: {
-									token: { type: 'string', example: 'verification-token-123...' }
+									token: {
+										type: 'string',
+										example: 'verification-token-123...'
+									}
 								},
 								required: ['token']
 							}
@@ -703,7 +806,10 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 										data: {
 											type: 'object',
 											properties: {
-												message: { type: 'string', example: 'Email verified successfully' }
+												message: {
+													type: 'string',
+													example: 'Email verified successfully'
+												}
 											}
 										}
 									}
@@ -741,7 +847,10 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 										data: {
 											type: 'object',
 											properties: {
-												message: { type: 'string', example: 'Verification email sent' }
+												message: {
+													type: 'string',
+													example: 'Verification email sent'
+												}
 											}
 										}
 									}
@@ -774,6 +883,9 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 		// Roommate paths
 		...roommatePaths,
 
+		// Review paths
+		...reviewPaths,
+
 		// Agent paths
 		...agentPaths,
 
@@ -788,4 +900,3 @@ Rate limiting is not enforced in MVP but may be added in future versions.
 export function getOpenApiSpecJson(): string {
 	return JSON.stringify(openApiSpec, null, 2);
 }
-

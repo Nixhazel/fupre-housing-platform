@@ -16,6 +16,9 @@ export * from './usePayments';
 // Roommates
 export * from './useRoommates';
 
+// Reviews
+export * from './useReviews';
+
 // Agent
 export * from './useAgent';
 

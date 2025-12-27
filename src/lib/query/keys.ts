@@ -34,6 +34,13 @@ export const queryKeys = {
 		unlocked: () => [...queryKeys.listings.all, 'unlocked'] as const
 	},
 
+	// ========== REVIEWS ==========
+	reviews: {
+		all: ['reviews'] as const,
+		forListing: (listingId: string) =>
+			[...queryKeys.reviews.all, 'listing', listingId] as const
+	},
+
 	// ========== PAYMENTS ==========
 	payments: {
 		all: ['payments'] as const,

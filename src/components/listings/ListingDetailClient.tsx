@@ -32,9 +32,11 @@ import {
 	useSaveListing,
 	useUnsaveListing
 } from '@/hooks/api/useListings';
+import { useListingReviews } from '@/hooks/api/useReviews';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { formatNaira } from '@/lib/utils/currency';
 import { formatUnlockFee } from '@/lib/config/env';
+import { ReviewForm, ReviewList } from '@/components/reviews';
 import { toast } from 'sonner';
 
 interface ListingDetailClientProps {
@@ -46,6 +48,8 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 
 	const { user, isAuthenticated } = useAuth();
 	const { data, isLoading, isError } = useListing(listingId);
+	const { data: reviewsData, isLoading: reviewsLoading } =
+		useListingReviews(listingId);
 	const saveMutation = useSaveListing();
 	const unsaveMutation = useUnsaveListing();
 
@@ -334,6 +338,23 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 							/>
 						</CardContent>
 					</Card>
+
+					{/* Reviews Section */}
+					{isAuthenticated && (
+						<ReviewForm
+							listingId={listingId}
+							existingReview={reviewsData?.userReview}
+							canReview={reviewsData?.canReview ?? false}
+							hasReviewed={reviewsData?.hasReviewed ?? false}
+						/>
+					)}
+
+					<ReviewList
+						reviews={reviewsData?.reviews ?? []}
+						isLoading={reviewsLoading}
+						averageRating={reviewsData?.averageRating ?? 0}
+						totalReviews={reviewsData?.totalReviews ?? 0}
+					/>
 				</div>
 
 				{/* Right Column - Agent and Contact */}
