@@ -76,7 +76,9 @@ export function PaymentProofModal({
 			const url = window.URL.createObjectURL(blob);
 			const link = document.createElement('a');
 			link.href = url;
-			link.download = `payment-proof-${proof.id.slice(-6)}.${blob.type.split('/')[1] || 'jpg'}`;
+			link.download = `payment-proof-${proof.id.slice(-6)}.${
+				blob.type.split('/')[1] || 'jpg'
+			}`;
 			document.body.appendChild(link);
 			link.click();
 			document.body.removeChild(link);
@@ -94,10 +96,10 @@ export function PaymentProofModal({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-				<DialogHeader>
-					<DialogTitle className="flex items-center gap-2">
-						<CreditCard className="h-5 w-5" />
+			<DialogContent className='w-[95vw] max-w-[900px] lg:max-w-[1100px] max-h-[90vh] overflow-hidden flex flex-col p-4 sm:p-6'>
+				<DialogHeader className='pb-2'>
+					<DialogTitle className='flex items-center gap-2'>
+						<CreditCard className='h-5 w-5' />
 						Payment Proof #{proof.id.slice(-6)}
 					</DialogTitle>
 					<DialogDescription>
@@ -105,81 +107,80 @@ export function PaymentProofModal({
 					</DialogDescription>
 				</DialogHeader>
 
-				<div className="flex flex-col lg:flex-row gap-6 flex-1 overflow-hidden">
-					{/* Image Preview Section */}
-					<div className="flex-1 flex flex-col min-h-0">
+				<div className='flex flex-col lg:flex-row gap-4 lg:gap-6 flex-1 overflow-hidden min-h-0'>
+					{/* Image Preview Section - takes more space on desktop */}
+					<div className='flex-1 lg:flex-[2] flex flex-col min-h-0 min-w-0'>
 						{/* Zoom Controls */}
-						<div className="flex items-center justify-between mb-3 px-1">
-							<div className="flex items-center gap-2">
+						<div className='flex items-center justify-between mb-3 px-1 flex-wrap gap-2'>
+							<div className='flex items-center gap-1 sm:gap-2'>
 								<Button
-									variant="outline"
-									size="sm"
+									variant='outline'
+									size='sm'
 									onClick={handleZoomOut}
 									disabled={zoom <= 0.5}
-								>
-									<ZoomOut className="h-4 w-4" />
+									className='h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3'>
+									<ZoomOut className='h-4 w-4' />
 								</Button>
-								<span className="text-sm text-muted-foreground min-w-[4rem] text-center">
+								<span className='text-sm text-muted-foreground min-w-[3rem] sm:min-w-[4rem] text-center'>
 									{Math.round(zoom * 100)}%
 								</span>
 								<Button
-									variant="outline"
-									size="sm"
+									variant='outline'
+									size='sm'
 									onClick={handleZoomIn}
 									disabled={zoom >= 3}
-								>
-									<ZoomIn className="h-4 w-4" />
+									className='h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3'>
+									<ZoomIn className='h-4 w-4' />
 								</Button>
 								<Button
-									variant="ghost"
-									size="sm"
+									variant='ghost'
+									size='sm'
 									onClick={handleResetZoom}
-									className="text-xs"
-								>
+									className='text-xs hidden sm:inline-flex'>
 									Reset
 								</Button>
 							</div>
-							<div className="flex items-center gap-2">
+							<div className='flex items-center gap-1 sm:gap-2'>
 								<Button
-									variant="outline"
-									size="sm"
+									variant='outline'
+									size='sm'
 									onClick={handleOpenInNewTab}
-								>
-									<ExternalLink className="h-4 w-4 mr-1" />
-									Open
+									className='h-8 px-2 sm:h-9 sm:px-3'>
+									<ExternalLink className='h-4 w-4 sm:mr-1' />
+									<span className='hidden sm:inline'>Open</span>
 								</Button>
 								<Button
-									variant="outline"
-									size="sm"
+									variant='outline'
+									size='sm'
 									onClick={handleDownload}
 									disabled={isDownloading}
-								>
+									className='h-8 px-2 sm:h-9 sm:px-3'>
 									{isDownloading ? (
-										<Loader2 className="h-4 w-4 mr-1 animate-spin" />
+										<Loader2 className='h-4 w-4 animate-spin' />
 									) : (
-										<Download className="h-4 w-4 mr-1" />
+										<>
+											<Download className='h-4 w-4 sm:mr-1' />
+											<span className='hidden sm:inline'>Download</span>
+										</>
 									)}
-									Download
 								</Button>
 							</div>
 						</div>
 
 						{/* Image Container */}
-						<div className="flex-1 overflow-auto bg-muted/30 rounded-lg border min-h-[300px]">
+						<div className='flex-1 overflow-auto bg-muted/30 rounded-lg border min-h-[250px] lg:min-h-[400px]'>
 							<div
-								className="min-h-full flex items-center justify-center p-4"
-								style={{ cursor: zoom > 1 ? 'move' : 'default' }}
-							>
+								className='min-h-full flex items-center justify-center p-4'
+								style={{ cursor: zoom > 1 ? 'move' : 'default' }}>
 								<div
-									className="relative transition-transform duration-200"
-									style={{ transform: `scale(${zoom})` }}
-								>
+									className='relative transition-transform duration-200'
+									style={{ transform: `scale(${zoom})` }}>
 									<Image
 										src={proof.imageUrl}
-										alt="Payment proof"
+										alt='Payment proof'
 										width={600}
 										height={800}
-										className="rounded-lg shadow-lg object-contain max-h-[50vh]"
+										className='rounded-lg shadow-lg object-contain max-h-[40vh] lg:max-h-[55vh]'
 										style={{ width: 'auto', height: 'auto' }}
 										priority
 									/>
@@ -188,48 +189,52 @@ export function PaymentProofModal({
 						</div>
 					</div>
 
-					{/* Details Section */}
-					<div className="lg:w-72 space-y-4">
-						<div className="space-y-3">
-							<h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+					{/* Details Section - fixed width on desktop, full width on mobile */}
+					<div className='w-full lg:w-80 lg:flex-shrink-0 space-y-4 overflow-y-auto'>
+						<div className='space-y-3'>
+							<h3 className='font-semibold text-sm text-muted-foreground uppercase tracking-wide'>
 								Payment Details
 							</h3>
-							
-							<div className="space-y-3">
-								<div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-									<CreditCard className="h-4 w-4 mt-0.5 text-muted-foreground" />
+
+							<div className='space-y-3'>
+								<div className='flex items-start gap-3 p-3 bg-muted/50 rounded-lg'>
+									<CreditCard className='h-4 w-4 mt-0.5 text-muted-foreground' />
 									<div>
-										<p className="text-xs text-muted-foreground">Amount</p>
-										<p className="font-semibold text-lg">{formatNaira(proof.amount)}</p>
+										<p className='text-xs text-muted-foreground'>Amount</p>
+										<p className='font-semibold text-lg'>
+											{formatNaira(proof.amount)}
+										</p>
 									</div>
 								</div>
 
-								<div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-									<Hash className="h-4 w-4 mt-0.5 text-muted-foreground" />
+								<div className='flex items-start gap-3 p-3 bg-muted/50 rounded-lg'>
+									<Hash className='h-4 w-4 mt-0.5 text-muted-foreground' />
 									<div>
-										<p className="text-xs text-muted-foreground">Reference</p>
-										<p className="font-medium break-all">{proof.reference}</p>
+										<p className='text-xs text-muted-foreground'>Reference</p>
+										<p className='font-medium break-all'>{proof.reference}</p>
 									</div>
 								</div>
 
-								<div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-									<Building2 className="h-4 w-4 mt-0.5 text-muted-foreground" />
+								<div className='flex items-start gap-3 p-3 bg-muted/50 rounded-lg'>
+									<Building2 className='h-4 w-4 mt-0.5 text-muted-foreground' />
 									<div>
-										<p className="text-xs text-muted-foreground">Payment Method</p>
-										<p className="font-medium capitalize">
+										<p className='text-xs text-muted-foreground'>
+											Payment Method
+										</p>
+										<p className='font-medium capitalize'>
 											{proof.method.replace('_', ' ')}
 										</p>
 									</div>
 								</div>
 
-								<div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-									<Calendar className="h-4 w-4 mt-0.5 text-muted-foreground" />
+								<div className='flex items-start gap-3 p-3 bg-muted/50 rounded-lg'>
+									<Calendar className='h-4 w-4 mt-0.5 text-muted-foreground' />
 									<div>
-										<p className="text-xs text-muted-foreground">Submitted</p>
-										<p className="font-medium">
+										<p className='text-xs text-muted-foreground'>Submitted</p>
+										<p className='font-medium'>
 											{dayjs(proof.submittedAt).format('MMM D, YYYY')}
 										</p>
-										<p className="text-xs text-muted-foreground">
+										<p className='text-xs text-muted-foreground'>
 											{dayjs(proof.submittedAt).format('h:mm A')}
 										</p>
 									</div>
@@ -237,14 +242,16 @@ export function PaymentProofModal({
 
 								{/* User info if available */}
 								{(proof as PaymentProofWithUser).user && (
-									<div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-										<User className="h-4 w-4 mt-0.5 text-muted-foreground" />
+									<div className='flex items-start gap-3 p-3 bg-muted/50 rounded-lg'>
+										<User className='h-4 w-4 mt-0.5 text-muted-foreground' />
 										<div>
-											<p className="text-xs text-muted-foreground">Submitted By</p>
-											<p className="font-medium">
+											<p className='text-xs text-muted-foreground'>
+												Submitted By
+											</p>
+											<p className='font-medium'>
 												{(proof as PaymentProofWithUser).user?.name}
 											</p>
-											<p className="text-xs text-muted-foreground">
+											<p className='text-xs text-muted-foreground'>
 												{(proof as PaymentProofWithUser).user?.email}
 											</p>
 										</div>
@@ -254,29 +261,27 @@ export function PaymentProofModal({
 						</div>
 
 						{/* Action Buttons */}
-						<div className="pt-4 border-t space-y-2">
+						<div className='pt-4 border-t space-y-2'>
 							<Button
-								className="w-full bg-green-600 hover:bg-green-700"
+								className='w-full bg-green-600 hover:bg-green-700'
 								onClick={() => onApprove(proof.id)}
-								disabled={isActionPending}
-							>
+								disabled={isActionPending}>
 								{isApproving ? (
-									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+									<Loader2 className='h-4 w-4 mr-2 animate-spin' />
 								) : (
-									<CheckCircle className="h-4 w-4 mr-2" />
+									<CheckCircle className='h-4 w-4 mr-2' />
 								)}
 								Approve Payment
 							</Button>
 							<Button
-								variant="destructive"
-								className="w-full"
+								variant='destructive'
+								className='w-full'
 								onClick={() => onReject(proof.id)}
-								disabled={isActionPending}
-							>
+								disabled={isActionPending}>
 								{isRejecting ? (
-									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+									<Loader2 className='h-4 w-4 mr-2 animate-spin' />
 								) : (
-									<XCircle className="h-4 w-4 mr-2" />
+									<XCircle className='h-4 w-4 mr-2' />
 								)}
 								Reject Payment
 							</Button>
@@ -296,4 +301,3 @@ interface PaymentProofWithUser extends PaymentProof {
 		phone?: string;
 	};
 }
-
