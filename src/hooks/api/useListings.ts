@@ -29,6 +29,7 @@ export interface ListingsFilters {
 	status?: 'available' | 'taken';
 	agentId?: string;
 	sortBy?: 'newest' | 'oldest' | 'price_low' | 'price_high' | 'rating' | 'views';
+	verifiedAgentsOnly?: boolean;
 	[key: string]: unknown;
 }
 

@@ -96,6 +96,7 @@ export interface ListingFilters {
 	campusAreas: string[];
 	amenities: string[];
 	sortBy: 'newest' | 'price_asc' | 'price_desc' | 'rating';
+	verifiedAgentsOnly?: boolean;
 }
 
 export interface RoommateFilters {

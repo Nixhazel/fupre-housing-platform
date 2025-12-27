@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import {
 	Select,
 	SelectContent,
@@ -93,19 +95,27 @@ export function ListingFilters({
 		}));
 	};
 
+	const handleVerifiedAgentsToggle = (checked: boolean) => {
+		setLocalFilters((prev) => ({
+			...prev,
+			verifiedAgentsOnly: checked
+		}));
+	};
+
 	const applyFilters = () => {
 		onFiltersChange(localFilters);
 		onClose?.();
 	};
 
 	const resetFilters = () => {
-		const defaultFilters = {
+		const defaultFilters: FilterType = {
 			priceRange: [0, 100000] as [number, number],
 			bedrooms: [],
 			bathrooms: [],
 			campusAreas: [],
 			amenities: [],
-			sortBy: 'newest' as const
+			sortBy: 'newest' as const,
+			verifiedAgentsOnly: false
 		};
 		setLocalFilters(defaultFilters);
 		onFiltersChange(defaultFilters);
@@ -119,11 +129,34 @@ export function ListingFilters({
 		if (localFilters.bathrooms.length > 0) count++;
 		if (localFilters.campusAreas.length > 0) count++;
 		if (localFilters.amenities.length > 0) count++;
+		if (localFilters.verifiedAgentsOnly) count++;
 		return count;
 	};
 
 	return (
 		<div className='space-y-6'>
+			{/* Verified Agents Only Toggle */}
+			<div className='flex items-center justify-between p-3 rounded-lg border bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800'>
+				<div className='flex items-center gap-3'>
+					<ShieldCheck className='h-5 w-5 text-green-600' />
+					<div>
+						<Label
+							htmlFor='verified-agents'
+							className='text-sm font-medium cursor-pointer'>
+							Verified Agents Only
+						</Label>
+						<p className='text-xs text-muted-foreground'>
+							Show listings from verified agents
+						</p>
+					</div>
+				</div>
+				<Switch
+					id='verified-agents'
+					checked={localFilters.verifiedAgentsOnly ?? false}
+					onCheckedChange={handleVerifiedAgentsToggle}
+				/>
+			</div>
+
 			{/* Price Range */}
 			<div className='space-y-3'>
 				<Label className='text-base font-semibold'>Price Range</Label>
@@ -240,6 +273,12 @@ export function ListingFilters({
 				<div className='space-y-3'>
 					<Label className='text-base font-semibold'>Active Filters</Label>
 					<div className='flex flex-wrap gap-2'>
+						{localFilters.verifiedAgentsOnly && (
+							<Badge variant='success' className='flex items-center gap-1'>
+								<ShieldCheck className='h-3 w-3' />
+								Verified Only
+							</Badge>
+						)}
 						{localFilters.priceRange[0] > 0 && (
 							<Badge variant='secondary'>
 								Min: {formatNaira(localFilters.priceRange[0])}

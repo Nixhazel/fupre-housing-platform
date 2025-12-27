@@ -12,7 +12,9 @@ import {
 	CheckCircle,
 	Loader2,
 	Building2,
-	AlertCircle
+	AlertCircle,
+	ShieldAlert,
+	ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,7 +37,10 @@ import { Badge } from '@/components/shared/Badge';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import { useListing } from '@/hooks/api/useListings';
 import { useCurrentUser } from '@/hooks/api/useAuth';
-import { useSubmitPaymentProof, useUnlockStatus } from '@/hooks/api/usePayments';
+import {
+	useSubmitPaymentProof,
+	useUnlockStatus
+} from '@/hooks/api/usePayments';
 import {
 	paymentProofSchema,
 	type PaymentProofFormData
@@ -53,7 +58,11 @@ export default function UnlockPage() {
 
 	// TanStack Query hooks
 	const { data: user, isLoading: isUserLoading } = useCurrentUser();
-	const { data: listingData, isLoading: isListingLoading, isError: isListingError } = useListing(listingId);
+	const {
+		data: listingData,
+		isLoading: isListingLoading,
+		isError: isListingError
+	} = useListing(listingId);
 	const { data: unlockStatus } = useUnlockStatus(listingId);
 	const submitProofMutation = useSubmitPaymentProof();
 
@@ -112,11 +121,15 @@ export default function UnlockPage() {
 			},
 			{
 				onSuccess: () => {
-					toast.success('Payment proof submitted successfully! We will review it shortly.');
+					toast.success(
+						'Payment proof submitted successfully! We will review it shortly.'
+					);
 					router.push(`/listings/${listing.id}`);
 				},
 				onError: (error) => {
-					toast.error(error.message || 'Failed to submit payment proof. Please try again.');
+					toast.error(
+						error.message || 'Failed to submit payment proof. Please try again.'
+					);
 				}
 			}
 		);
@@ -161,9 +174,7 @@ export default function UnlockPage() {
 							You already have access to this listing&apos;s location details.
 						</p>
 						<Button asChild>
-							<Link href={`/listings/${listing.id}`}>
-								View Listing Details
-							</Link>
+							<Link href={`/listings/${listing.id}`}>View Listing Details</Link>
 						</Button>
 					</CardContent>
 				</Card>
@@ -184,9 +195,7 @@ export default function UnlockPage() {
 						</p>
 						<div className='flex justify-center gap-4'>
 							<Button variant='outline' asChild>
-								<Link href={`/listings/${listing.id}`}>
-									Back to Listing
-								</Link>
+								<Link href={`/listings/${listing.id}`}>Back to Listing</Link>
 							</Button>
 							<Button asChild>
 								<Link href={`/auth/login?returnUrl=/unlock/${listing.id}`}>
@@ -240,7 +249,7 @@ export default function UnlockPage() {
 									src={listing.coverPhoto}
 									alt={listing.title}
 									fill
-									sizes="64px"
+									sizes='64px'
 									className='rounded-lg object-cover'
 								/>
 							</div>
@@ -252,6 +261,14 @@ export default function UnlockPage() {
 								<div className='flex items-center space-x-2 mt-1'>
 									<Badge variant='outline'>{listing.bedrooms} bed</Badge>
 									<Badge variant='outline'>{listing.bathrooms} bath</Badge>
+									{listing.agent?.isVerified && (
+										<Badge
+											variant='success'
+											className='flex items-center gap-1'>
+											<ShieldCheck className='h-3 w-3' />
+											Verified Agent
+										</Badge>
+									)}
 								</div>
 							</div>
 							<div className='text-right'>
@@ -263,6 +280,50 @@ export default function UnlockPage() {
 					</CardContent>
 				</Card>
 			</motion.div>
+
+			{/* Unverified Agent Warning */}
+			{listing.agent && !listing.agent.isVerified && (
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.6, delay: 0.3 }}
+					className='mb-8'>
+					<Card className='border-amber-300 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800'>
+						<CardContent className='p-4'>
+							<div className='flex items-start gap-3'>
+								<ShieldAlert className='h-5 w-5 text-amber-600 mt-0.5 shrink-0' />
+								<div>
+									<h4 className='font-semibold text-amber-800 dark:text-amber-200'>
+										Unverified Agent
+									</h4>
+									<p className='text-sm text-amber-700 dark:text-amber-300 mt-1'>
+										This listing is from an agent who has not yet been verified
+										by our team. While many unverified agents are legitimate, we
+										recommend extra caution:
+									</p>
+									<ul className='text-sm text-amber-700 dark:text-amber-300 mt-2 space-y-1'>
+										<li>
+											• Verify the property exists before making any additional
+											payments
+										</li>
+										<li>
+											• Visit the property in person before signing any
+											agreements
+										</li>
+										<li>
+											• Never pay rent in advance without seeing the property
+										</li>
+									</ul>
+									<p className='text-xs text-amber-600 dark:text-amber-400 mt-3'>
+										Verified agents have been vetted by EasyVille Estates for
+										added trust and security.
+									</p>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
+				</motion.div>
+			)}
 
 			{/* Payment Form */}
 			<motion.div

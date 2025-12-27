@@ -201,6 +201,10 @@ export const listingQuerySchema = z.object({
 	bathrooms: z.coerce.number().int().min(1).max(4).optional(),
 	status: listingStatusEnum.optional(),
 	agentId: z.string().optional(),
+	verifiedAgentsOnly: z
+		.enum(['true', 'false'])
+		.optional()
+		.transform((v) => v === 'true'),
 
 	// Sorting
 	sortBy: sortByEnum.default('newest')

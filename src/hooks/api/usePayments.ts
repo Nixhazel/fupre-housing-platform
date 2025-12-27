@@ -67,11 +67,15 @@ export interface UnlockStatusResponse {
  */
 export function useMyPaymentProofs(
 	filters: PaymentProofsFilters = {},
-	options?: Omit<UseQueryOptions<MyPaymentProofsResponse, ApiError>, 'queryKey' | 'queryFn'>
+	options?: Omit<
+		UseQueryOptions<MyPaymentProofsResponse, ApiError>,
+		'queryKey' | 'queryFn'
+	>
 ) {
 	return useQuery({
 		queryKey: queryKeys.payments.myProofs(filters),
-		queryFn: () => api.get<MyPaymentProofsResponse>('/payments/proofs', filters),
+		queryFn: () =>
+			api.get<MyPaymentProofsResponse>('/payments/proofs', filters),
 		staleTime: 30 * 1000, // 30 seconds
 		...options
 	});
@@ -85,11 +89,15 @@ export function useMyPaymentProofs(
  */
 export function usePendingPaymentProofs(
 	filters: PaymentProofsFilters = {},
-	options?: Omit<UseQueryOptions<PendingProofsResponse, ApiError>, 'queryKey' | 'queryFn'>
+	options?: Omit<
+		UseQueryOptions<PendingProofsResponse, ApiError>,
+		'queryKey' | 'queryFn'
+	>
 ) {
 	return useQuery({
 		queryKey: queryKeys.payments.pending(filters),
-		queryFn: () => api.get<PendingProofsResponse>('/payments/proofs/pending', filters),
+		queryFn: () =>
+			api.get<PendingProofsResponse>('/payments/proofs/pending', filters),
 		staleTime: 15 * 1000, // 15 seconds - more frequent updates for admins
 		...options
 	});
@@ -103,7 +111,10 @@ export function usePendingPaymentProofs(
  */
 export function usePaymentProof(
 	id: string,
-	options?: Omit<UseQueryOptions<PaymentProofResponse, ApiError>, 'queryKey' | 'queryFn'>
+	options?: Omit<
+		UseQueryOptions<PaymentProofResponse, ApiError>,
+		'queryKey' | 'queryFn'
+	>
 ) {
 	return useQuery({
 		queryKey: queryKeys.payments.detail(id),
@@ -122,11 +133,15 @@ export function usePaymentProof(
  */
 export function useUnlockStatus(
 	listingId: string,
-	options?: Omit<UseQueryOptions<UnlockStatusResponse, ApiError>, 'queryKey' | 'queryFn'>
+	options?: Omit<
+		UseQueryOptions<UnlockStatusResponse, ApiError>,
+		'queryKey' | 'queryFn'
+	>
 ) {
 	return useQuery({
 		queryKey: queryKeys.payments.forListing(listingId),
-		queryFn: () => api.get<UnlockStatusResponse>(`/payments/unlock/${listingId}`),
+		queryFn: () =>
+			api.get<UnlockStatusResponse>(`/payments/unlock/${listingId}`),
 		enabled: !!listingId,
 		staleTime: 5 * 60 * 1000, // 5 minutes - unlock status doesn't change often
 		...options
@@ -147,7 +162,9 @@ export function useSubmitPaymentProof() {
 
 		onSuccess: (_data, variables) => {
 			// Invalidate user's proofs list
-			queryClient.invalidateQueries({ queryKey: queryKeys.payments.myProofs() });
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.payments.myProofs()
+			});
 
 			// Invalidate the specific listing's unlock status
 			queryClient.invalidateQueries({
@@ -166,7 +183,7 @@ export function useApprovePaymentProof() {
 	return useMutation({
 		mutationFn: (proofId: string) =>
 			api.patch<PaymentProofResponse>(`/payments/proofs/${proofId}`, {
-				action: 'approve'
+				status: 'approved'
 			}),
 
 		onSuccess: (data, proofId) => {
@@ -194,7 +211,7 @@ export function useRejectPaymentProof() {
 	return useMutation({
 		mutationFn: ({ proofId, reason }: { proofId: string; reason: string }) =>
 			api.patch<PaymentProofResponse>(`/payments/proofs/${proofId}`, {
-				action: 'reject',
+				status: 'rejected',
 				rejectionReason: reason
 			}),
 
@@ -223,8 +240,13 @@ export function useReviewPaymentProof() {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ proofId, data }: { proofId: string; data: ReviewPaymentProofData }) =>
-			api.patch<PaymentProofResponse>(`/payments/proofs/${proofId}`, data),
+		mutationFn: ({
+			proofId,
+			data
+		}: {
+			proofId: string;
+			data: ReviewPaymentProofData;
+		}) => api.patch<PaymentProofResponse>(`/payments/proofs/${proofId}`, data),
 
 		onSuccess: (data, variables) => {
 			// Update cache with new status

@@ -12,7 +12,8 @@ import {
 	MapPin,
 	Star,
 	Eye,
-	Heart
+	Heart,
+	ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +26,11 @@ import {
 	SheetTitle,
 	SheetTrigger
 } from '@/components/ui/sheet';
-import { useListings, useSaveListing, useUnsaveListing } from '@/hooks/api/useListings';
+import {
+	useListings,
+	useSaveListing,
+	useUnsaveListing
+} from '@/hooks/api/useListings';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { formatNaira } from '@/lib/utils/currency';
 import { ListingCardSkeleton } from '@/components/shared/Skeleton';
@@ -40,7 +45,8 @@ const defaultFilters: ListingFiltersType = {
 	bathrooms: [],
 	campusAreas: [],
 	amenities: [],
-	sortBy: 'newest'
+	sortBy: 'newest',
+	verifiedAgentsOnly: false
 };
 
 function ListingsContent() {
@@ -48,7 +54,9 @@ function ListingsContent() {
 	const { user, isAuthenticated } = useAuth();
 
 	const [filters, setFilters] = useState<ListingFiltersType>(defaultFilters);
-	const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+	const [searchQuery, setSearchQuery] = useState(
+		searchParams.get('search') || ''
+	);
 	const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 	const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -62,12 +70,28 @@ function ListingsContent() {
 		error
 	} = useListings({
 		search: searchQuery || undefined,
-		campusArea: filters.campusAreas.length === 1 ? filters.campusAreas[0] as 'Ugbomro' | 'Effurun' | 'Enerhen' | 'PTI Road' | 'Other' : undefined,
+		campusArea:
+			filters.campusAreas.length === 1
+				? (filters.campusAreas[0] as
+						| 'Ugbomro'
+						| 'Effurun'
+						| 'Enerhen'
+						| 'PTI Road'
+						| 'Other')
+				: undefined,
 		minPrice: filters.priceRange[0] > 0 ? filters.priceRange[0] : undefined,
-		maxPrice: filters.priceRange[1] < 100000 ? filters.priceRange[1] : undefined,
+		maxPrice:
+			filters.priceRange[1] < 100000 ? filters.priceRange[1] : undefined,
 		bedrooms: filters.bedrooms.length === 1 ? filters.bedrooms[0] : undefined,
-		bathrooms: filters.bathrooms.length === 1 ? filters.bathrooms[0] : undefined,
-		sortBy: filters.sortBy === 'price_asc' ? 'price_low' : filters.sortBy === 'price_desc' ? 'price_high' : filters.sortBy
+		bathrooms:
+			filters.bathrooms.length === 1 ? filters.bathrooms[0] : undefined,
+		sortBy:
+			filters.sortBy === 'price_asc'
+				? 'price_low'
+				: filters.sortBy === 'price_desc'
+				? 'price_high'
+				: filters.sortBy,
+		verifiedAgentsOnly: filters.verifiedAgentsOnly || undefined
 	});
 
 	const saveMutation = useSaveListing();
@@ -78,7 +102,9 @@ function ListingsContent() {
 		const listings = listingsData?.listings || [];
 
 		if (showSavedOnly && user) {
-			return listings.filter(listing => user.savedListingIds.includes(listing.id));
+			return listings.filter((listing) =>
+				user.savedListingIds.includes(listing.id)
+			);
 		}
 
 		return listings;
@@ -100,12 +126,14 @@ function ListingsContent() {
 		if (isSaved) {
 			unsaveMutation.mutate(listingId, {
 				onSuccess: () => toast.success('Removed from favorites'),
-				onError: (err) => toast.error(err.message || 'Failed to remove from favorites')
+				onError: (err) =>
+					toast.error(err.message || 'Failed to remove from favorites')
 			});
 		} else {
 			saveMutation.mutate(listingId, {
 				onSuccess: () => toast.success('Added to favorites'),
-				onError: (err) => toast.error(err.message || 'Failed to add to favorites')
+				onError: (err) =>
+					toast.error(err.message || 'Failed to add to favorites')
 			});
 		}
 	};
@@ -128,7 +156,9 @@ function ListingsContent() {
 				<EmptyState
 					icon={Search}
 					title='Failed to load listings'
-					description={error?.message || 'An error occurred while loading listings.'}
+					description={
+						error?.message || 'An error occurred while loading listings.'
+					}
 					action={{
 						label: 'Try Again',
 						onClick: () => window.location.reload()
@@ -146,9 +176,9 @@ function ListingsContent() {
 					{showSavedOnly ? 'Saved Listings' : 'Browse Listings'}
 				</h1>
 				<p className='text-muted-foreground'>
-				{showSavedOnly
-					? 'Your saved student accommodations'
-					: 'Find your perfect student accommodation near campus'}
+					{showSavedOnly
+						? 'Your saved student accommodations'
+						: 'Find your perfect student accommodation near campus'}
 				</p>
 			</div>
 
@@ -286,6 +316,16 @@ function ListingsContent() {
 											{listing.status}
 										</Badge>
 
+										{/* Verified Agent Badge */}
+										{listing.agent?.isVerified && (
+											<Badge
+												variant='success'
+												className='absolute top-2 right-24 flex items-center gap-1 bg-green-600 text-white'>
+												<ShieldCheck className='h-3 w-3' />
+												Verified
+											</Badge>
+										)}
+
 										{/* Favorite Button */}
 										<Button
 											variant='ghost'
@@ -295,7 +335,9 @@ function ListingsContent() {
 												e.preventDefault();
 												toggleFavorite(listing.id);
 											}}
-											disabled={saveMutation.isPending || unsaveMutation.isPending}>
+											disabled={
+												saveMutation.isPending || unsaveMutation.isPending
+											}>
 											<Heart
 												className={`h-4 w-4 ${
 													isSaved ? 'fill-red-500 text-red-500' : ''
@@ -336,13 +378,17 @@ function ListingsContent() {
 													{listing.reviewsCount > 0 ? (
 														<div className='flex items-center space-x-1'>
 															<Star className='h-4 w-4 fill-yellow-400 text-yellow-400' />
-															<span className='text-sm'>{listing.rating.toFixed(1)}</span>
+															<span className='text-sm'>
+																{listing.rating.toFixed(1)}
+															</span>
 															<span className='text-xs text-muted-foreground'>
 																({listing.reviewsCount})
 															</span>
 														</div>
 													) : (
-														<span className='text-xs text-muted-foreground'>No reviews</span>
+														<span className='text-xs text-muted-foreground'>
+															No reviews
+														</span>
 													)}
 												</div>
 

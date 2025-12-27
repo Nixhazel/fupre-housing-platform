@@ -277,6 +277,62 @@ export async function sendPaymentRejectedEmail(
 }
 
 /**
+ * Send agent verification email
+ */
+export async function sendAgentVerifiedEmail(
+	to: string,
+	props: {
+		name: string;
+		dashboardUrl: string;
+	}
+): Promise<SendEmailResult> {
+	const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Your Account is Now Verified!</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f5;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h1 style="color: #22c55e; margin: 0 0 20px;">🎉 Congratulations! You're Verified!</h1>
+    <p style="color: #3f3f46; line-height: 1.6;">Hi ${props.name},</p>
+    <p style="color: #3f3f46; line-height: 1.6;">
+      Great news! Your account has been verified by our team. You now have a <strong>Verified Agent</strong> badge on your profile and listings.
+    </p>
+    
+    <div style="background-color: #f0fdf4; border-left: 4px solid #22c55e; padding: 16px; margin: 20px 0; border-radius: 4px;">
+      <h3 style="color: #166534; margin: 0 0 8px;">What this means for you:</h3>
+      <ul style="color: #15803d; margin: 0; padding-left: 20px;">
+        <li style="margin-bottom: 8px;">Your listings will display a "Verified Agent" badge</li>
+        <li style="margin-bottom: 8px;">Students can filter to see only verified agents</li>
+        <li style="margin-bottom: 8px;">Increased trust and credibility with potential clients</li>
+        <li>Higher visibility in search results</li>
+      </ul>
+    </div>
+    
+    <p style="text-align: center; margin: 30px 0;">
+      <a href="${props.dashboardUrl}" style="display: inline-block; padding: 14px 32px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">
+        View Your Dashboard
+      </a>
+    </p>
+    
+    <p style="color: #71717a; font-size: 14px;">
+      Thank you for being a trusted agent on EasyVille Estates!
+    </p>
+  </div>
+</body>
+</html>
+`.trim();
+
+	return sendEmail({
+		to,
+		subject: '🎉 Your Agent Account is Now Verified! - EasyVille Estates',
+		html
+	});
+}
+
+/**
  * Send new payment proof notification to admins
  */
 export async function sendNewPaymentProofNotification(

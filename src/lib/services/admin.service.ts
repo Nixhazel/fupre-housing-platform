@@ -3,14 +3,14 @@ import User from '@/lib/db/models/User';
 import Listing from '@/lib/db/models/Listing';
 import RoommateListing from '@/lib/db/models/RoommateListing';
 import PaymentProof from '@/lib/db/models/PaymentProof';
+import { sendAgentVerifiedEmail } from '@/lib/email';
+import { env, PLATFORM_CONFIG, logger } from '@/lib/config/env';
 
 /**
  * Admin Service
  *
  * Business logic for admin operations
  */
-
-import { PLATFORM_CONFIG } from '@/lib/config/env';
 
 const UNLOCK_FEE = PLATFORM_CONFIG.UNLOCK_FEE;
 
@@ -161,6 +161,11 @@ export async function updateUser(
 		throw new Error('User not found');
 	}
 
+	// Track if user is being newly verified (for email notification)
+	const wasVerified = user.isVerified;
+	const isBeingVerified =
+		input.isVerified === true && !wasVerified && user.role === 'agent';
+
 	// Update allowed fields
 	if (input.isVerified !== undefined) {
 		user.isVerified = input.isVerified;
@@ -172,6 +177,23 @@ export async function updateUser(
 	}
 
 	await user.save();
+
+	// Send verification email if agent is newly verified
+	if (isBeingVerified) {
+		sendAgentVerifiedEmail(user.email, {
+			name: user.name,
+			dashboardUrl: `${env.appUrl}/dashboard/agent`
+		})
+			.then(() => {
+				logger.info(`Agent verification email sent to ${user.email}`);
+			})
+			.catch((error) => {
+				logger.error(
+					`Failed to send agent verification email to ${user.email}`,
+					error
+				);
+			});
+	}
 
 	return user.toSafeObject();
 }

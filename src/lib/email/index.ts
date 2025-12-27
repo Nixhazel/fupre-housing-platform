@@ -23,6 +23,7 @@ export {
 	sendPaymentApprovedEmail,
 	sendPaymentRejectedEmail,
 	sendNewPaymentProofNotification,
+	sendAgentVerifiedEmail,
 	type SendEmailResult,
 	type PasswordResetEmailProps,
 	type EmailVerificationProps

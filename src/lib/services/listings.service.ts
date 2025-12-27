@@ -334,8 +334,19 @@ export async function getListings(
 		bathrooms,
 		status,
 		agentId,
-		sortBy
+		sortBy,
+		verifiedAgentsOnly
 	} = query;
+
+	// If verifiedAgentsOnly filter is set, get verified agent IDs first
+	let verifiedAgentIds: mongoose.Types.ObjectId[] | undefined;
+	if (verifiedAgentsOnly) {
+		const verifiedAgents = await User.find(
+			{ role: 'agent', isVerified: true, isDeleted: false },
+			'_id'
+		);
+		verifiedAgentIds = verifiedAgents.map((a) => a._id);
+	}
 
 	// Build filter
 	const filter: mongoose.FilterQuery<IListing> = {
@@ -366,6 +377,11 @@ export async function getListings(
 
 	if (agentId) {
 		filter.agentId = new mongoose.Types.ObjectId(agentId);
+	}
+
+	// Filter by verified agents
+	if (verifiedAgentIds) {
+		filter.agentId = { $in: verifiedAgentIds };
 	}
 
 	// Text search
@@ -399,14 +415,42 @@ export async function getListings(
 	const skip = (page - 1) * limit;
 
 	const [listings, total] = await Promise.all([
-		Listing.find(filter).sort(sort).skip(skip).limit(limit),
+		Listing.find(filter)
+			.populate('agentId', 'name avatarUrl isVerified')
+			.sort(sort)
+			.skip(skip)
+			.limit(limit),
 		Listing.countDocuments(filter)
 	]);
 
 	const totalPages = Math.ceil(total / limit);
 
+	// Map listings with agent info
+	const listingsWithAgent = listings.map((listing) => {
+		const publicListing = toPublicListing(listing);
+
+		// Add agent info if populated
+		const agent = listing.agentId as unknown as {
+			_id: mongoose.Types.ObjectId;
+			name: string;
+			avatarUrl?: string;
+			isVerified: boolean;
+		} | null;
+
+		if (agent && typeof agent === 'object' && agent._id) {
+			publicListing.agent = {
+				id: agent._id.toString(),
+				name: agent.name,
+				avatarUrl: agent.avatarUrl,
+				isVerified: agent.isVerified
+			};
+		}
+
+		return publicListing;
+	});
+
 	return {
-		listings: listings.map(toPublicListing),
+		listings: listingsWithAgent,
 		pagination: {
 			page,
 			limit,
