@@ -2,8 +2,17 @@ import mongoose from 'mongoose';
 import connectDB from '@/lib/db/connect';
 import PaymentProof, { PaymentStatus } from '@/lib/db/models/PaymentProof';
 import Listing from '@/lib/db/models/Listing';
-import User from '@/lib/db/models/User';
-import type { SubmitPaymentProofInput, ReviewPaymentProofInput } from '@/lib/validators/payments.server';
+import User, { UserRole } from '@/lib/db/models/User';
+import type {
+	SubmitPaymentProofInput,
+	ReviewPaymentProofInput
+} from '@/lib/validators/payments.server';
+import { env, PLATFORM_CONFIG, logger } from '@/lib/config/env';
+import {
+	sendNewPaymentProofNotification,
+	sendPaymentApprovedEmail,
+	sendPaymentRejectedEmail
+} from '@/lib/email';
 
 /**
  * Payment Proofs Service
@@ -11,9 +20,15 @@ import type { SubmitPaymentProofInput, ReviewPaymentProofInput } from '@/lib/val
  * Business logic for payment proof operations
  */
 
-import { PLATFORM_CONFIG } from '@/lib/config/env';
-
 const UNLOCK_FEE = PLATFORM_CONFIG.UNLOCK_FEE;
+
+/**
+ * Get all admin emails for notifications
+ */
+async function getAdminEmails(): Promise<string[]> {
+	const admins = await User.find({ role: UserRole.ADMIN }, 'email');
+	return admins.map((admin) => admin.email);
+}
 
 /**
  * Submit a new payment proof
@@ -31,15 +46,29 @@ export async function submitPaymentProof(
 	}
 
 	// Check if user already has an approved proof for this listing
-	const hasApproved = await PaymentProof.hasApprovedProof(userId, input.listingId);
+	const hasApproved = await PaymentProof.hasApprovedProof(
+		userId,
+		input.listingId
+	);
 	if (hasApproved) {
 		throw new Error('You have already unlocked this listing');
 	}
 
 	// Check if user has a pending proof for this listing
-	const hasPending = await PaymentProof.hasPendingProof(userId, input.listingId);
+	const hasPending = await PaymentProof.hasPendingProof(
+		userId,
+		input.listingId
+	);
 	if (hasPending) {
-		throw new Error('You already have a pending payment proof for this listing');
+		throw new Error(
+			'You already have a pending payment proof for this listing'
+		);
+	}
+
+	// Get user info for notification
+	const user = await User.findById(userId, 'name email');
+	if (!user) {
+		throw new Error('User not found');
 	}
 
 	// Create payment proof
@@ -52,6 +81,30 @@ export async function submitPaymentProof(
 		imageUrl: input.imageUrl,
 		status: PaymentStatus.PENDING
 	});
+
+	// Send notification to all admins (non-blocking)
+	getAdminEmails()
+		.then(async (adminEmails) => {
+			if (adminEmails.length > 0) {
+				await sendNewPaymentProofNotification(adminEmails, {
+					userName: user.name,
+					userEmail: user.email,
+					listingTitle: listing.title,
+					amount: UNLOCK_FEE,
+					reference: input.reference,
+					adminDashboardUrl: `${env.appUrl}/dashboard/admin`
+				});
+				logger.info(
+					`Admin notification sent for new payment proof: ${proof.id}`
+				);
+			}
+		})
+		.catch((error) => {
+			logger.error(
+				'Failed to send admin notification for payment proof',
+				error
+			);
+		});
 
 	return proof;
 }
@@ -96,9 +149,10 @@ export async function getUserPaymentProofs(
 /**
  * Get pending payment proofs (admin only)
  */
-export async function getPendingPaymentProofs(
-	options: { page: number; limit: number }
-) {
+export async function getPendingPaymentProofs(options: {
+	page: number;
+	limit: number;
+}) {
 	await connectDB();
 
 	const skip = (options.page - 1) * options.limit;
@@ -127,7 +181,11 @@ export async function getPendingPaymentProofs(
 /**
  * Get a single payment proof by ID
  */
-export async function getPaymentProofById(proofId: string, requesterId: string, requesterRole: string) {
+export async function getPaymentProofById(
+	proofId: string,
+	requesterId: string,
+	requesterRole: string
+) {
 	await connectDB();
 
 	const proof = await PaymentProof.findById(proofId)
@@ -159,7 +217,9 @@ export async function reviewPaymentProof(
 ) {
 	await connectDB();
 
-	const proof = await PaymentProof.findById(proofId);
+	const proof = await PaymentProof.findById(proofId)
+		.populate('userId', 'name email')
+		.populate('listingId', 'title');
 
 	if (!proof) {
 		throw new Error('Payment proof not found');
@@ -168,6 +228,17 @@ export async function reviewPaymentProof(
 	if (proof.status !== PaymentStatus.PENDING) {
 		throw new Error('This payment proof has already been reviewed');
 	}
+
+	// Get user and listing info before updating
+	const user = proof.userId as unknown as {
+		_id: mongoose.Types.ObjectId;
+		name: string;
+		email: string;
+	};
+	const listing = proof.listingId as unknown as {
+		_id: mongoose.Types.ObjectId;
+		title: string;
+	};
 
 	// Update proof status
 	proof.status = input.status;
@@ -182,12 +253,42 @@ export async function reviewPaymentProof(
 
 	// If approved, add listing to user's unlockedListingIds
 	if (input.status === 'approved') {
-		await User.findByIdAndUpdate(
-			proof.userId,
-			{
-				$addToSet: { unlockedListingIds: proof.listingId }
-			}
-		);
+		await User.findByIdAndUpdate(user._id, {
+			$addToSet: { unlockedListingIds: listing._id }
+		});
+
+		// Send approval email to user (non-blocking)
+		sendPaymentApprovedEmail(user.email, {
+			name: user.name,
+			listingTitle: listing.title,
+			listingUrl: `${env.appUrl}/listings/${listing._id}`
+		})
+			.then(() => {
+				logger.info(`Payment approved email sent to ${user.email}`);
+			})
+			.catch((error) => {
+				logger.error(
+					`Failed to send payment approved email to ${user.email}`,
+					error
+				);
+			});
+	} else if (input.status === 'rejected') {
+		// Send rejection email to user (non-blocking)
+		sendPaymentRejectedEmail(user.email, {
+			name: user.name,
+			listingTitle: listing.title,
+			reason: input.rejectionReason,
+			listingUrl: `${env.appUrl}/listings/${listing._id}`
+		})
+			.then(() => {
+				logger.info(`Payment rejected email sent to ${user.email}`);
+			})
+			.catch((error) => {
+				logger.error(
+					`Failed to send payment rejected email to ${user.email}`,
+					error
+				);
+			});
 	}
 
 	// Return updated proof with populated fields
@@ -213,7 +314,9 @@ export async function getProofsByListing(
 	}
 
 	if (listing.agentId.toString() !== agentId) {
-		throw new Error('You do not have permission to view proofs for this listing');
+		throw new Error(
+			'You do not have permission to view proofs for this listing'
+		);
 	}
 
 	const skip = (options.page - 1) * options.limit;
@@ -241,8 +344,10 @@ export async function getProofsByListing(
 /**
  * Check if user has unlocked a listing
  */
-export async function hasUnlockedListing(userId: string, listingId: string): Promise<boolean> {
+export async function hasUnlockedListing(
+	userId: string,
+	listingId: string
+): Promise<boolean> {
 	await connectDB();
 	return PaymentProof.hasApprovedProof(userId, listingId);
 }
-

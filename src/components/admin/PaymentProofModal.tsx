@@ -109,7 +109,7 @@ export function PaymentProofModal({
 
 				<div className='flex flex-col lg:flex-row gap-4 lg:gap-6 flex-1 overflow-hidden min-h-0'>
 					{/* Image Preview Section - takes more space on desktop */}
-					<div className='flex-1 lg:flex-[2] flex flex-col min-h-0 min-w-0'>
+					<div className='flex-1 lg:flex-2 flex flex-col min-h-0 min-w-0'>
 						{/* Zoom Controls */}
 						<div className='flex items-center justify-between mb-3 px-1 flex-wrap gap-2'>
 							<div className='flex items-center gap-1 sm:gap-2'>
@@ -121,7 +121,7 @@ export function PaymentProofModal({
 									className='h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3'>
 									<ZoomOut className='h-4 w-4' />
 								</Button>
-								<span className='text-sm text-muted-foreground min-w-[3rem] sm:min-w-[4rem] text-center'>
+								<span className='text-sm text-muted-foreground min-w-12 sm:min-w-16 text-center'>
 									{Math.round(zoom * 100)}%
 								</span>
 								<Button
@@ -190,7 +190,7 @@ export function PaymentProofModal({
 					</div>
 
 					{/* Details Section - fixed width on desktop, full width on mobile */}
-					<div className='w-full lg:w-80 lg:flex-shrink-0 space-y-4 overflow-y-auto'>
+					<div className='w-full lg:w-80 lg:shrink-0 space-y-4 overflow-y-auto'>
 						<div className='space-y-3'>
 							<h3 className='font-semibold text-sm text-muted-foreground uppercase tracking-wide'>
 								Payment Details

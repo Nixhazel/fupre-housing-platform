@@ -87,7 +87,8 @@ async function sendEmail(options: BaseEmailOptions): Promise<SendEmailResult> {
 			messageId: result.messageId
 		};
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+		const errorMessage =
+			error instanceof Error ? error.message : 'Unknown error';
 		logger.error(`Failed to send email to ${to}`, error);
 
 		return {
@@ -237,18 +238,26 @@ export async function sendPaymentRejectedEmail(
     <h1 style="color: #ef4444; margin: 0 0 20px;">❌ Payment Proof Rejected</h1>
     <p style="color: #3f3f46; line-height: 1.6;">Hi ${props.name},</p>
     <p style="color: #3f3f46; line-height: 1.6;">
-      Unfortunately, your payment proof for <strong>${props.listingTitle}</strong> could not be verified.
+      Unfortunately, your payment proof for <strong>${
+				props.listingTitle
+			}</strong> could not be verified.
     </p>
-    ${props.reason ? `
+    ${
+			props.reason
+				? `
     <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; margin: 20px 0; border-radius: 4px;">
       <p style="color: #991b1b; margin: 0;"><strong>Reason:</strong> ${props.reason}</p>
     </div>
-    ` : ''}
+    `
+				: ''
+		}
     <p style="color: #3f3f46; line-height: 1.6;">
       Please submit a new payment proof with a clear image of your payment receipt.
     </p>
     <p style="text-align: center; margin: 30px 0;">
-      <a href="${props.listingUrl}" style="display: inline-block; padding: 14px 32px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">
+      <a href="${
+				props.listingUrl
+			}" style="display: inline-block; padding: 14px 32px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">
         Try Again
       </a>
     </p>
@@ -267,6 +276,97 @@ export async function sendPaymentRejectedEmail(
 	});
 }
 
+/**
+ * Send new payment proof notification to admins
+ */
+export async function sendNewPaymentProofNotification(
+	adminEmails: string[],
+	props: {
+		userName: string;
+		userEmail: string;
+		listingTitle: string;
+		amount: number;
+		reference: string;
+		adminDashboardUrl: string;
+	}
+): Promise<SendEmailResult[]> {
+	const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>New Payment Proof Submitted</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f5;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h1 style="color: #3b82f6; margin: 0 0 20px;">🔔 New Payment Proof Awaiting Review</h1>
+    <p style="color: #3f3f46; line-height: 1.6;">
+      A new payment proof has been submitted and requires your review.
+    </p>
+    
+    <div style="background-color: #f4f4f5; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <h3 style="color: #3f3f46; margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Payment Details</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="color: #71717a; padding: 8px 0; border-bottom: 1px solid #e4e4e7;">User</td>
+          <td style="color: #3f3f46; padding: 8px 0; border-bottom: 1px solid #e4e4e7; font-weight: 500; text-align: right;">${
+						props.userName
+					}</td>
+        </tr>
+        <tr>
+          <td style="color: #71717a; padding: 8px 0; border-bottom: 1px solid #e4e4e7;">Email</td>
+          <td style="color: #3f3f46; padding: 8px 0; border-bottom: 1px solid #e4e4e7; font-weight: 500; text-align: right;">${
+						props.userEmail
+					}</td>
+        </tr>
+        <tr>
+          <td style="color: #71717a; padding: 8px 0; border-bottom: 1px solid #e4e4e7;">Listing</td>
+          <td style="color: #3f3f46; padding: 8px 0; border-bottom: 1px solid #e4e4e7; font-weight: 500; text-align: right;">${
+						props.listingTitle
+					}</td>
+        </tr>
+        <tr>
+          <td style="color: #71717a; padding: 8px 0; border-bottom: 1px solid #e4e4e7;">Amount</td>
+          <td style="color: #22c55e; padding: 8px 0; border-bottom: 1px solid #e4e4e7; font-weight: 600; text-align: right;">₦${props.amount.toLocaleString()}</td>
+        </tr>
+        <tr>
+          <td style="color: #71717a; padding: 8px 0;">Reference</td>
+          <td style="color: #3f3f46; padding: 8px 0; font-weight: 500; text-align: right; font-family: monospace;">${
+						props.reference
+					}</td>
+        </tr>
+      </table>
+    </div>
+    
+    <p style="text-align: center; margin: 30px 0;">
+      <a href="${
+				props.adminDashboardUrl
+			}" style="display: inline-block; padding: 14px 32px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">
+        Review Payment Proof
+      </a>
+    </p>
+    
+    <p style="color: #71717a; font-size: 14px; text-align: center;">
+      Please review and approve or reject this payment proof as soon as possible.
+    </p>
+  </div>
+</body>
+</html>
+`.trim();
+
+	// Send to all admin emails
+	const results = await Promise.all(
+		adminEmails.map((email) =>
+			sendEmail({
+				to: email,
+				subject: `New Payment Proof: ${props.listingTitle}`,
+				html
+			})
+		)
+	);
+
+	return results;
+}
+
 // Re-export types
 export type { PasswordResetEmailProps, EmailVerificationProps };
-

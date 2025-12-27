@@ -22,6 +22,7 @@ export {
 	sendWelcomeEmail,
 	sendPaymentApprovedEmail,
 	sendPaymentRejectedEmail,
+	sendNewPaymentProofNotification,
 	type SendEmailResult,
 	type PasswordResetEmailProps,
 	type EmailVerificationProps
@@ -54,4 +55,3 @@ export {
 	emailVerificationEmailText,
 	welcomeEmail
 } from './templates/email-verification';
-
