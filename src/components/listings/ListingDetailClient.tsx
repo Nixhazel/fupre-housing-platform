@@ -171,27 +171,30 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 
 			{/* Header */}
 			<div className='mb-8'>
-				<div className='flex items-start justify-between mb-4'>
-					<div className='flex-1'>
-						<h1 className='text-3xl font-bold mb-2'>{listing.title}</h1>
-						<div className='flex items-center space-x-4 text-muted-foreground'>
-							<div className='flex items-center space-x-1'>
-								<MapPin className='h-4 w-4' />
-								<span>
+				{/* Title and action buttons */}
+				<div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4'>
+					<div className='flex-1 min-w-0'>
+						<h1 className='text-2xl sm:text-3xl font-bold mb-2 wrap-break-word'>
+							{listing.title}
+						</h1>
+						<div className='flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-muted-foreground'>
+							<div className='flex items-center gap-1'>
+								<MapPin className='h-4 w-4 shrink-0' />
+								<span className='truncate max-w-[200px] sm:max-w-none'>
 									{isUnlocked ? listing.addressFull : listing.addressApprox}
 								</span>
 							</div>
-							<div className='flex items-center space-x-1'>
-								<Eye className='h-4 w-4' />
+							<div className='flex items-center gap-1'>
+								<Eye className='h-4 w-4 shrink-0' />
 								<span>{listing.views} views</span>
 							</div>
 						</div>
 					</div>
 
-					<div className='flex items-center space-x-2'>
+					<div className='flex items-center gap-2 shrink-0'>
 						<Button variant='outline' size='sm' onClick={handleShare}>
-							<Share2 className='h-4 w-4 mr-2' />
-							Share
+							<Share2 className='h-4 w-4 sm:mr-2' />
+							<span className='hidden sm:inline'>Share</span>
 						</Button>
 						<Button
 							variant='outline'
@@ -199,23 +202,26 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 							onClick={handleToggleFavorite}
 							disabled={saveMutation.isPending || unsaveMutation.isPending}>
 							{saveMutation.isPending || unsaveMutation.isPending ? (
-								<Loader2 className='h-4 w-4 mr-2 animate-spin' />
+								<Loader2 className='h-4 w-4 sm:mr-2 animate-spin' />
 							) : (
 								<Heart
-									className={`h-4 w-4 mr-2 ${
+									className={`h-4 w-4 sm:mr-2 ${
 										isSaved ? 'fill-red-500 text-red-500' : ''
 									}`}
 								/>
 							)}
-							{isSaved ? 'Saved' : 'Save'}
+							<span className='hidden sm:inline'>
+								{isSaved ? 'Saved' : 'Save'}
+							</span>
 						</Button>
 					</div>
 				</div>
 
-				<div className='flex items-center justify-between'>
-					<div className='flex items-center space-x-4'>
-						<span className='text-3xl font-bold text-primary'>
-							{formatNaira(listing.priceMonthly)}/month
+				{/* Price, status, and rating */}
+				<div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
+					<div className='flex flex-wrap items-center gap-2 sm:gap-4'>
+						<span className='text-2xl sm:text-3xl font-bold text-primary'>
+							{formatNaira(listing.priceMonthly)}/mo
 						</span>
 						<Badge
 							variant={
@@ -225,7 +231,7 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 						</Badge>
 					</div>
 
-					<div className='flex items-center space-x-2'>
+					<div className='flex items-center'>
 						<Rating
 							rating={listing.rating}
 							reviewsCount={listing.reviewsCount}

@@ -178,21 +178,30 @@ export async function updateUser(
 
 	await user.save();
 
-	// Send verification email if agent is newly verified
+	// Send verification email if agent is newly verified (non-blocking)
 	if (isBeingVerified) {
-		sendAgentVerifiedEmail(user.email, {
-			name: user.name,
-			dashboardUrl: `${env.appUrl}/dashboard/agent`
-		})
-			.then(() => {
-				logger.info(`Agent verification email sent to ${user.email}`);
-			})
-			.catch((error) => {
+		(async () => {
+			try {
+				const emailResult = await sendAgentVerifiedEmail(user.email, {
+					name: user.name,
+					dashboardUrl: `${env.appUrl}/dashboard/agent`
+				});
+				if (emailResult.success) {
+					logger.info(
+						`Agent verification email sent to ${user.email}, messageId: ${emailResult.messageId}`
+					);
+				} else {
+					logger.error(
+						`Agent verification email failed for ${user.email}: ${emailResult.error}`
+					);
+				}
+			} catch (error) {
 				logger.error(
-					`Failed to send agent verification email to ${user.email}`,
+					`Exception sending agent verification email to ${user.email}`,
 					error
 				);
-			});
+			}
+		})();
 	}
 
 	return user.toSafeObject();

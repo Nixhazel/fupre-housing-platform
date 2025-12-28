@@ -320,55 +320,59 @@ export default function AdminDashboard() {
 												initial={{ opacity: 0, x: -20 }}
 												animate={{ opacity: 1, x: 0 }}
 												transition={{ duration: 0.3, delay: index * 0.1 }}
-												className='flex items-center space-x-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors'>
-												{/* Clickable image thumbnail */}
-												<button
-													onClick={() => handleOpenProofModal(proof)}
-													className='relative w-16 h-16 shrink-0 group cursor-pointer'
-													title='Click to view full image'>
-													<Image
-														src={proof.imageUrl}
-														alt='Payment proof'
-														fill
-														sizes='64px'
-														className='rounded-lg object-cover'
-													/>
-													<div className='absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center'>
-														<Eye className='h-5 w-5 text-white' />
+												className='p-4 border rounded-lg hover:bg-muted/50 transition-colors'>
+												{/* Mobile: Stack layout, Desktop: Row layout */}
+												<div className='flex flex-col sm:flex-row sm:items-center gap-4'>
+													{/* Clickable image thumbnail */}
+													<button
+														onClick={() => handleOpenProofModal(proof)}
+														className='relative w-16 h-16 shrink-0 group cursor-pointer'
+														title='Click to view full image'>
+														<Image
+															src={proof.imageUrl}
+															alt='Payment proof'
+															fill
+															sizes='64px'
+															className='rounded-lg object-cover'
+														/>
+														<div className='absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center'>
+															<Eye className='h-5 w-5 text-white' />
+														</div>
+													</button>
+													<div className='flex-1 min-w-0'>
+														<h4 className='font-semibold text-sm sm:text-base'>
+															Payment Proof #{proof.id.slice(-6)}
+														</h4>
+														<p className='text-xs sm:text-sm text-muted-foreground'>
+															{formatNaira(proof.amount)} •{' '}
+															{proof.method.replace('_', ' ')}
+														</p>
+														<p className='text-xs sm:text-sm text-muted-foreground truncate max-w-[200px] sm:max-w-none'>
+															Ref: {proof.reference}
+														</p>
+														<p className='text-xs text-muted-foreground'>
+															{new Date(proof.submittedAt).toLocaleDateString()}
+														</p>
 													</div>
-												</button>
-												<div className='flex-1 min-w-0'>
-													<h4 className='font-semibold'>
-														Payment Proof #{proof.id.slice(-6)}
-													</h4>
-													<p className='text-sm text-muted-foreground'>
-														Amount: {formatNaira(proof.amount)} • Method:{' '}
-														{proof.method.replace('_', ' ')}
-													</p>
-													<p className='text-sm text-muted-foreground truncate'>
-														Reference: {proof.reference}
-													</p>
-													<p className='text-xs text-muted-foreground'>
-														Submitted:{' '}
-														{new Date(proof.submittedAt).toLocaleDateString()}
-													</p>
 												</div>
-												<div className='flex items-center space-x-2'>
+												{/* Action buttons - full width on mobile */}
+												<div className='flex flex-wrap items-center gap-2 mt-3 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-t-0'>
 													<Button
 														size='sm'
 														variant='outline'
+														className='flex-1 sm:flex-none'
 														onClick={() => handleOpenProofModal(proof)}>
 														<Eye className='h-4 w-4 mr-1' />
 														View
 													</Button>
 													<Button
 														size='sm'
+														className='flex-1 sm:flex-none bg-green-600 hover:bg-green-700'
 														onClick={() => handleApproveProof(proof.id)}
 														disabled={
 															approveMutation.isPending ||
 															rejectMutation.isPending
-														}
-														className='bg-green-600 hover:bg-green-700'>
+														}>
 														{approveMutation.isPending ? (
 															<Loader2 className='h-4 w-4 mr-1 animate-spin' />
 														) : (
@@ -379,6 +383,7 @@ export default function AdminDashboard() {
 													<Button
 														size='sm'
 														variant='destructive'
+														className='flex-1 sm:flex-none'
 														disabled={
 															approveMutation.isPending ||
 															rejectMutation.isPending

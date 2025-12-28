@@ -82,29 +82,48 @@ export async function submitPaymentProof(
 		status: PaymentStatus.PENDING
 	});
 
-	// Send notification to all admins (non-blocking)
-	getAdminEmails()
-		.then(async (adminEmails) => {
+	// Send notification to all admins (non-blocking, fire and forget)
+	(async () => {
+		try {
+			const adminEmails = await getAdminEmails();
 			if (adminEmails.length > 0) {
-				await sendNewPaymentProofNotification(adminEmails, {
-					userName: user.name,
-					userEmail: user.email,
-					listingTitle: listing.title,
-					amount: UNLOCK_FEE,
-					reference: input.reference,
-					adminDashboardUrl: `${env.appUrl}/dashboard/admin`
-				});
-				logger.info(
-					`Admin notification sent for new payment proof: ${proof.id}`
+				const emailResults = await sendNewPaymentProofNotification(
+					adminEmails,
+					{
+						userName: user.name,
+						userEmail: user.email,
+						listingTitle: listing.title,
+						amount: UNLOCK_FEE,
+						reference: input.reference,
+						adminDashboardUrl: `${env.appUrl}/dashboard/admin`
+					}
 				);
+				const successCount = emailResults.filter((r) => r.success).length;
+				const failedCount = emailResults.length - successCount;
+				if (successCount > 0) {
+					logger.info(
+						`Admin notifications sent for payment proof ${proof.id}: ${successCount} sent, ${failedCount} failed`
+					);
+				}
+				if (failedCount > 0) {
+					const failedErrors = emailResults
+						.filter((r) => !r.success)
+						.map((r) => r.error)
+						.join(', ');
+					logger.error(
+						`Some admin notifications failed for payment proof ${proof.id}: ${failedErrors}`
+					);
+				}
+			} else {
+				logger.warn('No admin emails found to send payment proof notification');
 			}
-		})
-		.catch((error) => {
+		} catch (error) {
 			logger.error(
-				'Failed to send admin notification for payment proof',
+				'Exception sending admin notification for payment proof',
 				error
 			);
-		});
+		}
+	})();
 
 	return proof;
 }
@@ -257,38 +276,78 @@ export async function reviewPaymentProof(
 			$addToSet: { unlockedListingIds: listing._id }
 		});
 
-		// Send approval email to user (non-blocking)
-		sendPaymentApprovedEmail(user.email, {
-			name: user.name,
-			listingTitle: listing.title,
-			listingUrl: `${env.appUrl}/listings/${listing._id}`
-		})
-			.then(() => {
-				logger.info(`Payment approved email sent to ${user.email}`);
-			})
-			.catch((error) => {
-				logger.error(
-					`Failed to send payment approved email to ${user.email}`,
-					error
-				);
-			});
+		// Send approval email to user (non-blocking, fire and forget)
+		if (user.email && user.name && listing.title) {
+			(async () => {
+				try {
+					logger.info(
+						`Attempting to send payment approved email to ${user.email} for listing: ${listing.title}`
+					);
+					const emailResult = await sendPaymentApprovedEmail(user.email, {
+						name: user.name,
+						listingTitle: listing.title,
+						listingUrl: `${env.appUrl}/listings/${listing._id}`
+					});
+					if (emailResult.success) {
+						logger.info(
+							`Payment approved email sent to ${user.email}, messageId: ${emailResult.messageId}`
+						);
+					} else {
+						logger.error(
+							`Payment approved email failed for ${user.email}: ${emailResult.error}`
+						);
+					}
+				} catch (error) {
+					logger.error(
+						`Exception sending payment approved email to ${user.email}`,
+						error
+					);
+				}
+			})();
+		} else {
+			logger.error(
+				`Cannot send payment approved email - missing data. User: ${JSON.stringify(
+					{ email: user.email, name: user.name }
+				)}, Listing: ${listing.title}`
+			);
+		}
 	} else if (input.status === 'rejected') {
-		// Send rejection email to user (non-blocking)
-		sendPaymentRejectedEmail(user.email, {
-			name: user.name,
-			listingTitle: listing.title,
-			reason: input.rejectionReason,
-			listingUrl: `${env.appUrl}/listings/${listing._id}`
-		})
-			.then(() => {
-				logger.info(`Payment rejected email sent to ${user.email}`);
-			})
-			.catch((error) => {
-				logger.error(
-					`Failed to send payment rejected email to ${user.email}`,
-					error
-				);
-			});
+		// Send rejection email to user (non-blocking, fire and forget)
+		if (user.email && user.name && listing.title) {
+			(async () => {
+				try {
+					logger.info(
+						`Attempting to send payment rejected email to ${user.email} for listing: ${listing.title}`
+					);
+					const emailResult = await sendPaymentRejectedEmail(user.email, {
+						name: user.name,
+						listingTitle: listing.title,
+						reason: input.rejectionReason,
+						listingUrl: `${env.appUrl}/listings/${listing._id}`
+					});
+					if (emailResult.success) {
+						logger.info(
+							`Payment rejected email sent to ${user.email}, messageId: ${emailResult.messageId}`
+						);
+					} else {
+						logger.error(
+							`Payment rejected email failed for ${user.email}: ${emailResult.error}`
+						);
+					}
+				} catch (error) {
+					logger.error(
+						`Exception sending payment rejected email to ${user.email}`,
+						error
+					);
+				}
+			})();
+		} else {
+			logger.error(
+				`Cannot send payment rejected email - missing data. User: ${JSON.stringify(
+					{ email: user.email, name: user.name }
+				)}, Listing: ${listing.title}`
+			);
+		}
 	}
 
 	// Return updated proof with populated fields
