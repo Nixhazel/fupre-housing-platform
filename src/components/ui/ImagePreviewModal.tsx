@@ -3,14 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-	X,
-	ChevronLeft,
-	ChevronRight,
-	ZoomIn,
-	ZoomOut,
-	Download
-} from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -50,15 +43,11 @@ export function ImagePreviewModal({
 					onClose();
 					break;
 				case 'ArrowLeft':
-					setCurrentIndex((prev) =>
-						prev > 0 ? prev - 1 : images.length - 1
-					);
+					setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
 					setIsZoomed(false);
 					break;
 				case 'ArrowRight':
-					setCurrentIndex((prev) =>
-						prev < images.length - 1 ? prev + 1 : 0
-					);
+					setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
 					setIsZoomed(false);
 					break;
 			}
@@ -97,25 +86,6 @@ export function ImagePreviewModal({
 		setIsZoomed((prev) => !prev);
 	};
 
-	const handleDownload = async () => {
-		const imageUrl = images[currentIndex];
-		try {
-			const response = await fetch(imageUrl);
-			const blob = await response.blob();
-			const url = window.URL.createObjectURL(blob);
-			const link = document.createElement('a');
-			link.href = url;
-			link.download = `image-${currentIndex + 1}.jpg`;
-			document.body.appendChild(link);
-			link.click();
-			document.body.removeChild(link);
-			window.URL.revokeObjectURL(url);
-		} catch {
-			// Fallback: open in new tab
-			window.open(imageUrl, '_blank');
-		}
-	};
-
 	if (!isOpen) return null;
 
 	return (
@@ -125,7 +95,7 @@ export function ImagePreviewModal({
 					initial={{ opacity: 0 }}
 					animate={{ opacity: 1 }}
 					exit={{ opacity: 0 }}
-					className='fixed inset-0 z-50 flex items-center justify-center'
+					className='fixed inset-0 z-[100] flex items-center justify-center'
 					onClick={onClose}>
 					{/* Backdrop */}
 					<div className='absolute inset-0 bg-black/90' />
@@ -135,7 +105,7 @@ export function ImagePreviewModal({
 						className='relative z-10 w-full h-full flex flex-col'
 						onClick={(e) => e.stopPropagation()}>
 						{/* Header */}
-						<div className='absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-4 bg-gradient-to-b from-black/50 to-transparent'>
+						<div className='absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-4 bg-linear-to-b from-black/50 to-transparent'>
 							<div className='text-white'>
 								{title && (
 									<h3 className='text-lg font-semibold truncate max-w-[50vw]'>
@@ -164,14 +134,6 @@ export function ImagePreviewModal({
 									variant='ghost'
 									size='icon'
 									className='text-white hover:bg-white/20'
-									onClick={handleDownload}
-									title='Download image'>
-									<Download className='h-5 w-5' />
-								</Button>
-								<Button
-									variant='ghost'
-									size='icon'
-									className='text-white hover:bg-white/20'
 									onClick={onClose}
 									title='Close (Esc)'>
 									<X className='h-5 w-5' />
@@ -188,9 +150,7 @@ export function ImagePreviewModal({
 								transition={{ duration: 0.2 }}
 								className={cn(
 									'relative w-full h-full',
-									isZoomed
-										? 'cursor-zoom-out overflow-auto'
-										: 'cursor-zoom-in'
+									isZoomed ? 'cursor-zoom-out overflow-auto' : 'cursor-zoom-in'
 								)}
 								onClick={toggleZoom}>
 								<Image
@@ -200,9 +160,7 @@ export function ImagePreviewModal({
 									sizes='100vw'
 									className={cn(
 										'transition-transform duration-200',
-										isZoomed
-											? 'object-contain scale-150'
-											: 'object-contain'
+										isZoomed ? 'object-contain scale-150' : 'object-contain'
 									)}
 									priority
 								/>
@@ -233,7 +191,7 @@ export function ImagePreviewModal({
 
 						{/* Thumbnail Strip */}
 						{images.length > 1 && (
-							<div className='absolute bottom-0 left-0 right-0 z-20 p-4 bg-gradient-to-t from-black/50 to-transparent'>
+							<div className='absolute bottom-0 left-0 right-0 z-20 p-4 bg-linear-to-t from-black/50 to-transparent'>
 								<div className='flex justify-center gap-2 overflow-x-auto py-2'>
 									{images.map((image, index) => (
 										<button
@@ -266,4 +224,3 @@ export function ImagePreviewModal({
 		</AnimatePresence>
 	);
 }
-

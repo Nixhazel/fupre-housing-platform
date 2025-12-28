@@ -70,7 +70,7 @@ function MobileTabBarContent() {
 	};
 
 	return (
-		<div className='fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t md:hidden'>
+		<div className='fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-t md:hidden'>
 			<div className='flex items-center justify-around h-16'>
 				{availableTabs.map((tab) => {
 					const isActive =
