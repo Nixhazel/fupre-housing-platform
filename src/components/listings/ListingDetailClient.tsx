@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -18,7 +19,8 @@ import {
 	ArrowLeft,
 	Lock,
 	Unlock,
-	Loader2
+	Loader2,
+	ZoomIn
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/shared/Badge';
@@ -37,6 +39,7 @@ import { useAuth } from '@/components/providers/AuthProvider';
 import { formatNaira } from '@/lib/utils/currency';
 import { formatUnlockFee } from '@/lib/config/env';
 import { ReviewForm, ReviewList } from '@/components/reviews';
+import { ImagePreviewModal } from '@/components/ui/ImagePreviewModal';
 import { toast } from 'sonner';
 
 interface ListingDetailClientProps {
@@ -53,9 +56,18 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 	const saveMutation = useSaveListing();
 	const unsaveMutation = useUnsaveListing();
 
+	// Image preview modal state
+	const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
+	const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
 	const listing = data?.listing;
 	const isUnlocked = data?.isUnlocked ?? false;
 	const isSaved = user?.savedListingIds.includes(listingId) ?? false;
+
+	const openImagePreview = (index: number) => {
+		setSelectedImageIndex(index);
+		setIsImagePreviewOpen(true);
+	};
 
 	const handleUnlockLocation = () => {
 		if (!isAuthenticated) {
@@ -251,14 +263,19 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 								{listing.photos.map((photo: string, index: number) => (
 									<div
 										key={index}
-										className='aspect-square overflow-hidden relative'>
+										className='aspect-square overflow-hidden relative group cursor-pointer'
+										onClick={() => openImagePreview(index)}>
 										<Image
 											src={photo}
 											alt={`${listing.title} - Image ${index + 1}`}
 											fill
 											sizes='(max-width: 768px) 50vw, 33vw'
-											className='object-cover hover:scale-105 transition-transform cursor-pointer'
+											className='object-cover group-hover:scale-105 transition-transform'
 										/>
+										{/* Hover overlay */}
+										<div className='absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center'>
+											<ZoomIn className='h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity' />
+										</div>
 									</div>
 								))}
 							</div>
@@ -504,6 +521,15 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 					</Card>
 				</div>
 			</div>
+
+			{/* Image Preview Modal */}
+			<ImagePreviewModal
+				images={listing.photos}
+				initialIndex={selectedImageIndex}
+				isOpen={isImagePreviewOpen}
+				onClose={() => setIsImagePreviewOpen(false)}
+				title={listing.title}
+			/>
 		</div>
 	);
 }

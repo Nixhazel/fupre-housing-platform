@@ -24,8 +24,11 @@ type RouteParams = { params: Promise<{ id: string }> };
  *
  * Fetch a single listing by ID
  *
- * If user is authenticated and has unlocked the listing, includes private fields.
- * Otherwise, returns public listing only.
+ * Access levels:
+ * - Admins: Always see full unlocked listing
+ * - Agents: See their own listings as unlocked
+ * - Users with unlocked listing: See full details
+ * - Others: See public listing only
  *
  * Path Parameters:
  * - id: Listing ID
@@ -44,16 +47,37 @@ export const GET = withOptionalAuth(
 				return notFoundResponse('Listing ID is required');
 			}
 
-			// Check if user has unlocked this listing
+			await connectDB();
+
+			// First, get the listing to check ownership
+			const listingData = await listingsService.getListingById(listingId);
+			if (!listingData) {
+				return notFoundResponse('Listing not found');
+			}
+
+			// Check if user has access to unlocked info
 			let isUnlocked = false;
 
 			if (context?.user) {
-				await connectDB();
 				const user = await User.findActiveById(context.user.userId);
 				if (user) {
-					isUnlocked = user.unlockedListingIds.some(
-						(id) => id.toString() === listingId
-					);
+					// Admins always have access
+					if (user.role === 'admin') {
+						isUnlocked = true;
+					}
+					// Agents have access to their own listings
+					else if (
+						user.role === 'agent' &&
+						listingData.agentId === context.user.userId
+					) {
+						isUnlocked = true;
+					}
+					// Check if user has paid to unlock
+					else {
+						isUnlocked = user.unlockedListingIds.some(
+							(id) => id.toString() === listingId
+						);
+					}
 				}
 			}
 
@@ -65,11 +89,7 @@ export const GET = withOptionalAuth(
 				}
 				return successResponse({ listing, isUnlocked: true });
 			} else {
-				const listing = await listingsService.getListingById(listingId);
-				if (!listing) {
-					return notFoundResponse('Listing not found');
-				}
-				return successResponse({ listing, isUnlocked: false });
+				return successResponse({ listing: listingData, isUnlocked: false });
 			}
 		} catch (error) {
 			return serverErrorResponse(error);
@@ -91,44 +111,42 @@ export const GET = withOptionalAuth(
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
 	// Wrap with agent guard
-	const handler = withAgent(
-		async (req: NextRequest, context: AuthContext) => {
-			try {
-				const { id: listingId } = await params;
+	const handler = withAgent(async (req: NextRequest, context: AuthContext) => {
+		try {
+			const { id: listingId } = await params;
 
-				if (!listingId) {
-					return notFoundResponse('Listing ID is required');
-				}
-
-				// Parse and validate request body
-				const body = await req.json();
-				const validation = updateListingSchema.safeParse(body);
-
-				if (!validation.success) {
-					return validationErrorResponse(validation.error);
-				}
-
-				// Update listing
-				const listing = await listingsService.updateListing(
-					listingId,
-					context.user.userId,
-					validation.data
-				);
-
-				return successResponse({ listing });
-			} catch (error) {
-				if (error instanceof Error) {
-					if (error.message.includes('not found')) {
-						return notFoundResponse(error.message);
-					}
-					if (error.message.includes('permission')) {
-						return forbiddenResponse(error.message);
-					}
-				}
-				return serverErrorResponse(error);
+			if (!listingId) {
+				return notFoundResponse('Listing ID is required');
 			}
+
+			// Parse and validate request body
+			const body = await req.json();
+			const validation = updateListingSchema.safeParse(body);
+
+			if (!validation.success) {
+				return validationErrorResponse(validation.error);
+			}
+
+			// Update listing
+			const listing = await listingsService.updateListing(
+				listingId,
+				context.user.userId,
+				validation.data
+			);
+
+			return successResponse({ listing });
+		} catch (error) {
+			if (error instanceof Error) {
+				if (error.message.includes('not found')) {
+					return notFoundResponse(error.message);
+				}
+				if (error.message.includes('permission')) {
+					return forbiddenResponse(error.message);
+				}
+			}
+			return serverErrorResponse(error);
 		}
-	);
+	});
 
 	return handler(request);
 }
@@ -145,33 +163,30 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
  * Response: { success, data: { message } }
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-	const handler = withAgent(
-		async (_req: NextRequest, context: AuthContext) => {
-			try {
-				const { id: listingId } = await params;
+	const handler = withAgent(async (_req: NextRequest, context: AuthContext) => {
+		try {
+			const { id: listingId } = await params;
 
-				if (!listingId) {
-					return notFoundResponse('Listing ID is required');
-				}
-
-				// Delete listing
-				await listingsService.deleteListing(listingId, context.user.userId);
-
-				return successResponse({ message: 'Listing deleted successfully' });
-			} catch (error) {
-				if (error instanceof Error) {
-					if (error.message.includes('not found')) {
-						return notFoundResponse(error.message);
-					}
-					if (error.message.includes('permission')) {
-						return forbiddenResponse(error.message);
-					}
-				}
-				return serverErrorResponse(error);
+			if (!listingId) {
+				return notFoundResponse('Listing ID is required');
 			}
+
+			// Delete listing
+			await listingsService.deleteListing(listingId, context.user.userId);
+
+			return successResponse({ message: 'Listing deleted successfully' });
+		} catch (error) {
+			if (error instanceof Error) {
+				if (error.message.includes('not found')) {
+					return notFoundResponse(error.message);
+				}
+				if (error.message.includes('permission')) {
+					return forbiddenResponse(error.message);
+				}
+			}
+			return serverErrorResponse(error);
 		}
-	);
+	});
 
 	return handler(request);
 }
-
