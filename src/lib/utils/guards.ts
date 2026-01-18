@@ -55,7 +55,11 @@ export function canCreateListings(userRole: Role | undefined): boolean {
 
 /**
  * Check if user can create roommate listings
+ * Only students and owners can create roommate listings (not agents or admins)
  */
 export function canCreateRoommateListings(userRole: Role | undefined): boolean {
-	return hasRole(userRole, 'student') || hasRole(userRole, 'owner');
+	if (!userRole) return false;
+	// Only students and owners can create roommate listings
+	// Agents and admins are explicitly excluded
+	return userRole === 'student' || userRole === 'owner';
 }

@@ -18,7 +18,8 @@ import {
 	Star,
 	TrendingUp,
 	Users,
-	FileText
+	FileText,
+	Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,26 +28,36 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/shared/Badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { useAuthStore } from '@/lib/store/authSlice';
-import { useListingsStore } from '@/lib/store/listingsSlice';
-import { useRoommatesStore } from '@/lib/store/roommatesSlice';
-import { usePaymentsStore } from '@/lib/store/paymentsSlice';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useUpdateProfile } from '@/hooks/api/useAuth';
+import { useSavedListings } from '@/hooks/api/useListings';
+import { useMyRoommates } from '@/hooks/api/useRoommates';
+import { useMyPaymentProofs } from '@/hooks/api/usePayments';
 import { dayjs } from '@/lib/utils/date';
 import { toast } from 'sonner';
 
 function ProfileContent() {
-	const { user, updateUser } = useAuthStore();
-	const { listings } = useListingsStore();
-	const { roommateListings } = useRoommatesStore();
-	const { paymentProofs } = usePaymentsStore();
+	const { user, isLoading: authLoading } = useAuth();
+	const updateProfileMutation = useUpdateProfile();
+
+	// Fetch user-specific data
+	const { data: savedListingsData } = useSavedListings({ enabled: !!user });
+	const { data: roommatesData } = useMyRoommates({}, { enabled: !!user });
+	const { data: paymentsData } = useMyPaymentProofs({}, { enabled: !!user });
 
 	const [isEditing, setIsEditing] = useState(false);
 	const [editForm, setEditForm] = useState({
 		name: user?.name || '',
-		email: user?.email || '',
-		phone: user?.phone || '',
-		matricNumber: user?.matricNumber || ''
+		phone: user?.phone || ''
 	});
+
+	if (authLoading) {
+		return (
+			<div className='min-h-screen bg-background flex items-center justify-center'>
+				<Loader2 className='h-8 w-8 animate-spin text-primary' />
+			</div>
+		);
+	}
 
 	if (!user) {
 		return (
@@ -67,72 +78,55 @@ function ProfileContent() {
 	const handleEdit = () => {
 		setEditForm({
 			name: user.name,
-			email: user.email || '',
-			phone: user.phone || '',
-			matricNumber: user.matricNumber || ''
+			phone: user.phone || ''
 		});
 		setIsEditing(true);
 	};
 
 	const handleSave = () => {
-		updateUser(editForm);
-		setIsEditing(false);
-		toast.success('Profile updated successfully!');
+		updateProfileMutation.mutate(editForm, {
+			onSuccess: () => {
+				setIsEditing(false);
+				toast.success('Profile updated successfully!');
+			},
+			onError: (error) => {
+				toast.error(error.message || 'Failed to update profile');
+			}
+		});
 	};
 
 	const handleCancel = () => {
 		setIsEditing(false);
 		setEditForm({
 			name: user.name,
-			email: user.email || '',
-			phone: user.phone || '',
-			matricNumber: user.matricNumber || ''
+			phone: user.phone || ''
 		});
 	};
 
-	// Get user-specific data
-	const userListings = listings.filter(
-		(listing) => listing.agentId === user.id
-	);
-	const userRoommateListings = roommateListings.filter(
-		(roommate) => roommate.ownerId === user.id
-	);
-	const userPaymentProofs = paymentProofs.filter(
-		(proof) => proof.userId === user.id
-	);
-	const savedListings = listings.filter((listing) =>
-		user.savedListingIds.includes(listing.id)
-	);
-	const unlockedListings = listings.filter((listing) =>
-		user.unlockedListingIds.includes(listing.id)
-	);
-
 	// Calculate stats based on role
+	const savedListings = savedListingsData?.listings || [];
+	const roommateListings = roommatesData?.listings || [];
+	const paymentProofs = paymentsData?.proofs || [];
+
 	const getRoleStats = () => {
 		switch (user.role) {
 			case 'agent':
 				return [
 					{
 						label: 'Active Listings',
-						value: userListings.filter((l) => l.status === 'available').length,
+						value: 0, // Would come from agent listings API
 						icon: Building2,
 						color: 'text-blue-600'
 					},
 					{
 						label: 'Total Views',
-						value: userListings.reduce((sum, l) => sum + l.views, 0),
+						value: 0,
 						icon: TrendingUp,
 						color: 'text-green-600'
 					},
 					{
 						label: 'Average Rating',
-						value:
-							userListings.length > 0
-								? (
-										userListings.reduce((sum, l) => sum + l.rating, 0) /
-										userListings.length
-								  ).toFixed(1)
-								: '0.0',
+						value: '0.0',
 						icon: Star,
 						color: 'text-yellow-600'
 					}
@@ -147,13 +141,13 @@ function ProfileContent() {
 					},
 					{
 						label: 'Unlocked Listings',
-						value: unlockedListings.length,
+						value: user.unlockedListingIds.length,
 						icon: Unlock,
 						color: 'text-green-600'
 					},
 					{
 						label: 'Payment Proofs',
-						value: userPaymentProofs.length,
+						value: paymentProofs.length,
 						icon: FileText,
 						color: 'text-blue-600'
 					}
@@ -162,19 +156,19 @@ function ProfileContent() {
 				return [
 					{
 						label: 'Roommate Listings',
-						value: userRoommateListings.length,
+						value: roommateListings.length,
 						icon: Users,
 						color: 'text-purple-600'
 					},
 					{
 						label: 'Total Listings',
-						value: userRoommateListings.length,
+						value: roommateListings.length,
 						icon: TrendingUp,
 						color: 'text-green-600'
 					},
 					{
 						label: 'Recent Listings',
-						value: userRoommateListings.filter((l) =>
+						value: roommateListings.filter((l) =>
 							dayjs(l.createdAt).isAfter(dayjs().subtract(30, 'days'))
 						).length,
 						icon: Building2,
@@ -222,8 +216,15 @@ function ProfileContent() {
 											<X className='h-4 w-4 mr-2' />
 											Cancel
 										</Button>
-										<Button size='sm' onClick={handleSave}>
-											<Save className='h-4 w-4 mr-2' />
+										<Button
+											size='sm'
+											onClick={handleSave}
+											disabled={updateProfileMutation.isPending}>
+											{updateProfileMutation.isPending ? (
+												<Loader2 className='h-4 w-4 mr-2 animate-spin' />
+											) : (
+												<Save className='h-4 w-4 mr-2' />
+											)}
 											Save
 										</Button>
 									</div>
@@ -244,10 +245,10 @@ function ProfileContent() {
 									<div>
 										<h3 className='text-xl font-semibold'>{user.name}</h3>
 										<div className='flex items-center gap-2 mt-1'>
-											<Badge variant={user.verified ? 'default' : 'secondary'}>
+											<Badge variant={user.isVerified ? 'default' : 'secondary'}>
 												{user.role.charAt(0).toUpperCase() + user.role.slice(1)}
 											</Badge>
-											{user.verified && (
+											{user.isVerified && (
 												<Badge
 													variant='outline'
 													className='text-green-600 border-green-600'>
@@ -286,24 +287,10 @@ function ProfileContent() {
 
 									<div className='space-y-2'>
 										<Label htmlFor='email'>Email</Label>
-										{isEditing ? (
-											<Input
-												id='email'
-												type='email'
-												value={editForm.email}
-												onChange={(e) =>
-													setEditForm((prev) => ({
-														...prev,
-														email: e.target.value
-													}))
-												}
-											/>
-										) : (
-											<div className='flex items-center gap-2 p-2 border rounded-md bg-muted/50'>
-												<Mail className='h-4 w-4 text-muted-foreground' />
-												<span>{user.email || 'Not provided'}</span>
-											</div>
-										)}
+										<div className='flex items-center gap-2 p-2 border rounded-md bg-muted/50'>
+											<Mail className='h-4 w-4 text-muted-foreground' />
+											<span>{user.email || 'Not provided'}</span>
+										</div>
 									</div>
 
 									<div className='space-y-2'>
@@ -329,23 +316,10 @@ function ProfileContent() {
 
 									<div className='space-y-2'>
 										<Label htmlFor='matricNumber'>Matric Number</Label>
-										{isEditing ? (
-											<Input
-												id='matricNumber'
-												value={editForm.matricNumber}
-												onChange={(e) =>
-													setEditForm((prev) => ({
-														...prev,
-														matricNumber: e.target.value
-													}))
-												}
-											/>
-										) : (
-											<div className='flex items-center gap-2 p-2 border rounded-md bg-muted/50'>
-												<FileText className='h-4 w-4 text-muted-foreground' />
-												<span>{user.matricNumber || 'Not provided'}</span>
-											</div>
-										)}
+										<div className='flex items-center gap-2 p-2 border rounded-md bg-muted/50'>
+											<FileText className='h-4 w-4 text-muted-foreground' />
+											<span>{user.matricNumber || 'Not provided'}</span>
+										</div>
 									</div>
 								</div>
 

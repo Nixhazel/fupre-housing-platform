@@ -1,12 +1,12 @@
-# FUPRE Housing Platform
+# EasyVille Estates
 
-A comprehensive student housing and roommate matching platform for Federal University of Petroleum Resources (FUPRE), Effurun, Delta State, Nigeria.
+A comprehensive student housing and roommate matching platform. Find quality accommodation and compatible roommates near campus.
 
 ## 🏠 Features
 
 ### For Students
 
-- **Browse Listings**: Search and filter student accommodations near FUPRE campus
+- **Browse Listings**: Search and filter student accommodations near campus
 - **Location Unlock**: Pay ₦1,000 to unlock exact location and contact details
 - **Roommate Matching**: Find compatible roommates based on preferences
 - **Verified Agents**: Connect with verified student agents (ISAs)
@@ -272,16 +272,17 @@ This project is licensed under the MIT License.
 
 For support or questions:
 
-- Email: support@fuprehousing.com
-- Phone: +234 801 234 5678
+- Email: info@easyvilleestates.com
+- Phone: +234 704 848 9342
+- Address: 11 Asama Avenue, Osubi, Delta State, Nigeria
 
 ## 🎉 Acknowledgments
 
-- FUPRE community for feedback and testing
+- Our community for feedback and testing
 - shadcn/ui for the excellent component library
 - Next.js team for the amazing framework
 - All contributors and supporters
 
 ---
 
-**Built with ❤️ for the FUPRE community**
+**Built with ❤️ by EasyVille Estates**

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import {
 	Search,
 	Menu,
@@ -16,7 +17,8 @@ import {
 	Users,
 	BarChart3,
 	Moon,
-	Sun
+	Sun,
+	Loader2
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -29,14 +31,17 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { useAuthStore } from '@/lib/store/authSlice';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { useLogout } from '@/hooks/api/useAuth';
 import { ClientOnly } from '@/components/providers/ClientOnly';
+import { toast } from 'sonner';
 
 function NavbarContent() {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
 	const { theme, setTheme } = useTheme();
-	const { user, isAuthenticated, logout } = useAuthStore();
+	const { user, isAuthenticated } = useAuth();
+	const logoutMutation = useLogout();
 	const router = useRouter();
 
 	const handleSearch = (e: React.FormEvent) => {
@@ -48,8 +53,16 @@ function NavbarContent() {
 	};
 
 	const handleLogout = () => {
-		logout();
-		router.push('/');
+		logoutMutation.mutate(undefined, {
+			onSuccess: () => {
+				toast.success('Logged out successfully');
+				router.push('/');
+			},
+			onError: () => {
+				// Even on error, redirect (cache is cleared)
+				router.push('/');
+			}
+		});
 	};
 
 	const getDashboardLink = () => {
@@ -83,13 +96,21 @@ function NavbarContent() {
 	};
 
 	return (
-		<nav className='sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
+		<nav className='sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60'>
 			<div className='container mx-auto px-4'>
 				<div className='flex h-16 items-center justify-between'>
 					{/* Logo */}
 					<Link href='/' className='flex items-center space-x-2'>
-						<Building2 className='h-8 w-8 text-primary' />
-						<span className='text-xl font-bold'>FUPRE Housing</span>
+						<Image
+							src='/images/easyvill-logo.png'
+							alt='EasyVille Estates'
+							width={40}
+							height={40}
+							className='h-10 w-10 object-contain'
+						/>
+						<span className='text-xl font-bold hidden sm:inline'>
+							EasyVille Estates
+						</span>
 					</Link>
 
 					{/* Desktop Search */}
@@ -136,7 +157,7 @@ function NavbarContent() {
 						</Button>
 
 						{/* Auth Menu */}
-						{isAuthenticated && user ? (
+						{isAuthenticated && user?.name ? (
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
 									<Button
@@ -171,8 +192,13 @@ function NavbarContent() {
 									<DropdownMenuSeparator />
 									<DropdownMenuItem
 										onClick={handleLogout}
-										className='text-red-600'>
-										<LogOut className='h-4 w-4' />
+										className='text-red-600'
+										disabled={logoutMutation.isPending}>
+										{logoutMutation.isPending ? (
+											<Loader2 className='h-4 w-4 animate-spin' />
+										) : (
+											<LogOut className='h-4 w-4' />
+										)}
 										<span className='ml-2'>Logout</span>
 									</DropdownMenuItem>
 								</DropdownMenuContent>
@@ -255,7 +281,7 @@ function NavbarContent() {
 							</Button>
 
 							{/* Mobile Auth */}
-							{isAuthenticated && user ? (
+							{isAuthenticated && user?.name ? (
 								<div className='space-y-2 pt-2 border-t'>
 									<div className='px-3 py-2 text-sm text-muted-foreground'>
 										Signed in as {user.name}
@@ -277,8 +303,13 @@ function NavbarContent() {
 									<Button
 										variant='ghost'
 										className='w-full justify-start text-red-600'
-										onClick={handleLogout}>
-										<LogOut className='h-4 w-4' />
+										onClick={handleLogout}
+										disabled={logoutMutation.isPending}>
+										{logoutMutation.isPending ? (
+											<Loader2 className='h-4 w-4' />
+										) : (
+											<LogOut className='h-4 w-4' />
+										)}
 										<span className='ml-2'>Logout</span>
 									</Button>
 								</div>

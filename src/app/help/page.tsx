@@ -22,11 +22,19 @@ import {
 	XCircle,
 	AlertCircle
 } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/shared/Badge';
 import { Separator } from '@/components/ui/separator';
+
+import { formatUnlockFee } from '@/lib/config/env';
+
+// Support contact configuration
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@easyvilleestates.com';
+const SUPPORT_PHONE = process.env.NEXT_PUBLIC_SUPPORT_PHONE || '+234 704 848 9342';
+const SUPPORT_WHATSAPP = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP || '2347048489342';
 
 interface FAQItem {
 	id: string;
@@ -39,7 +47,7 @@ interface FAQItem {
 const faqData: FAQItem[] = [
 	{
 		id: '1',
-		question: 'How do I find housing near FUPRE?',
+		question: 'How do I find housing near campus?',
 		answer:
 			'Use our search filters to find listings by location (Ugbomro, Effurun, Enerhen, PTI Road), price range, and amenities. You can also browse featured listings on our homepage.',
 		category: 'Finding Housing',
@@ -49,7 +57,7 @@ const faqData: FAQItem[] = [
 		id: '2',
 		question: 'How does the location unlock feature work?',
 		answer:
-			'To see the full address and contact details of a listing, you need to pay ₦1,000 and submit payment proof. Our admin team will review and approve your request within 24 hours.',
+			`To see the full address and contact details of a listing, you need to pay ${formatUnlockFee()} and submit payment proof. Our admin team will review and approve your request within 24 hours.`,
 		category: 'Finding Housing',
 		icon: CreditCard
 	},
@@ -65,7 +73,7 @@ const faqData: FAQItem[] = [
 		id: '4',
 		question: 'How do I become a verified agent?',
 		answer:
-			'To become a verified agent, you need to be a current FUPRE student with a valid matric number and student ID. Contact our admin team for verification.',
+			'To become a verified agent, you need to be a current student with a valid matric number and student ID. Contact our admin team for verification.',
 		category: 'Agents',
 		icon: Shield
 	},
@@ -158,10 +166,10 @@ function HelpContent() {
 					animate={{ opacity: 1, y: 0 }}
 					className='text-center mb-12'>
 					<h1 className='text-4xl font-bold mb-4'>Help & Support</h1>
-					<p className='text-xl text-muted-foreground max-w-2xl mx-auto'>
-						Find answers to common questions and get help with using the FUPRE
-						Housing Platform.
-					</p>
+				<p className='text-xl text-muted-foreground max-w-2xl mx-auto'>
+					Find answers to common questions and get help with using
+					EasyVille Estates.
+				</p>
 				</motion.div>
 
 				{/* Search */}
@@ -284,40 +292,50 @@ function HelpContent() {
 								Can&apos;t find what you&apos;re looking for? Our support team
 								is here to help.
 							</p>
-							<div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+							<div className={`grid grid-cols-1 gap-4 ${SUPPORT_PHONE || SUPPORT_WHATSAPP ? 'md:grid-cols-3' : 'md:grid-cols-1 max-w-md mx-auto'}`}>
 								<div className='text-center p-4 rounded-lg bg-muted/50'>
 									<Mail className='h-8 w-8 text-primary mx-auto mb-2' />
 									<h3 className='font-semibold mb-1'>Email Support</h3>
 									<p className='text-sm text-muted-foreground mb-2'>
-										Get help via email
+										{SUPPORT_EMAIL}
 									</p>
-									<Button variant='outline' size='sm'>
-										<Mail className='h-4 w-4 mr-2' />
-										Send Email
+									<Button variant='outline' size='sm' asChild>
+										<a href={`mailto:${SUPPORT_EMAIL}`}>
+											<Mail className='h-4 w-4 mr-2' />
+											Send Email
+										</a>
 									</Button>
 								</div>
-								<div className='text-center p-4 rounded-lg bg-muted/50'>
-									<Phone className='h-8 w-8 text-primary mx-auto mb-2' />
-									<h3 className='font-semibold mb-1'>Phone Support</h3>
-									<p className='text-sm text-muted-foreground mb-2'>
-										Call us directly
-									</p>
-									<Button variant='outline' size='sm'>
-										<Phone className='h-4 w-4 mr-2' />
-										Call Now
-									</Button>
-								</div>
-								<div className='text-center p-4 rounded-lg bg-muted/50'>
-									<MessageCircle className='h-8 w-8 text-primary mx-auto mb-2' />
-									<h3 className='font-semibold mb-1'>Live Chat</h3>
-									<p className='text-sm text-muted-foreground mb-2'>
-										Chat with support
-									</p>
-									<Button variant='outline' size='sm'>
-										<MessageCircle className='h-4 w-4 mr-2' />
-										Start Chat
-									</Button>
-								</div>
+								{SUPPORT_PHONE && (
+									<div className='text-center p-4 rounded-lg bg-muted/50'>
+										<Phone className='h-8 w-8 text-primary mx-auto mb-2' />
+										<h3 className='font-semibold mb-1'>Phone Support</h3>
+										<p className='text-sm text-muted-foreground mb-2'>
+											{SUPPORT_PHONE}
+										</p>
+										<Button variant='outline' size='sm' asChild>
+											<a href={`tel:${SUPPORT_PHONE.replace(/\s/g, '')}`}>
+												<Phone className='h-4 w-4 mr-2' />
+												Call Now
+											</a>
+										</Button>
+									</div>
+								)}
+								{SUPPORT_WHATSAPP && (
+									<div className='text-center p-4 rounded-lg bg-muted/50'>
+										<MessageCircle className='h-8 w-8 text-primary mx-auto mb-2' />
+										<h3 className='font-semibold mb-1'>WhatsApp</h3>
+										<p className='text-sm text-muted-foreground mb-2'>
+											Quick responses
+										</p>
+										<Button variant='outline' size='sm' asChild>
+											<a href={`https://wa.me/${SUPPORT_WHATSAPP.replace(/\D/g, '')}`} target='_blank' rel='noopener noreferrer'>
+												<MessageCircle className='h-4 w-4 mr-2' />
+												Chat on WhatsApp
+											</a>
+										</Button>
+									</div>
+								)}
 							</div>
 						</CardContent>
 					</Card>
@@ -337,27 +355,39 @@ function HelpContent() {
 							<div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
 								<Button
 									variant='outline'
-									className='h-auto p-4 flex flex-col items-center gap-2'>
-									<Building2 className='h-6 w-6' />
-									<span className='text-sm'>Browse Listings</span>
+									className='h-auto p-4 flex flex-col items-center gap-2'
+									asChild>
+									<Link href='/listings'>
+										<Building2 className='h-6 w-6' />
+										<span className='text-sm'>Browse Listings</span>
+									</Link>
 								</Button>
 								<Button
 									variant='outline'
-									className='h-auto p-4 flex flex-col items-center gap-2'>
-									<Users className='h-6 w-6' />
-									<span className='text-sm'>Find Roommates</span>
+									className='h-auto p-4 flex flex-col items-center gap-2'
+									asChild>
+									<Link href='/roommates'>
+										<Users className='h-6 w-6' />
+										<span className='text-sm'>Find Roommates</span>
+									</Link>
 								</Button>
 								<Button
 									variant='outline'
-									className='h-auto p-4 flex flex-col items-center gap-2'>
-									<Shield className='h-6 w-6' />
-									<span className='text-sm'>Become an Agent</span>
+									className='h-auto p-4 flex flex-col items-center gap-2'
+									asChild>
+									<Link href='/auth/register?role=agent'>
+										<Shield className='h-6 w-6' />
+										<span className='text-sm'>Become an Agent</span>
+									</Link>
 								</Button>
 								<Button
 									variant='outline'
-									className='h-auto p-4 flex flex-col items-center gap-2'>
-									<FileText className='h-6 w-6' />
-									<span className='text-sm'>Terms of Service</span>
+									className='h-auto p-4 flex flex-col items-center gap-2'
+									asChild>
+									<Link href='/terms'>
+										<FileText className='h-6 w-6' />
+										<span className='text-sm'>Terms of Service</span>
+									</Link>
 								</Button>
 							</div>
 						</CardContent>

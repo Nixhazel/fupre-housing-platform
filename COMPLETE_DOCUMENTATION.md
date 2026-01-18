@@ -1,4 +1,4 @@
-# 📚 **Complete FUPRE Housing Platform Documentation**
+# 📚 **Complete EasyVille Estates Documentation**
 
 ## **Table of Contents**
 
@@ -21,7 +21,7 @@
 
 ### **What is this project?**
 
-This is a **Student Housing and Roommate Platform** specifically designed for **Federal University of Petroleum Resources (FUPRE)** in Delta State, Nigeria. Think of it as a "student-friendly Airbnb" where:
+This is a **Student Housing and Roommate Platform** designed for students. Think of it as a "student-friendly Airbnb" where:
 
 - **Students** can find housing near campus
 - **Property owners** can list their properties
@@ -2052,7 +2052,7 @@ function Navbar() {
 			<div className='container mx-auto px-4'>
 				<div className='flex items-center justify-between h-16'>
 					<Link href='/' className='text-xl font-bold'>
-						FUPRE Housing
+						EasyVille Estates
 					</Link>
 
 					<div className='flex items-center space-x-4'>
@@ -2207,11 +2207,11 @@ module.exports = nextConfig;
 ```bash
 # .env.local (for development)
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_APP_NAME=FUPRE Housing Platform
+NEXT_PUBLIC_APP_NAME=EasyVille Estates
 
 # .env.production (for production)
 NEXT_PUBLIC_APP_URL=https://your-domain.com
-NEXT_PUBLIC_APP_NAME=FUPRE Housing Platform
+NEXT_PUBLIC_APP_NAME=EasyVille Estates
 ```
 
 ### **11.4 Deployment Options**
@@ -2374,7 +2374,7 @@ const useStore = create<State>()(
 
 ## **🎯 Summary**
 
-This FUPRE Housing Platform is a **comprehensive, production-ready** web application built with modern technologies:
+EasyVille Estates is a **comprehensive, production-ready** web application built with modern technologies:
 
 ### **Key Technologies:**
 
@@ -2431,7 +2431,7 @@ npm run typecheck    # Check TypeScript
 ### **Important URLs**
 
 - **Development:** http://localhost:3000
-- **GitHub:** https://github.com/Nixhazel/fupre-housing-platform
+- **GitHub:** https://github.com/easyville-estates/platform
 - **Documentation:** This file (COMPLETE_DOCUMENTATION.md)
 
 ---

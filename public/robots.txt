@@ -1,0 +1,38 @@
+# EasyVille Estates - robots.txt
+# https://www.robotstxt.org/robotstxt.html
+
+User-agent: *
+
+# Allow public pages
+Allow: /
+Allow: /listings
+Allow: /listings/*
+Allow: /roommates
+Allow: /roommates/*
+Allow: /help
+
+# Block dashboard pages (private user areas)
+Disallow: /dashboard
+Disallow: /dashboard/*
+
+# Block authentication pages
+Disallow: /auth
+Disallow: /auth/*
+
+# Block API routes
+Disallow: /api
+Disallow: /api/*
+
+# Block unlock pages (payment flow)
+Disallow: /unlock
+Disallow: /unlock/*
+
+# Block profile page (private)
+Disallow: /profile
+
+# Block API documentation
+Disallow: /api-docs
+
+# Sitemap location
+Sitemap: https://easyvilleestates.com/sitemap.xml
+
