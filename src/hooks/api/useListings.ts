@@ -21,7 +21,8 @@ export interface ListingsFilters {
 	page?: number;
 	limit?: number;
 	search?: string;
-	campusArea?: 'Ugbomro' | 'Effurun' | 'Enerhen' | 'PTI Road' | 'Other';
+	university?: string;
+	location?: string;
 	minPrice?: number;
 	maxPrice?: number;
 	bedrooms?: number;
@@ -57,7 +58,7 @@ export interface SaveListingResponse {
 /**
  * Hook to fetch paginated listings with filters
  *
- * @param filters - Query filters (page, search, campusArea, etc.)
+ * @param filters - Query filters (page, search, university, location, etc.)
  * @param options - Additional TanStack Query options
  */
 export function useListings(

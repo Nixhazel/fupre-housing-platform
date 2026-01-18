@@ -279,9 +279,9 @@ export default function AboutPage() {
 									<div>
 										<h4 className='font-semibold'>Address</h4>
 										<p className='text-sm text-muted-foreground'>
-											Federal University of Petroleum Resources,
+											11 Asama Avenue, Osubi,
 											<br />
-											Effurun, Delta State, Nigeria
+											Delta State, Nigeria
 										</p>
 									</div>
 								</div>
@@ -292,7 +292,7 @@ export default function AboutPage() {
 									<div>
 										<h4 className='font-semibold'>Phone</h4>
 										<p className='text-sm text-muted-foreground'>
-											+234 801 234 5678
+											+234 704 848 9342
 										</p>
 									</div>
 								</div>

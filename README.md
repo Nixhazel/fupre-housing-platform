@@ -272,8 +272,9 @@ This project is licensed under the MIT License.
 
 For support or questions:
 
-- Email: support@easyvilleestates.com
-- Phone: +234 801 234 5678
+- Email: info@easyvilleestates.com
+- Phone: +234 704 848 9342
+- Address: 11 Asama Avenue, Osubi, Delta State, Nigeria
 
 ## 🎉 Acknowledgments
 

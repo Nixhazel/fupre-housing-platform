@@ -13,8 +13,8 @@ export type { UserRoleType } from './User';
 // Listing Model
 export { default as Listing } from './Listing';
 export type { IListing, IListingModel } from './Listing';
-export { ListingStatus, CampusArea } from './Listing';
-export type { ListingStatusType, CampusAreaType } from './Listing';
+export { ListingStatus, PropertyType, AvailabilityStatus, AMENITIES } from './Listing';
+export type { ListingStatusType, PropertyTypeType, AvailabilityStatusType, AmenityType } from './Listing';
 
 // PaymentProof Model
 export { default as PaymentProof } from './PaymentProof';

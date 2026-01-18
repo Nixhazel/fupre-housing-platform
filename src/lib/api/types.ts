@@ -143,30 +143,48 @@ export interface ListingAgent {
 }
 
 /**
+ * Property types
+ */
+export type PropertyType = 'bedsitter' | 'self-con' | '1-bedroom' | '2-bedroom' | '3-bedroom';
+
+/**
+ * Availability status types
+ */
+export type AvailabilityStatus = 'available_now' | 'available_soon';
+
+/**
  * Listing type (public view)
  */
 export interface Listing {
 	id: string;
 	title: string;
 	description: string;
-	campusArea: 'Ugbomro' | 'Effurun' | 'Enerhen' | 'PTI Road' | 'Other';
+	university: string;
+	location: string;
 	addressApprox: string;
 	addressFull?: string; // Only present if unlocked
-	priceMonthly: number;
+	propertyType: PropertyType;
+	priceYearly: number;
 	bedrooms: number;
 	bathrooms: number;
-	distanceToCampusKm: number;
+	walkingMinutes: number;
 	amenities: string[];
 	photos: string[];
+	videos: string[];
 	coverPhoto: string;
 	agentId: string;
 	agent?: ListingAgent; // Populated agent info
 	status: 'available' | 'taken';
+	availabilityStatus: AvailabilityStatus;
+	availableFrom?: string; // Only for available_soon
 	rating: number;
 	reviewsCount: number;
 	views: number;
 	mapPreview: string;
 	mapFull?: string; // Only present if unlocked
+	// Landlord/caretaker info (only revealed after booking inspection)
+	landlordName?: string;
+	landlordPhone?: string;
 	createdAt: string;
 	updatedAt: string;
 }

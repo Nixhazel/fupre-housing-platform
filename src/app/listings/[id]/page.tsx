@@ -21,7 +21,7 @@ export async function generateMetadata({
 		await connectDB();
 		const listing = await Listing.findOne({ _id: id, isDeleted: false })
 			.select(
-				'title description coverPhoto priceMonthly campusArea addressApprox'
+				'title description coverPhoto priceYearly university location addressApprox'
 			)
 			.lean();
 
@@ -37,14 +37,14 @@ export async function generateMetadata({
 			style: 'currency',
 			currency: 'NGN',
 			minimumFractionDigits: 0
-		}).format(listing.priceMonthly);
+		}).format(listing.priceYearly);
 
 		const description =
 			listing.description.length > 155
 				? `${listing.description.substring(0, 155)}...`
 				: listing.description;
 
-		const fullDescription = `${priceFormatted}/month in ${listing.campusArea}. ${description}`;
+		const fullDescription = `${priceFormatted}/year in ${listing.location}. ${description}`;
 
 		return {
 			title: `${listing.title} | EasyVille Estates`,

@@ -25,8 +25,12 @@ export {
 	UPLOAD_FOLDERS,
 	MAX_FILE_SIZES,
 	ALLOWED_IMAGE_TYPES,
+	ALLOWED_VIDEO_TYPES,
 	validateImageFile,
+	validateVideoFile,
+	isVideoFile,
 	buildCloudinaryUrl,
+	buildCloudinaryVideoUrl,
 	type UploadFolder
 } from './config';
 
@@ -35,9 +39,12 @@ export {
 	uploadImage,
 	uploadImages,
 	uploadBase64Image,
+	uploadVideo,
+	uploadVideos,
 	fileToBase64,
 	getImageDimensions,
 	type CloudinaryUploadResult,
+	type CloudinaryVideoUploadResult,
 	type UploadOptions
 } from './upload';
 

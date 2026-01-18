@@ -16,19 +16,21 @@ import type {
 
 /**
  * Agent info included in listing response
+ * Note: Real name is hidden for independent agents until booking
  */
 export interface ListingAgent {
 	id: string;
-	name: string;
+	name: string; // Shows codename for independent agents, real name for ISA
 	avatarUrl?: string;
 	isVerified: boolean;
 	listingsCount?: number;
 }
 
 /**
- * Agent info with contact details (for unlocked listings)
+ * Agent info with contact details (for booked inspections)
  */
 export interface ListingAgentUnlocked extends ListingAgent {
+	realName: string; // Actual name revealed after booking
 	phone: string;
 	email: string;
 }
@@ -40,14 +42,19 @@ export interface PublicListing {
 	id: string;
 	title: string;
 	description: string;
-	campusArea: string;
+	university: string;
+	location: string;
+	propertyType: string;
 	addressApprox: string;
-	priceMonthly: number;
+	priceYearly: number;
 	bedrooms: number;
 	bathrooms: number;
-	distanceToCampusKm: number;
+	walkingMinutes: number;
 	amenities: string[];
+	availabilityStatus: string;
+	availableFrom?: Date;
 	photos: string[];
+	videos: string[];
 	coverPhoto: string;
 	mapPreview: string;
 	agentId: string;
@@ -61,11 +68,13 @@ export interface PublicListing {
 }
 
 /**
- * Unlocked listing response (includes private fields)
+ * Unlocked/Booked listing response (includes private fields)
  */
 export interface UnlockedListing extends Omit<PublicListing, 'agent'> {
 	addressFull: string;
 	mapFull: string;
+	landlordName?: string;
+	landlordPhone?: string;
 	agent?: ListingAgentUnlocked;
 }
 
@@ -92,14 +101,19 @@ function toPublicListing(listing: IListing): PublicListing {
 		id: listing._id.toString(),
 		title: listing.title,
 		description: listing.description,
-		campusArea: listing.campusArea,
+		university: listing.university,
+		location: listing.location,
+		propertyType: listing.propertyType,
 		addressApprox: listing.addressApprox,
-		priceMonthly: listing.priceMonthly,
+		priceYearly: listing.priceYearly,
 		bedrooms: listing.bedrooms,
 		bathrooms: listing.bathrooms,
-		distanceToCampusKm: listing.distanceToCampusKm,
+		walkingMinutes: listing.walkingMinutes,
 		amenities: listing.amenities,
+		availabilityStatus: listing.availabilityStatus,
+		availableFrom: listing.availableFrom,
 		photos: listing.photos,
+		videos: listing.videos || [],
 		coverPhoto: listing.coverPhoto,
 		mapPreview: listing.mapPreview,
 		agentId: listing.agentId.toString(),
@@ -113,7 +127,7 @@ function toPublicListing(listing: IListing): PublicListing {
 }
 
 /**
- * Convert Mongoose document to unlocked listing object
+ * Convert Mongoose document to unlocked/booked listing object
  */
 function toUnlockedListing(listing: IListing): UnlockedListing {
 	// Destructure to omit agent from spread (agent will be added separately with contact info)
@@ -123,7 +137,9 @@ function toUnlockedListing(listing: IListing): UnlockedListing {
 	return {
 		...publicListing,
 		addressFull: listing.addressFull,
-		mapFull: listing.mapFull
+		mapFull: listing.mapFull,
+		landlordName: listing.landlordName,
+		landlordPhone: listing.landlordPhone
 	};
 }
 
@@ -252,9 +268,12 @@ export async function getListingById(
 			isDeleted: false
 		});
 
+		// Use codename for independent agents (hide real name until booking)
+		const displayName = agent.codename || agent.name;
+
 		agentInfo = {
 			id: agent._id.toString(),
-			name: agent.name,
+			name: displayName,
 			avatarUrl: agent.avatarUrl,
 			isVerified: agent.isVerified,
 			listingsCount
@@ -268,7 +287,7 @@ export async function getListingById(
 }
 
 /**
- * Get a listing with unlocked details (for users who have unlocked it)
+ * Get a listing with unlocked/booked details (for users who have booked inspection)
  *
  * @param listingId - ID of the listing
  * @returns Unlocked listing or null
@@ -284,7 +303,7 @@ export async function getUnlockedListing(
 		return null;
 	}
 
-	// Fetch agent info with contact details
+	// Fetch agent info with contact details (revealed after booking inspection)
 	const agent = await User.findActiveById(listing.agentId.toString());
 	let agentInfo: ListingAgentUnlocked | undefined;
 
@@ -295,9 +314,13 @@ export async function getUnlockedListing(
 			isDeleted: false
 		});
 
+		// After booking, reveal the real name
+		const displayName = agent.codename || agent.name;
+
 		agentInfo = {
 			id: agent._id.toString(),
-			name: agent.name,
+			name: displayName,
+			realName: agent.name, // Real name revealed after booking
 			avatarUrl: agent.avatarUrl,
 			isVerified: agent.isVerified,
 			listingsCount,
@@ -327,11 +350,14 @@ export async function getListings(
 		page,
 		limit,
 		search,
-		campusArea,
+		university,
+		location,
+		propertyType,
 		minPrice,
 		maxPrice,
 		bedrooms,
 		bathrooms,
+		availabilityStatus,
 		status,
 		agentId,
 		sortBy,
@@ -353,14 +379,26 @@ export async function getListings(
 		isDeleted: false
 	};
 
-	if (campusArea) {
-		filter.campusArea = campusArea;
+	if (university) {
+		filter.university = university;
+	}
+
+	if (location) {
+		filter.location = location;
+	}
+
+	if (propertyType) {
+		filter.propertyType = propertyType;
+	}
+
+	if (availabilityStatus) {
+		filter.availabilityStatus = availabilityStatus;
 	}
 
 	if (minPrice !== undefined || maxPrice !== undefined) {
-		filter.priceMonthly = {};
-		if (minPrice !== undefined) filter.priceMonthly.$gte = minPrice;
-		if (maxPrice !== undefined) filter.priceMonthly.$lte = maxPrice;
+		filter.priceYearly = {};
+		if (minPrice !== undefined) filter.priceYearly.$gte = minPrice;
+		if (maxPrice !== undefined) filter.priceYearly.$lte = maxPrice;
 	}
 
 	if (bedrooms) {
@@ -396,10 +434,10 @@ export async function getListings(
 			sort = { createdAt: 1 };
 			break;
 		case 'price_low':
-			sort = { priceMonthly: 1 };
+			sort = { priceYearly: 1 };
 			break;
 		case 'price_high':
-			sort = { priceMonthly: -1 };
+			sort = { priceYearly: -1 };
 			break;
 		case 'rating':
 			sort = { rating: -1 };
@@ -416,7 +454,7 @@ export async function getListings(
 
 	const [listings, total] = await Promise.all([
 		Listing.find(filter)
-			.populate('agentId', 'name avatarUrl isVerified')
+			.populate('agentId', 'name codename avatarUrl isVerified')
 			.sort(sort)
 			.skip(skip)
 			.limit(limit),
@@ -433,14 +471,18 @@ export async function getListings(
 		const agent = listing.agentId as unknown as {
 			_id: mongoose.Types.ObjectId;
 			name: string;
+			codename?: string;
 			avatarUrl?: string;
 			isVerified: boolean;
 		} | null;
 
 		if (agent && typeof agent === 'object' && agent._id) {
+			// Use codename for independent agents (hide real name until booking)
+			const displayName = agent.codename || agent.name;
+			
 			publicListing.agent = {
 				id: agent._id.toString(),
-				name: agent.name,
+				name: displayName,
 				avatarUrl: agent.avatarUrl,
 				isVerified: agent.isVerified
 			};

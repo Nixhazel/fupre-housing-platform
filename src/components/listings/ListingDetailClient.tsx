@@ -20,7 +20,9 @@ import {
 	Lock,
 	Unlock,
 	Loader2,
-	ZoomIn
+	ZoomIn,
+	Play,
+	Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/shared/Badge';
@@ -233,7 +235,7 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 				<div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
 					<div className='flex flex-wrap items-center gap-2 sm:gap-4'>
 						<span className='text-2xl sm:text-3xl font-bold text-primary'>
-							{formatNaira(listing.priceMonthly)}/mo
+							{formatNaira(listing.priceYearly)}/yr
 						</span>
 						<Badge
 							variant={
@@ -282,6 +284,38 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 						</CardContent>
 					</Card>
 
+					{/* Video Gallery */}
+					{listing.videos && listing.videos.length > 0 && (
+						<Card>
+							<CardHeader>
+								<CardTitle className='flex items-center gap-2'>
+									<Play className='h-5 w-5' />
+									Property Videos
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+									{listing.videos.map((video: string, index: number) => (
+										<div
+											key={index}
+											className='aspect-video rounded-lg overflow-hidden bg-muted'>
+											<video
+												src={video}
+												controls
+												preload='metadata'
+												className='w-full h-full object-cover'
+												poster={listing.coverPhoto}
+											/>
+										</div>
+									))}
+								</div>
+								<p className='text-xs text-muted-foreground mt-3'>
+									{listing.videos.length} video{listing.videos.length > 1 ? 's' : ''} available - click to play
+								</p>
+							</CardContent>
+						</Card>
+					)}
+
 					{/* Property Details */}
 					<Card>
 						<CardHeader>
@@ -300,16 +334,16 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 									<div className='text-sm text-muted-foreground'>Bathrooms</div>
 								</div>
 								<div className='text-center p-4 bg-muted rounded-lg'>
-									<MapPin className='h-6 w-6 mx-auto mb-2 text-primary' />
+									<Clock className='h-6 w-6 mx-auto mb-2 text-primary' />
 									<div className='font-semibold'>
-										{listing.distanceToCampusKm}km
+										{listing.walkingMinutes} min
 									</div>
-									<div className='text-sm text-muted-foreground'>To Campus</div>
+									<div className='text-sm text-muted-foreground'>Walk to Campus</div>
 								</div>
 								<div className='text-center p-4 bg-muted rounded-lg'>
 									<Home className='h-6 w-6 mx-auto mb-2 text-primary' />
-									<div className='font-semibold'>{listing.campusArea}</div>
-									<div className='text-sm text-muted-foreground'>Area</div>
+									<div className='font-semibold'>{listing.location}</div>
+									<div className='text-sm text-muted-foreground'>Location</div>
 								</div>
 							</div>
 						</CardContent>

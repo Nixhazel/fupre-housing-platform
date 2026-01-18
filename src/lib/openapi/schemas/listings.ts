@@ -1,21 +1,72 @@
+import { UNIVERSITY_IDS, UNIVERSITIES } from '@/lib/config/universities';
+
 /**
  * OpenAPI Schemas for Listings API
  *
  * Derived from Zod validation schemas
  */
 
+// Get all unique locations from all universities
+const allLocations = [...new Set(UNIVERSITIES.flatMap((u) => u.locations))];
+
+// Property types
+const PROPERTY_TYPES = ['bedsitter', 'self-con', '1-bedroom', '2-bedroom', '3-bedroom'];
+
+// Availability statuses
+const AVAILABILITY_STATUSES = ['available_now', 'available_soon'];
+
+// Predefined amenities
+const AMENITIES = [
+	'Water',
+	'Light (Electricity)',
+	'Tiles',
+	'POP Ceiling',
+	'PVC Ceiling',
+	'Fenced Compound',
+	'Gated Compound',
+	'Wardrobe',
+	'Landlord in Compound',
+	'Landlord Not in Compound',
+	'Private Balcony',
+	'Upstairs',
+	'Downstairs'
+];
+
 export const listingSchemas = {
 	// Enums
-	CampusArea: {
+	University: {
 		type: 'string',
-		enum: ['Ugbomro', 'Effurun', 'Enerhen', 'PTI Road', 'Other'],
-		description: 'Campus area where the listing is located'
+		enum: UNIVERSITY_IDS,
+		description: 'University identifier'
+	},
+
+	Location: {
+		type: 'string',
+		description: 'Location/area near the university'
+	},
+
+	PropertyType: {
+		type: 'string',
+		enum: PROPERTY_TYPES,
+		description: 'Type of property (bedsitter, self-con, 1-bedroom, etc.)'
+	},
+
+	AvailabilityStatus: {
+		type: 'string',
+		enum: AVAILABILITY_STATUSES,
+		description: 'Whether property is available now or soon'
+	},
+
+	Amenity: {
+		type: 'string',
+		enum: AMENITIES,
+		description: 'Available amenity options'
 	},
 
 	ListingStatus: {
 		type: 'string',
 		enum: ['available', 'taken'],
-		description: 'Availability status of the listing'
+		description: 'Whether property is taken or available for rent'
 	},
 
 	SortBy: {
@@ -25,6 +76,33 @@ export const listingSchemas = {
 		description: 'Sort order for listings'
 	},
 
+	// Agent info (public - uses codename)
+	ListingAgent: {
+		type: 'object',
+		properties: {
+			id: { type: 'string' },
+			name: { type: 'string', description: 'Agent codename (real name hidden until booking)' },
+			avatarUrl: { type: 'string', format: 'uri' },
+			isVerified: { type: 'boolean' },
+			listingsCount: { type: 'integer' }
+		}
+	},
+
+	// Agent info (revealed after booking)
+	ListingAgentUnlocked: {
+		type: 'object',
+		properties: {
+			id: { type: 'string' },
+			name: { type: 'string', description: 'Agent codename' },
+			realName: { type: 'string', description: 'Agent real name (revealed after booking)' },
+			avatarUrl: { type: 'string', format: 'uri' },
+			isVerified: { type: 'boolean' },
+			listingsCount: { type: 'integer' },
+			phone: { type: 'string', description: 'Agent phone number' },
+			email: { type: 'string', format: 'email' }
+		}
+	},
+
 	// Main schemas
 	PublicListing: {
 		type: 'object',
@@ -32,30 +110,38 @@ export const listingSchemas = {
 			id: { type: 'string', description: 'Unique listing identifier' },
 			title: { type: 'string', minLength: 5, maxLength: 100 },
 			description: { type: 'string', minLength: 20, maxLength: 1000 },
-			campusArea: { $ref: '#/components/schemas/CampusArea' },
+			university: { $ref: '#/components/schemas/University' },
+			location: { type: 'string', description: 'Location near university', enum: allLocations },
+			propertyType: { $ref: '#/components/schemas/PropertyType' },
 			addressApprox: {
 				type: 'string',
 				description: 'Approximate address (public)'
 			},
-			priceMonthly: {
+			priceYearly: {
 				type: 'number',
-				minimum: 5000,
-				maximum: 500000,
-				description: 'Monthly rent in Naira'
+				minimum: 50000,
+				maximum: 5000000,
+				description: 'Yearly rent in Naira'
 			},
-			bedrooms: { type: 'integer', minimum: 1, maximum: 5 },
+			bedrooms: { type: 'integer', minimum: 0, maximum: 5 },
 			bathrooms: { type: 'integer', minimum: 1, maximum: 4 },
-			distanceToCampusKm: {
-				type: 'number',
-				minimum: 0.1,
-				maximum: 20,
-				description: 'Distance to campus in kilometers'
+			walkingMinutes: {
+				type: 'integer',
+				minimum: 1,
+				maximum: 120,
+				description: 'Walking time to campus in minutes'
 			},
 			amenities: {
 				type: 'array',
-				items: { type: 'string' },
+				items: { $ref: '#/components/schemas/Amenity' },
 				minItems: 1,
-				maxItems: 10
+				maxItems: 13
+			},
+			availabilityStatus: { $ref: '#/components/schemas/AvailabilityStatus' },
+			availableFrom: {
+				type: 'string',
+				format: 'date-time',
+				description: 'Date when property becomes available (if status is available_soon)'
 			},
 			photos: {
 				type: 'array',
@@ -63,9 +149,16 @@ export const listingSchemas = {
 				minItems: 1,
 				maxItems: 10
 			},
+			videos: {
+				type: 'array',
+				items: { type: 'string', format: 'uri' },
+				maxItems: 3,
+				description: 'Property video URLs'
+			},
 			coverPhoto: { type: 'string', format: 'uri' },
 			mapPreview: { type: 'string', format: 'uri' },
 			agentId: { type: 'string', description: 'ID of the agent who created the listing' },
+			agent: { $ref: '#/components/schemas/ListingAgent' },
 			status: { $ref: '#/components/schemas/ListingStatus' },
 			rating: { type: 'number', minimum: 0, maximum: 5 },
 			reviewsCount: { type: 'integer', minimum: 0 },
@@ -77,13 +170,16 @@ export const listingSchemas = {
 			'id',
 			'title',
 			'description',
-			'campusArea',
+			'university',
+			'location',
+			'propertyType',
 			'addressApprox',
-			'priceMonthly',
+			'priceYearly',
 			'bedrooms',
 			'bathrooms',
-			'distanceToCampusKm',
+			'walkingMinutes',
 			'amenities',
+			'availabilityStatus',
 			'photos',
 			'coverPhoto',
 			'mapPreview',
@@ -105,13 +201,22 @@ export const listingSchemas = {
 				properties: {
 					addressFull: {
 						type: 'string',
-						description: 'Full address (revealed after unlock)'
+						description: 'Full address (revealed after booking inspection)'
 					},
 					mapFull: {
 						type: 'string',
 						format: 'uri',
-						description: 'Full map image (revealed after unlock)'
-					}
+						description: 'Full map image (revealed after booking)'
+					},
+					landlordName: {
+						type: 'string',
+						description: 'Landlord/caretaker name (revealed after booking)'
+					},
+					landlordPhone: {
+						type: 'string',
+						description: 'Landlord/caretaker phone (revealed after booking)'
+					},
+					agent: { $ref: '#/components/schemas/ListingAgentUnlocked' }
 				},
 				required: ['addressFull', 'mapFull']
 			}
@@ -123,39 +228,52 @@ export const listingSchemas = {
 		properties: {
 			title: { type: 'string', minLength: 5, maxLength: 100 },
 			description: { type: 'string', minLength: 20, maxLength: 1000 },
-			campusArea: { $ref: '#/components/schemas/CampusArea' },
+			university: { $ref: '#/components/schemas/University' },
+			location: { type: 'string', minLength: 2, maxLength: 50 },
+			propertyType: { $ref: '#/components/schemas/PropertyType' },
 			addressApprox: { type: 'string', minLength: 5, maxLength: 200 },
 			addressFull: { type: 'string', minLength: 10, maxLength: 300 },
-			priceMonthly: { type: 'number', minimum: 5000, maximum: 500000 },
-			bedrooms: { type: 'integer', minimum: 1, maximum: 5 },
+			priceYearly: { type: 'number', minimum: 50000, maximum: 5000000 },
+			bedrooms: { type: 'integer', minimum: 0, maximum: 5 },
 			bathrooms: { type: 'integer', minimum: 1, maximum: 4 },
-			distanceToCampusKm: { type: 'number', minimum: 0.1, maximum: 20 },
+			walkingMinutes: { type: 'integer', minimum: 1, maximum: 120 },
 			amenities: {
 				type: 'array',
-				items: { type: 'string' },
+				items: { $ref: '#/components/schemas/Amenity' },
 				minItems: 1,
-				maxItems: 10
+				maxItems: 13
 			},
+			availabilityStatus: { $ref: '#/components/schemas/AvailabilityStatus' },
+			availableFrom: { type: 'string', format: 'date-time' },
 			photos: {
 				type: 'array',
 				items: { type: 'string', format: 'uri' },
 				minItems: 1,
 				maxItems: 10
 			},
+			videos: {
+				type: 'array',
+				items: { type: 'string', format: 'uri' },
+				maxItems: 3
+			},
 			coverPhoto: { type: 'string', format: 'uri' },
 			mapPreview: { type: 'string', format: 'uri' },
-			mapFull: { type: 'string', format: 'uri' }
+			mapFull: { type: 'string', format: 'uri' },
+			landlordName: { type: 'string', maxLength: 100 },
+			landlordPhone: { type: 'string', pattern: '^\\+234\\d{10}$' }
 		},
 		required: [
 			'title',
 			'description',
-			'campusArea',
+			'university',
+			'location',
+			'propertyType',
 			'addressApprox',
 			'addressFull',
-			'priceMonthly',
+			'priceYearly',
 			'bedrooms',
 			'bathrooms',
-			'distanceToCampusKm',
+			'walkingMinutes',
 			'amenities',
 			'photos',
 			'coverPhoto',
@@ -169,18 +287,25 @@ export const listingSchemas = {
 		properties: {
 			title: { type: 'string', minLength: 5, maxLength: 100 },
 			description: { type: 'string', minLength: 20, maxLength: 1000 },
-			campusArea: { $ref: '#/components/schemas/CampusArea' },
+			university: { $ref: '#/components/schemas/University' },
+			location: { type: 'string', minLength: 2, maxLength: 50 },
+			propertyType: { $ref: '#/components/schemas/PropertyType' },
 			addressApprox: { type: 'string', minLength: 5, maxLength: 200 },
 			addressFull: { type: 'string', minLength: 10, maxLength: 300 },
-			priceMonthly: { type: 'number', minimum: 5000, maximum: 500000 },
-			bedrooms: { type: 'integer', minimum: 1, maximum: 5 },
+			priceYearly: { type: 'number', minimum: 50000, maximum: 5000000 },
+			bedrooms: { type: 'integer', minimum: 0, maximum: 5 },
 			bathrooms: { type: 'integer', minimum: 1, maximum: 4 },
-			distanceToCampusKm: { type: 'number', minimum: 0.1, maximum: 20 },
-			amenities: { type: 'array', items: { type: 'string' } },
+			walkingMinutes: { type: 'integer', minimum: 1, maximum: 120 },
+			amenities: { type: 'array', items: { $ref: '#/components/schemas/Amenity' } },
+			availabilityStatus: { $ref: '#/components/schemas/AvailabilityStatus' },
+			availableFrom: { type: 'string', format: 'date-time' },
 			photos: { type: 'array', items: { type: 'string', format: 'uri' } },
+			videos: { type: 'array', items: { type: 'string', format: 'uri' } },
 			coverPhoto: { type: 'string', format: 'uri' },
 			mapPreview: { type: 'string', format: 'uri' },
 			mapFull: { type: 'string', format: 'uri' },
+			landlordName: { type: 'string', maxLength: 100 },
+			landlordPhone: { type: 'string', pattern: '^\\+234\\d{10}$' },
 			status: { $ref: '#/components/schemas/ListingStatus' }
 		}
 	},
@@ -247,27 +372,39 @@ export const listingPaths = {
 					description: 'Text search query'
 				},
 				{
-					name: 'campusArea',
+					name: 'university',
 					in: 'query',
-					schema: { $ref: '#/components/schemas/CampusArea' },
-					description: 'Filter by campus area'
+					schema: { $ref: '#/components/schemas/University' },
+					description: 'Filter by university'
+				},
+				{
+					name: 'location',
+					in: 'query',
+					schema: { type: 'string' },
+					description: 'Filter by location'
+				},
+				{
+					name: 'propertyType',
+					in: 'query',
+					schema: { $ref: '#/components/schemas/PropertyType' },
+					description: 'Filter by property type'
 				},
 				{
 					name: 'minPrice',
 					in: 'query',
 					schema: { type: 'number', minimum: 0 },
-					description: 'Minimum price filter'
+					description: 'Minimum yearly price filter'
 				},
 				{
 					name: 'maxPrice',
 					in: 'query',
-					schema: { type: 'number', maximum: 1000000 },
-					description: 'Maximum price filter'
+					schema: { type: 'number', maximum: 10000000 },
+					description: 'Maximum yearly price filter'
 				},
 				{
 					name: 'bedrooms',
 					in: 'query',
-					schema: { type: 'integer', minimum: 1, maximum: 5 },
+					schema: { type: 'integer', minimum: 0, maximum: 5 },
 					description: 'Filter by bedroom count'
 				},
 				{
@@ -277,10 +414,16 @@ export const listingPaths = {
 					description: 'Filter by bathroom count'
 				},
 				{
+					name: 'availabilityStatus',
+					in: 'query',
+					schema: { $ref: '#/components/schemas/AvailabilityStatus' },
+					description: 'Filter by availability status'
+				},
+				{
 					name: 'status',
 					in: 'query',
 					schema: { $ref: '#/components/schemas/ListingStatus' },
-					description: 'Filter by availability status'
+					description: 'Filter by listing status'
 				},
 				{
 					name: 'agentId',
@@ -332,21 +475,26 @@ export const listingPaths = {
 					'application/json': {
 						schema: { $ref: '#/components/schemas/CreateListingInput' },
 						example: {
-							title: 'Modern 2-Bedroom Apartment near campus',
+							title: 'Modern Self-Con Apartment near FUPRE',
 							description:
-								'Spacious and well-furnished apartment with modern amenities, perfect for students.',
-							campusArea: 'Ugbomro',
+								'Spacious self-contained apartment with modern amenities, perfect for students.',
+							university: 'fupre',
+							location: 'Ugbomro',
+							propertyType: 'self-con',
 							addressApprox: 'Off Main Road, Ugbomro',
 							addressFull: 'No 15, Peace Avenue, Off Main Road, Ugbomro',
-							priceMonthly: 45000,
-							bedrooms: 2,
+							priceYearly: 450000,
+							bedrooms: 1,
 							bathrooms: 1,
-							distanceToCampusKm: 0.5,
-							amenities: ['WiFi', 'Water', 'Security', 'Generator'],
+							walkingMinutes: 15,
+							amenities: ['Water', 'Light (Electricity)', 'Tiles', 'Gated Compound'],
+							availabilityStatus: 'available_now',
 							photos: ['https://example.com/photo1.jpg'],
 							coverPhoto: 'https://example.com/cover.jpg',
 							mapPreview: 'https://example.com/map-preview.jpg',
-							mapFull: 'https://example.com/map-full.jpg'
+							mapFull: 'https://example.com/map-full.jpg',
+							landlordName: 'Mr. Johnson',
+							landlordPhone: '+2348012345678'
 						}
 					}
 				}
@@ -404,7 +552,7 @@ export const listingPaths = {
 			tags: ['Listings'],
 			summary: 'Get a single listing',
 			description:
-				'Fetch a listing by ID. Returns private fields if user has unlocked the listing.',
+				'Fetch a listing by ID. Returns private fields if user has booked inspection.',
 			operationId: 'getListingById',
 			parameters: [
 				{
@@ -594,4 +742,3 @@ export const listingPaths = {
 		}
 	}
 };
-

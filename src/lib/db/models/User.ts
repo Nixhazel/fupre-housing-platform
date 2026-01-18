@@ -20,7 +20,8 @@ export interface IUser extends Document {
 	_id: mongoose.Types.ObjectId;
 	email: string;
 	password: string;
-	name: string;
+	name: string; // Real name (hidden for agents until booking)
+	codename?: string; // Agent codename (displayed publicly instead of real name)
 	phone?: string;
 	role: UserRoleType;
 	avatarUrl?: string;
@@ -94,6 +95,14 @@ const UserSchema = new Schema<IUser, IUserModel>(
 			trim: true,
 			minlength: [2, 'Name must be at least 2 characters'],
 			maxlength: [50, 'Name cannot exceed 50 characters']
+		},
+
+		codename: {
+			type: String,
+			trim: true,
+			minlength: [2, 'Codename must be at least 2 characters'],
+			maxlength: [30, 'Codename cannot exceed 30 characters']
+			// Required for agents, validated at application level
 		},
 
 		phone: {

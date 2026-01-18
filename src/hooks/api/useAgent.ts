@@ -48,18 +48,25 @@ export interface AgentListingsResponse {
 export interface CreateListingData {
 	title: string;
 	description: string;
-	campusArea: 'Ugbomro' | 'Effurun' | 'Enerhen' | 'PTI Road' | 'Other';
+	university: string;
+	location: string;
+	propertyType: 'bedsitter' | 'self-con' | '1-bedroom' | '2-bedroom' | '3-bedroom';
 	addressApprox: string;
 	addressFull: string;
-	priceMonthly: number;
+	priceYearly: number;
 	bedrooms: number;
 	bathrooms: number;
-	distanceToCampusKm: number;
+	walkingMinutes: number;
 	amenities: string[];
+	availabilityStatus: 'available_now' | 'available_soon';
+	availableFrom?: string;
 	photos: string[];
+	videos?: string[];
 	coverPhoto: string;
 	mapPreview: string;
 	mapFull: string;
+	landlordName?: string;
+	landlordPhone?: string;
 }
 
 export interface UpdateListingData extends Partial<CreateListingData> {

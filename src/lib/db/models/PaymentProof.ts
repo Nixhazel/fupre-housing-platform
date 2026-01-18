@@ -202,7 +202,7 @@ PaymentProofSchema.pre('save', function () {
 PaymentProofSchema.statics.findPending = function () {
 	return this.find({ status: PaymentStatus.PENDING })
 		.populate('userId', 'name email phone')
-		.populate('listingId', 'title coverPhoto priceMonthly')
+		.populate('listingId', 'title coverPhoto priceYearly')
 		.sort({ createdAt: -1 });
 };
 
@@ -211,7 +211,7 @@ PaymentProofSchema.statics.findPending = function () {
  */
 PaymentProofSchema.statics.findByUser = function (userId: string) {
 	return this.find({ userId })
-		.populate('listingId', 'title coverPhoto priceMonthly campusArea')
+		.populate('listingId', 'title coverPhoto priceYearly university location')
 		.sort({ createdAt: -1 });
 };
 

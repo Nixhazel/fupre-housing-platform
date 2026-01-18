@@ -40,7 +40,7 @@ export const GET = withAuth(
 				_id: { $in: user.savedListingIds },
 				isDeleted: false
 			})
-				.select('title coverPhoto priceMonthly campusArea bedrooms bathrooms status')
+				.select('title coverPhoto priceYearly university location bedrooms bathrooms status')
 				.sort({ createdAt: -1 });
 
 			return successResponse({ listings });

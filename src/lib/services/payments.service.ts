@@ -147,7 +147,7 @@ export async function getUserPaymentProofs(
 
 	const [proofs, total] = await Promise.all([
 		PaymentProof.find(query)
-			.populate('listingId', 'title coverPhoto priceMonthly campusArea')
+			.populate('listingId', 'title coverPhoto priceYearly university location')
 			.sort({ createdAt: -1 })
 			.skip(skip)
 			.limit(options.limit),
@@ -179,7 +179,7 @@ export async function getPendingPaymentProofs(options: {
 	const [proofs, total] = await Promise.all([
 		PaymentProof.find({ status: PaymentStatus.PENDING })
 			.populate('userId', 'name email phone')
-			.populate('listingId', 'title coverPhoto priceMonthly campusArea agentId')
+			.populate('listingId', 'title coverPhoto priceYearly university location agentId')
 			.sort({ createdAt: -1 })
 			.skip(skip)
 			.limit(options.limit),
@@ -209,7 +209,7 @@ export async function getPaymentProofById(
 
 	const proof = await PaymentProof.findById(proofId)
 		.populate('userId', 'name email phone')
-		.populate('listingId', 'title coverPhoto priceMonthly campusArea agentId');
+		.populate('listingId', 'title coverPhoto priceYearly university location agentId');
 
 	if (!proof) {
 		throw new Error('Payment proof not found');
@@ -353,7 +353,7 @@ export async function reviewPaymentProof(
 	// Return updated proof with populated fields
 	return PaymentProof.findById(proofId)
 		.populate('userId', 'name email phone')
-		.populate('listingId', 'title coverPhoto priceMonthly campusArea');
+		.populate('listingId', 'title coverPhoto priceYearly university location');
 }
 
 /**

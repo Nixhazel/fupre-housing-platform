@@ -18,22 +18,51 @@ export interface User {
 }
 
 export type ListingStatus = 'available' | 'taken';
+export type PropertyType = 'bedsitter' | 'self-con' | '1-bedroom' | '2-bedroom' | '3-bedroom';
+export type AvailabilityStatus = 'available_now' | 'available_soon';
+
+// Predefined amenities
+export const AMENITIES_LIST = [
+	'Water',
+	'Light (Electricity)',
+	'Tiles',
+	'POP Ceiling',
+	'PVC Ceiling',
+	'Fenced Compound',
+	'Gated Compound',
+	'Wardrobe',
+	'Landlord in Compound',
+	'Landlord Not in Compound',
+	'Private Balcony',
+	'Upstairs',
+	'Downstairs'
+] as const;
+
+export type AmenityType = (typeof AMENITIES_LIST)[number];
 
 export interface Listing {
 	id: ID;
 	title: string;
 	description: string;
-	campusArea: 'Ugbomro' | 'Effurun' | 'Enerhen' | 'PTI Road' | 'Other';
-	addressApprox: string; // displayed pre-unlock (no house number)
-	addressFull: string; // revealed after unlock
-	priceMonthly: number; // NGN
+	university: string;
+	location: string;
+	propertyType: PropertyType;
+	addressApprox: string; // displayed pre-booking (no house number)
+	addressFull: string; // revealed after booking inspection
+	priceYearly: number; // NGN per year
 	bedrooms: number;
 	bathrooms: number;
-	distanceToCampusKm: number;
-	amenities: string[]; // e.g. ['Wi-Fi','Water','Power','Furnished']
-	photos: string[]; // /public/images/listings/*.jpg
+	walkingMinutes: number; // Distance to campus in walking minutes
+	amenities: AmenityType[];
+	availabilityStatus: AvailabilityStatus;
+	availableFrom?: string; // ISO date when availabilityStatus is 'available_soon'
+	photos: string[];
+	videos: string[]; // Video URLs (Cloudinary)
 	coverPhoto: string; // hero image
-	agentId: ID; // ISA
+	// Landlord/Caretaker contact (private until booking)
+	landlordName?: string;
+	landlordPhone?: string;
+	agentId: ID; // ISA or agent
 	status: ListingStatus;
 	rating: number; // 1..5
 	reviewsCount: number;
@@ -41,7 +70,7 @@ export interface Listing {
 	views: number;
 	// "Location" assets
 	mapPreview: string; // blurred map image path
-	mapFull: string; // unblurred map image path (revealed after unlock)
+	mapFull: string; // unblurred map image path (revealed after booking)
 }
 
 export type PaymentStatus = 'pending' | 'approved' | 'rejected';
@@ -90,11 +119,14 @@ export interface RoommateListing {
 
 // Filter types
 export interface ListingFilters {
+	university?: string;
+	locations: string[];
+	propertyTypes: PropertyType[];
 	priceRange: [number, number];
 	bedrooms: number[];
 	bathrooms: number[];
-	campusAreas: string[];
-	amenities: string[];
+	amenities: string[]; // Simplified to string[] for easier filter handling
+	availabilityStatus?: AvailabilityStatus;
 	sortBy: 'newest' | 'price_asc' | 'price_desc' | 'rating';
 	verifiedAgentsOnly?: boolean;
 }
@@ -132,16 +164,24 @@ export interface RegisterForm {
 export interface ListingForm {
 	title: string;
 	description: string;
-	campusArea: string;
+	university: string;
+	location: string;
+	propertyType: PropertyType;
 	addressApprox: string;
 	addressFull: string;
-	priceMonthly: number;
+	priceYearly: number;
 	bedrooms: number;
 	bathrooms: number;
-	distanceToCampusKm: number;
-	amenities: string[];
+	walkingMinutes: number;
+	amenities: AmenityType[];
+	availabilityStatus: AvailabilityStatus;
+	availableFrom?: string;
 	photos: string[];
+	videos: string[];
 	coverPhoto: string;
+	// Landlord/Caretaker contact (required for ISA)
+	landlordName?: string;
+	landlordPhone?: string;
 }
 
 export interface PaymentProofForm {

@@ -40,10 +40,12 @@ import { ListingFilters as ListingFiltersType } from '@/types';
 import { toast } from 'sonner';
 
 const defaultFilters: ListingFiltersType = {
-	priceRange: [0, 100000],
+	university: undefined,
+	locations: [],
+	propertyTypes: [],
+	priceRange: [0, 5000000],
 	bedrooms: [],
 	bathrooms: [],
-	campusAreas: [],
 	amenities: [],
 	sortBy: 'newest',
 	verifiedAgentsOnly: false
@@ -70,18 +72,11 @@ function ListingsContent() {
 		error
 	} = useListings({
 		search: searchQuery || undefined,
-		campusArea:
-			filters.campusAreas.length === 1
-				? (filters.campusAreas[0] as
-						| 'Ugbomro'
-						| 'Effurun'
-						| 'Enerhen'
-						| 'PTI Road'
-						| 'Other')
-				: undefined,
+		university: filters.university || undefined,
+		location: filters.locations.length === 1 ? filters.locations[0] : undefined,
 		minPrice: filters.priceRange[0] > 0 ? filters.priceRange[0] : undefined,
 		maxPrice:
-			filters.priceRange[1] < 100000 ? filters.priceRange[1] : undefined,
+			filters.priceRange[1] < 5000000 ? filters.priceRange[1] : undefined,
 		bedrooms: filters.bedrooms.length === 1 ? filters.bedrooms[0] : undefined,
 		bathrooms:
 			filters.bathrooms.length === 1 ? filters.bathrooms[0] : undefined,
@@ -356,7 +351,7 @@ function ListingsContent() {
 
 												<div className='flex items-center space-x-2 text-sm text-muted-foreground mb-2'>
 													<MapPin className='h-4 w-4' />
-													<span>{listing.campusArea}</span>
+													<span>{listing.location}</span>
 												</div>
 
 												<div className='flex items-center space-x-4 text-sm text-muted-foreground mb-3'>
@@ -368,12 +363,12 @@ function ListingsContent() {
 														{listing.bathrooms} bath
 														{listing.bathrooms !== 1 ? 's' : ''}
 													</span>
-													<span>{listing.distanceToCampusKm}km to campus</span>
+													<span>{listing.walkingMinutes} min walk</span>
 												</div>
 
 												<div className='flex items-center justify-between mb-3'>
 													<span className='text-lg font-bold text-primary'>
-														{formatNaira(listing.priceMonthly)}/month
+														{formatNaira(listing.priceYearly)}/yr
 													</span>
 													{listing.reviewsCount > 0 ? (
 														<div className='flex items-center space-x-1'>

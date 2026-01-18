@@ -51,7 +51,7 @@ export default function SavedListingsPage() {
 		return listings.filter(
 			(listing) =>
 				listing.title.toLowerCase().includes(query) ||
-				listing.campusArea.toLowerCase().includes(query) ||
+				listing.location.toLowerCase().includes(query) ||
 				listing.addressApprox.toLowerCase().includes(query)
 		);
 	}, [listings, searchQuery]);
@@ -250,7 +250,7 @@ export default function SavedListingsPage() {
 											</Button>
 											{/* Price Badge */}
 											<div className='absolute bottom-3 left-3 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-semibold'>
-												{formatNaira(listing.priceMonthly)}/mo
+												{formatNaira(listing.priceYearly)}/yr
 											</div>
 										</div>
 
@@ -276,7 +276,7 @@ export default function SavedListingsPage() {
 												</div>
 												<div className='flex items-center gap-1 text-muted-foreground'>
 													<MapPin className='h-4 w-4' />
-													<span>{listing.distanceToCampusKm}km</span>
+													<span>{listing.walkingMinutes} min</span>
 												</div>
 											</div>
 										</CardContent>

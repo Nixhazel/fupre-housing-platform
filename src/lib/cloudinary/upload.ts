@@ -7,6 +7,7 @@
 import {
 	getCloudinaryConfig,
 	validateImageFile,
+	validateVideoFile,
 	MAX_FILE_SIZES,
 	type UploadFolder
 } from './config';
@@ -250,3 +251,142 @@ export function getImageDimensions(file: File): Promise<{ width: number; height:
 	});
 }
 
+/**
+ * Video upload result from Cloudinary
+ */
+export interface CloudinaryVideoUploadResult {
+	success: boolean;
+	url?: string;
+	publicId?: string;
+	width?: number;
+	height?: number;
+	format?: string;
+	duration?: number;
+	bytes?: number;
+	error?: string;
+}
+
+/**
+ * Cloudinary video API response type
+ */
+interface CloudinaryVideoResponse {
+	secure_url: string;
+	public_id: string;
+	width: number;
+	height: number;
+	format: string;
+	duration: number;
+	bytes: number;
+	error?: { message: string };
+}
+
+/**
+ * Upload a video to Cloudinary
+ *
+ * Uses unsigned upload with upload preset
+ */
+export async function uploadVideo(
+	file: File,
+	options: UploadOptions = {}
+): Promise<CloudinaryVideoUploadResult> {
+	const config = getCloudinaryConfig();
+
+	if (!config.isConfigured) {
+		return {
+			success: false,
+			error: 'Cloudinary is not configured. Please set environment variables.'
+		};
+	}
+
+	// Validate file
+	const validation = validateVideoFile(file, options.maxSize || MAX_FILE_SIZES.VIDEO);
+	if (!validation.valid) {
+		return {
+			success: false,
+			error: validation.error
+		};
+	}
+
+	try {
+		// Create form data
+		const formData = new FormData();
+		formData.append('file', file);
+		formData.append('upload_preset', config.uploadPreset);
+		formData.append('resource_type', 'video');
+
+		if (options.folder) {
+			formData.append('folder', options.folder);
+		}
+
+		if (options.tags && options.tags.length > 0) {
+			formData.append('tags', options.tags.join(','));
+		}
+
+		if (options.context) {
+			const contextString = Object.entries(options.context)
+				.map(([key, value]) => `${key}=${value}`)
+				.join('|');
+			formData.append('context', contextString);
+		}
+
+		// Upload to Cloudinary video endpoint
+		const uploadUrl = `https://api.cloudinary.com/v1_1/${config.cloudName}/video/upload`;
+
+		const response = await fetch(uploadUrl, {
+			method: 'POST',
+			body: formData
+		});
+
+		if (!response.ok) {
+			const errorData = await response.json();
+			throw new Error(errorData.error?.message || 'Video upload failed');
+		}
+
+		const data: CloudinaryVideoResponse = await response.json();
+
+		return {
+			success: true,
+			url: data.secure_url,
+			publicId: data.public_id,
+			width: data.width,
+			height: data.height,
+			format: data.format,
+			duration: data.duration,
+			bytes: data.bytes
+		};
+	} catch (error) {
+		return {
+			success: false,
+			error: error instanceof Error ? error.message : 'Video upload failed. Please try again.'
+		};
+	}
+}
+
+/**
+ * Upload multiple videos to Cloudinary
+ */
+export async function uploadVideos(
+	files: File[],
+	options: UploadOptions & {
+		onFileComplete?: (index: number, result: CloudinaryVideoUploadResult) => void;
+	} = {}
+): Promise<CloudinaryVideoUploadResult[]> {
+	const results: CloudinaryVideoUploadResult[] = [];
+
+	for (let i = 0; i < files.length; i++) {
+		const result = await uploadVideo(files[i], {
+			folder: options.folder,
+			maxSize: options.maxSize,
+			tags: options.tags,
+			context: options.context
+		});
+
+		results.push(result);
+
+		if (options.onFileComplete) {
+			options.onFileComplete(i, result);
+		}
+	}
+
+	return results;
+}

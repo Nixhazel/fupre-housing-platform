@@ -246,10 +246,10 @@ export default function StudentDashboardPage() {
 														{listing.title}
 													</h4>
 													<p className='text-sm text-muted-foreground'>
-														{listing.campusArea}
+														{listing.location}
 													</p>
 													<p className='text-sm font-semibold text-primary'>
-														{formatNaira(listing.priceMonthly)}/month
+														{formatNaira(listing.priceYearly)}/yr
 													</p>
 												</div>
 												<Badge

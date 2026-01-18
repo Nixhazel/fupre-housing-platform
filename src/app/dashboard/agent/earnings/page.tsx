@@ -101,8 +101,8 @@ export default function AgentEarningsPage() {
 			})),
 			topListings: listings.map((l) => ({
 				title: l.title,
-				area: l.campusArea,
-				price: l.priceMonthly,
+				area: l.location,
+				price: l.priceYearly,
 				views: l.views
 			})),
 			exportDate: new Date().toLocaleDateString('en-US', {
@@ -496,8 +496,8 @@ export default function AgentEarningsPage() {
 													{listing.title}
 												</h3>
 												<p className='text-sm text-muted-foreground'>
-													{listing.campusArea} •{' '}
-													{formatNaira(listing.priceMonthly)}/month
+													{listing.location} •{' '}
+													{formatNaira(listing.priceYearly)}/yr
 												</p>
 											</div>
 										</div>

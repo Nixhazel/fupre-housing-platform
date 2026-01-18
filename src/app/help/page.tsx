@@ -33,8 +33,8 @@ import { formatUnlockFee } from '@/lib/config/env';
 
 // Support contact configuration
 const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@easyvilleestates.com';
-const SUPPORT_PHONE = process.env.NEXT_PUBLIC_SUPPORT_PHONE || '';
-const SUPPORT_WHATSAPP = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP || '';
+const SUPPORT_PHONE = process.env.NEXT_PUBLIC_SUPPORT_PHONE || '+234 704 848 9342';
+const SUPPORT_WHATSAPP = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP || '2347048489342';
 
 interface FAQItem {
 	id: string;

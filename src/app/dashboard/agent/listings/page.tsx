@@ -66,7 +66,7 @@ export default function AgentListingsPage() {
 		return listings.filter(
 			(listing) =>
 				listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				listing.campusArea.toLowerCase().includes(searchQuery.toLowerCase())
+				listing.location.toLowerCase().includes(searchQuery.toLowerCase())
 		);
 	}, [listingsData?.listings, searchQuery]);
 
@@ -306,7 +306,7 @@ export default function AgentListingsPage() {
 									<div className='space-y-2 mb-3'>
 										<div className='flex items-center gap-2 text-sm text-muted-foreground'>
 											<MapPin className='h-4 w-4' />
-											<span>{listing.campusArea}</span>
+											<span>{listing.location}</span>
 										</div>
 										<div className='flex items-center gap-2 text-sm text-muted-foreground'>
 											<Users className='h-4 w-4' />
@@ -324,7 +324,7 @@ export default function AgentListingsPage() {
 
 									<div className='flex items-center justify-between'>
 										<span className='text-lg font-bold text-primary'>
-											{formatNaira(listing.priceMonthly)}/month
+											{formatNaira(listing.priceYearly)}/yr
 										</span>
 										<div className='flex items-center gap-1 text-sm text-muted-foreground'>
 											<Eye className='h-4 w-4' />

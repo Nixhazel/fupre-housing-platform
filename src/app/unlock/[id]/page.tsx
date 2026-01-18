@@ -256,7 +256,7 @@ export default function UnlockPage() {
 							<div className='flex-1'>
 								<h3 className='font-semibold'>{listing.title}</h3>
 								<p className='text-sm text-muted-foreground'>
-									{listing.campusArea}
+									{listing.location}
 								</p>
 								<div className='flex items-center space-x-2 mt-1'>
 									<Badge variant='outline'>{listing.bedrooms} bed</Badge>
@@ -273,7 +273,7 @@ export default function UnlockPage() {
 							</div>
 							<div className='text-right'>
 								<div className='text-lg font-bold text-primary'>
-									{formatNaira(listing.priceMonthly)}/month
+									{formatNaira(listing.priceYearly)}/yr
 								</div>
 							</div>
 						</div>

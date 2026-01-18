@@ -270,7 +270,7 @@ export async function getRecentActivity(limit: number = 10) {
 			.limit(limit),
 
 		Listing.find({ isDeleted: false })
-			.select('title campusArea status createdAt')
+			.select('title university location status createdAt')
 			.populate('agentId', 'name')
 			.sort({ createdAt: -1 })
 			.limit(limit),

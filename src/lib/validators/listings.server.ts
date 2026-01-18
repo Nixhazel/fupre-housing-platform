@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { UNIVERSITY_IDS, isValidLocationForUniversity } from '@/lib/config/universities';
 
 /**
  * Server-side Listing Validators
@@ -6,17 +7,43 @@ import { z } from 'zod';
  * Zod schemas for listing API validation
  */
 
-// Campus areas enum
-export const campusAreaEnum = z.enum([
-	'Ugbomro',
-	'Effurun',
-	'Enerhen',
-	'PTI Road',
-	'Other'
-]);
+// University enum
+export const universityEnum = z.enum(UNIVERSITY_IDS);
 
 // Listing status enum
 export const listingStatusEnum = z.enum(['available', 'taken']);
+
+// Property type enum
+export const propertyTypeEnum = z.enum([
+	'bedsitter',
+	'self-con',
+	'1-bedroom',
+	'2-bedroom',
+	'3-bedroom'
+]);
+
+// Availability status enum
+export const availabilityStatusEnum = z.enum([
+	'available_now',
+	'available_soon'
+]);
+
+// Predefined amenities enum
+export const amenitiesEnum = z.enum([
+	'Water',
+	'Light (Electricity)',
+	'Tiles',
+	'POP Ceiling',
+	'PVC Ceiling',
+	'Fenced Compound',
+	'Gated Compound',
+	'Wardrobe',
+	'Landlord in Compound',
+	'Landlord Not in Compound',
+	'Private Balcony',
+	'Upstairs',
+	'Downstairs'
+]);
 
 // Sort options
 export const sortByEnum = z.enum([
@@ -44,7 +71,15 @@ export const createListingSchema = z.object({
 		.max(1000, 'Description cannot exceed 1000 characters')
 		.transform((v) => v.trim()),
 
-	campusArea: campusAreaEnum,
+	university: universityEnum,
+
+	location: z
+		.string()
+		.min(2, 'Location must be at least 2 characters')
+		.max(50, 'Location cannot exceed 50 characters')
+		.transform((v) => v.trim()),
+
+	propertyType: propertyTypeEnum,
 
 	addressApprox: z
 		.string()
@@ -58,15 +93,15 @@ export const createListingSchema = z.object({
 		.max(300, 'Full address cannot exceed 300 characters')
 		.transform((v) => v.trim()),
 
-	priceMonthly: z
+	priceYearly: z
 		.number()
-		.min(5000, 'Price must be at least ₦5,000')
-		.max(500000, 'Price cannot exceed ₦500,000'),
+		.min(50000, 'Yearly rent must be at least ₦50,000')
+		.max(5000000, 'Yearly rent cannot exceed ₦5,000,000'),
 
 	bedrooms: z
 		.number()
 		.int()
-		.min(1, 'Must have at least 1 bedroom')
+		.min(0, 'Bedrooms cannot be negative')
 		.max(5, 'Cannot exceed 5 bedrooms'),
 
 	bathrooms: z
@@ -75,27 +110,74 @@ export const createListingSchema = z.object({
 		.min(1, 'Must have at least 1 bathroom')
 		.max(4, 'Cannot exceed 4 bathrooms'),
 
-	distanceToCampusKm: z
+	walkingMinutes: z
 		.number()
-		.min(0.1, 'Distance must be at least 0.1km')
-		.max(20, 'Distance cannot exceed 20km'),
+		.int()
+		.min(1, 'Walking time must be at least 1 minute')
+		.max(120, 'Walking time cannot exceed 120 minutes'),
 
 	amenities: z
-		.array(z.string())
+		.array(amenitiesEnum)
 		.min(1, 'Must have at least 1 amenity')
-		.max(10, 'Cannot exceed 10 amenities'),
+		.max(13, 'Cannot exceed 13 amenities'),
+
+	availabilityStatus: availabilityStatusEnum.default('available_now'),
+
+	availableFrom: z
+		.string()
+		.datetime()
+		.optional()
+		.refine(
+			(val) => !val || new Date(val) > new Date(),
+			'Available from date must be in the future'
+		),
 
 	photos: z
 		.array(z.string().url('Each photo must be a valid URL'))
 		.min(1, 'Must have at least 1 photo')
 		.max(10, 'Cannot exceed 10 photos'),
 
+	videos: z
+		.array(z.string().url('Each video must be a valid URL'))
+		.max(3, 'Cannot exceed 3 videos')
+		.default([]),
+
 	coverPhoto: z.string().url('Cover photo must be a valid URL'),
 
 	mapPreview: z.string().url('Map preview must be a valid URL'),
 
-	mapFull: z.string().url('Full map must be a valid URL')
-});
+	mapFull: z.string().url('Full map must be a valid URL'),
+
+	// Landlord/Caretaker contact (required for ISA)
+	landlordName: z
+		.string()
+		.max(100, 'Landlord name cannot exceed 100 characters')
+		.transform((v) => v.trim())
+		.optional(),
+
+	landlordPhone: z
+		.string()
+		.regex(/^\+234\d{10}$/, 'Please enter a valid Nigerian phone number')
+		.optional()
+}).refine(
+	(data) => isValidLocationForUniversity(data.university, data.location),
+	{
+		message: 'Invalid location for the selected university',
+		path: ['location']
+	}
+).refine(
+	(data) => {
+		// If available_soon, require availableFrom date
+		if (data.availabilityStatus === 'available_soon') {
+			return !!data.availableFrom;
+		}
+		return true;
+	},
+	{
+		message: 'Please specify when the property will be available',
+		path: ['availableFrom']
+	}
+);
 
 export type CreateListingInput = z.infer<typeof createListingSchema>;
 
@@ -117,7 +199,16 @@ export const updateListingSchema = z.object({
 		.transform((v) => v.trim())
 		.optional(),
 
-	campusArea: campusAreaEnum.optional(),
+	university: universityEnum.optional(),
+
+	location: z
+		.string()
+		.min(2, 'Location must be at least 2 characters')
+		.max(50, 'Location cannot exceed 50 characters')
+		.transform((v) => v.trim())
+		.optional(),
+
+	propertyType: propertyTypeEnum.optional(),
 
 	addressApprox: z
 		.string()
@@ -133,16 +224,16 @@ export const updateListingSchema = z.object({
 		.transform((v) => v.trim())
 		.optional(),
 
-	priceMonthly: z
+	priceYearly: z
 		.number()
-		.min(5000, 'Price must be at least ₦5,000')
-		.max(500000, 'Price cannot exceed ₦500,000')
+		.min(50000, 'Yearly rent must be at least ₦50,000')
+		.max(5000000, 'Yearly rent cannot exceed ₦5,000,000')
 		.optional(),
 
 	bedrooms: z
 		.number()
 		.int()
-		.min(1, 'Must have at least 1 bedroom')
+		.min(0, 'Bedrooms cannot be negative')
 		.max(5, 'Cannot exceed 5 bedrooms')
 		.optional(),
 
@@ -153,16 +244,24 @@ export const updateListingSchema = z.object({
 		.max(4, 'Cannot exceed 4 bathrooms')
 		.optional(),
 
-	distanceToCampusKm: z
+	walkingMinutes: z
 		.number()
-		.min(0.1, 'Distance must be at least 0.1km')
-		.max(20, 'Distance cannot exceed 20km')
+		.int()
+		.min(1, 'Walking time must be at least 1 minute')
+		.max(120, 'Walking time cannot exceed 120 minutes')
 		.optional(),
 
 	amenities: z
-		.array(z.string())
+		.array(amenitiesEnum)
 		.min(1, 'Must have at least 1 amenity')
-		.max(10, 'Cannot exceed 10 amenities')
+		.max(13, 'Cannot exceed 13 amenities')
+		.optional(),
+
+	availabilityStatus: availabilityStatusEnum.optional(),
+
+	availableFrom: z
+		.string()
+		.datetime()
 		.optional(),
 
 	photos: z
@@ -171,11 +270,27 @@ export const updateListingSchema = z.object({
 		.max(10, 'Cannot exceed 10 photos')
 		.optional(),
 
+	videos: z
+		.array(z.string().url('Each video must be a valid URL'))
+		.max(3, 'Cannot exceed 3 videos')
+		.optional(),
+
 	coverPhoto: z.string().url('Cover photo must be a valid URL').optional(),
 
 	mapPreview: z.string().url('Map preview must be a valid URL').optional(),
 
 	mapFull: z.string().url('Full map must be a valid URL').optional(),
+
+	landlordName: z
+		.string()
+		.max(100, 'Landlord name cannot exceed 100 characters')
+		.transform((v) => v.trim())
+		.optional(),
+
+	landlordPhone: z
+		.string()
+		.regex(/^\+234\d{10}$/, 'Please enter a valid Nigerian phone number')
+		.optional(),
 
 	status: listingStatusEnum.optional()
 });
@@ -194,11 +309,14 @@ export const listingQuerySchema = z.object({
 	search: z.string().optional(),
 
 	// Filters
-	campusArea: campusAreaEnum.optional(),
+	university: universityEnum.optional(),
+	location: z.string().optional(),
+	propertyType: propertyTypeEnum.optional(),
 	minPrice: z.coerce.number().min(0).optional(),
-	maxPrice: z.coerce.number().max(1000000).optional(),
-	bedrooms: z.coerce.number().int().min(1).max(5).optional(),
+	maxPrice: z.coerce.number().max(10000000).optional(),
+	bedrooms: z.coerce.number().int().min(0).max(5).optional(),
 	bathrooms: z.coerce.number().int().min(1).max(4).optional(),
+	availabilityStatus: availabilityStatusEnum.optional(),
 	status: listingStatusEnum.optional(),
 	agentId: z.string().optional(),
 	verifiedAgentsOnly: z
@@ -220,4 +338,3 @@ export const updateStatusSchema = z.object({
 });
 
 export type UpdateStatusInput = z.infer<typeof updateStatusSchema>;
-

@@ -118,8 +118,7 @@ function HomeContent() {
 
 							<p className='text-xl text-muted-foreground max-w-2xl mx-auto'>
 								Connect with verified agents and fellow students to find quality
-								accommodation near Federal University of Petroleum Resources,
-								Effurun.
+								accommodation.
 							</p>
 						</motion.div>
 
@@ -338,11 +337,11 @@ function HomeContent() {
 												</h3>
 												<div className='flex items-center space-x-2 text-sm text-muted-foreground'>
 													<MapPin className='h-4 w-4' />
-													<span>{listing.campusArea}</span>
+													<span>{listing.location}</span>
 												</div>
 												<div className='flex items-center justify-between'>
 													<span className='text-lg font-bold text-primary'>
-														{formatNaira(listing.priceMonthly)}/month
+														{formatNaira(listing.priceYearly)}/yr
 													</span>
 													{listing.reviewsCount > 0 ? (
 														<div className='flex items-center space-x-1'>

@@ -20,7 +20,8 @@ import {
  * - page: Page number (default: 1)
  * - limit: Items per page (default: 12, max: 50)
  * - search: Text search
- * - campusArea: Filter by campus area
+ * - university: Filter by university
+ * - location: Filter by location
  * - minPrice: Minimum price
  * - maxPrice: Maximum price
  * - bedrooms: Filter by bedroom count

@@ -1,4 +1,18 @@
 import mongoose, { Schema, Document, Model, FilterQuery } from 'mongoose';
+import { UNIVERSITY_IDS, isValidLocationForUniversity } from '@/lib/config/universities';
+
+/**
+ * Property Type Enum
+ */
+export const PropertyType = {
+	BEDSITTER: 'bedsitter',
+	SELF_CON: 'self-con',
+	ONE_BEDROOM: '1-bedroom',
+	TWO_BEDROOM: '2-bedroom',
+	THREE_BEDROOM: '3-bedroom'
+} as const;
+
+export type PropertyTypeType = (typeof PropertyType)[keyof typeof PropertyType];
 
 /**
  * Listing Status Enum
@@ -12,17 +26,36 @@ export type ListingStatusType =
 	(typeof ListingStatus)[keyof typeof ListingStatus];
 
 /**
- * Campus Area Enum
+ * Availability Status Enum
  */
-export const CampusArea = {
-	UGBOMRO: 'Ugbomro',
-	EFFURUN: 'Effurun',
-	ENERHEN: 'Enerhen',
-	PTI_ROAD: 'PTI Road',
-	OTHER: 'Other'
+export const AvailabilityStatus = {
+	AVAILABLE_NOW: 'available_now',
+	AVAILABLE_SOON: 'available_soon'
 } as const;
 
-export type CampusAreaType = (typeof CampusArea)[keyof typeof CampusArea];
+export type AvailabilityStatusType =
+	(typeof AvailabilityStatus)[keyof typeof AvailabilityStatus];
+
+/**
+ * Predefined Amenities List
+ */
+export const AMENITIES = [
+	'Water',
+	'Light (Electricity)',
+	'Tiles',
+	'POP Ceiling',
+	'PVC Ceiling',
+	'Fenced Compound',
+	'Gated Compound',
+	'Wardrobe',
+	'Landlord in Compound',
+	'Landlord Not in Compound',
+	'Private Balcony',
+	'Upstairs',
+	'Downstairs'
+] as const;
+
+export type AmenityType = (typeof AMENITIES)[number];
 
 /**
  * Listing Document Interface
@@ -31,26 +64,37 @@ export interface IListing extends Document {
 	_id: mongoose.Types.ObjectId;
 	title: string;
 	description: string;
-	campusArea: CampusAreaType;
+	university: string;
+	location: string;
+	propertyType: PropertyTypeType;
 
-	// Addresses (addressFull is private - only revealed after unlock)
+	// Addresses (addressFull is private - only revealed after unlock/booking)
 	addressApprox: string;
 	addressFull: string;
 
-	// Pricing
-	priceMonthly: number;
+	// Pricing (yearly rent)
+	priceYearly: number;
 
 	// Property details
 	bedrooms: number;
 	bathrooms: number;
-	distanceToCampusKm: number;
-	amenities: string[];
+	walkingMinutes: number; // Distance to campus in walking minutes
+	amenities: AmenityType[];
+
+	// Availability
+	availabilityStatus: AvailabilityStatusType;
+	availableFrom?: Date; // Required when availabilityStatus is 'available_soon'
 
 	// Media
 	photos: string[];
+	videos: string[]; // Video URLs (Cloudinary)
 	coverPhoto: string;
 	mapPreview: string;
-	mapFull: string; // Private - revealed after unlock
+	mapFull: string; // Private - revealed after booking
+
+	// Landlord/Caretaker Contact (required for ISA listings, private until booking)
+	landlordName?: string;
+	landlordPhone?: string;
 
 	// Relationships
 	agentId: mongoose.Types.ObjectId;
@@ -105,12 +149,36 @@ const ListingSchema = new Schema<IListing, IListingModel>(
 			maxlength: [1000, 'Description cannot exceed 1000 characters']
 		},
 
-		campusArea: {
+		university: {
 			type: String,
-			required: [true, 'Campus area is required'],
+			required: [true, 'University is required'],
 			enum: {
-				values: Object.values(CampusArea),
-				message: 'Invalid campus area'
+				values: UNIVERSITY_IDS,
+				message: 'Invalid university'
+			},
+			index: true
+		},
+
+		location: {
+			type: String,
+			required: [true, 'Location is required'],
+			trim: true,
+			minlength: [2, 'Location must be at least 2 characters'],
+			maxlength: [50, 'Location cannot exceed 50 characters'],
+			validate: {
+				validator: function (this: IListing, value: string) {
+					return isValidLocationForUniversity(this.university, value);
+				},
+				message: 'Invalid location for the selected university'
+			}
+		},
+
+		propertyType: {
+			type: String,
+			required: [true, 'Property type is required'],
+			enum: {
+				values: Object.values(PropertyType),
+				message: 'Invalid property type'
 			}
 		},
 
@@ -123,7 +191,7 @@ const ListingSchema = new Schema<IListing, IListingModel>(
 			maxlength: [200, 'Address cannot exceed 200 characters']
 		},
 
-		// Private address (revealed after unlock)
+		// Private address (revealed after booking inspection)
 		addressFull: {
 			type: String,
 			required: [true, 'Full address is required'],
@@ -132,17 +200,17 @@ const ListingSchema = new Schema<IListing, IListingModel>(
 			maxlength: [300, 'Full address cannot exceed 300 characters']
 		},
 
-		priceMonthly: {
+		priceYearly: {
 			type: Number,
-			required: [true, 'Monthly price is required'],
-			min: [5000, 'Price must be at least ₦5,000'],
-			max: [500000, 'Price cannot exceed ₦500,000']
+			required: [true, 'Yearly rent is required'],
+			min: [50000, 'Price must be at least ₦50,000/year'],
+			max: [5000000, 'Price cannot exceed ₦5,000,000/year']
 		},
 
 		bedrooms: {
 			type: Number,
 			required: [true, 'Number of bedrooms is required'],
-			min: [1, 'Must have at least 1 bedroom'],
+			min: [0, 'Bedrooms cannot be negative'], // 0 for bedsitter/self-con
 			max: [5, 'Cannot exceed 5 bedrooms']
 		},
 
@@ -153,20 +221,48 @@ const ListingSchema = new Schema<IListing, IListingModel>(
 			max: [4, 'Cannot exceed 4 bathrooms']
 		},
 
-		distanceToCampusKm: {
+		walkingMinutes: {
 			type: Number,
-			required: [true, 'Distance to campus is required'],
-			min: [0.1, 'Distance must be at least 0.1km'],
-			max: [20, 'Distance cannot exceed 20km']
+			required: [true, 'Walking time to campus is required'],
+			min: [1, 'Walking time must be at least 1 minute'],
+			max: [120, 'Walking time cannot exceed 120 minutes (2 hours)']
 		},
 
 		amenities: {
 			type: [String],
+			enum: {
+				values: AMENITIES,
+				message: 'Invalid amenity: {VALUE}'
+			},
 			validate: {
 				validator: function (v: string[]) {
-					return v.length >= 1 && v.length <= 10;
+					return v.length >= 1 && v.length <= 13;
 				},
-				message: 'Must have between 1 and 10 amenities'
+				message: 'Must have between 1 and 13 amenities'
+			}
+		},
+
+		// Availability
+		availabilityStatus: {
+			type: String,
+			enum: {
+				values: Object.values(AvailabilityStatus),
+				message: 'Invalid availability status'
+			},
+			default: AvailabilityStatus.AVAILABLE_NOW
+		},
+
+		availableFrom: {
+			type: Date,
+			// Required when availabilityStatus is 'available_soon'
+			validate: {
+				validator: function (this: IListing, value: Date | undefined) {
+					if (this.availabilityStatus === AvailabilityStatus.AVAILABLE_SOON) {
+						return value != null && value > new Date();
+					}
+					return true;
+				},
+				message: 'Available from date is required and must be in the future when status is "available soon"'
 			}
 		},
 
@@ -177,6 +273,17 @@ const ListingSchema = new Schema<IListing, IListingModel>(
 					return v.length >= 1 && v.length <= 10;
 				},
 				message: 'Must have between 1 and 10 photos'
+			}
+		},
+
+		videos: {
+			type: [String],
+			default: [],
+			validate: {
+				validator: function (v: string[]) {
+					return v.length <= 3;
+				},
+				message: 'Cannot have more than 3 videos'
 			}
 		},
 
@@ -192,11 +299,24 @@ const ListingSchema = new Schema<IListing, IListingModel>(
 			trim: true
 		},
 
-		// Private - revealed after unlock
+		// Private - revealed after booking inspection
 		mapFull: {
 			type: String,
 			required: [true, 'Full map is required'],
 			trim: true
+		},
+
+		// Landlord/Caretaker contact (required for ISA, private until booking)
+		landlordName: {
+			type: String,
+			trim: true,
+			maxlength: [100, 'Landlord name cannot exceed 100 characters']
+		},
+
+		landlordPhone: {
+			type: String,
+			trim: true,
+			match: [/^\+234\d{10}$/, 'Please provide a valid Nigerian phone number']
 		},
 
 		agentId: {
@@ -263,9 +383,10 @@ const ListingSchema = new Schema<IListing, IListingModel>(
  * Indexes
  */
 // Main search/filter indexes
-ListingSchema.index({ campusArea: 1, isDeleted: 1 });
+ListingSchema.index({ university: 1, isDeleted: 1 });
+ListingSchema.index({ university: 1, location: 1, isDeleted: 1 });
 ListingSchema.index({ status: 1, isDeleted: 1 });
-ListingSchema.index({ priceMonthly: 1, isDeleted: 1 });
+ListingSchema.index({ priceYearly: 1, isDeleted: 1 });
 ListingSchema.index({ bedrooms: 1, isDeleted: 1 });
 ListingSchema.index({ bathrooms: 1, isDeleted: 1 });
 
@@ -273,8 +394,9 @@ ListingSchema.index({ bathrooms: 1, isDeleted: 1 });
 ListingSchema.index({
 	isDeleted: 1,
 	status: 1,
-	campusArea: 1,
-	priceMonthly: 1
+	university: 1,
+	location: 1,
+	priceYearly: 1
 });
 
 // Text index for search

@@ -16,7 +16,8 @@ import {
 	Bath,
 	Ruler,
 	Image as ImageIcon,
-	Map
+	Map,
+	Video
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,14 +39,18 @@ import {
 } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ImageGalleryUpload } from '@/components/ui/ImageGalleryUpload';
+import { VideoGalleryUpload } from '@/components/ui/VideoGalleryUpload';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useCreateListing } from '@/hooks/api/useAgent';
 import {
 	listingFormSchema,
 	type ListingFormData,
-	CAMPUS_AREAS,
-	AMENITIES_OPTIONS
+	AMENITIES_OPTIONS,
+	PROPERTY_TYPES,
+	AVAILABILITY_STATUSES,
+	getLocationsForUniversity
 } from '@/lib/validators/listings';
+import { UNIVERSITIES, getUniversityDisplayName } from '@/lib/config/universities';
 import { toast } from 'sonner';
 import { UPLOAD_FOLDERS, MAX_FILE_SIZES } from '@/lib/cloudinary';
 import Link from 'next/link';
@@ -60,10 +65,11 @@ export default function NewListingPage() {
 	// Mutation hook
 	const createListingMutation = useCreateListing();
 
-	// Local state for images
+	// Local state for images/videos
 	const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+	const [uploadedVideos, setUploadedVideos] = useState<string[]>([]);
 	const [coverImage, setCoverImage] = useState<string>('');
-	const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+	const [selectedAmenities, setSelectedAmenities] = useState<ListingFormData['amenities']>([]);
 
 	const {
 		register,
@@ -72,18 +78,36 @@ export default function NewListingPage() {
 		watch,
 		formState: { errors }
 	} = useForm<ListingFormData>({
-		resolver: zodResolver(listingFormSchema),
+		resolver: zodResolver(listingFormSchema) as never,
 		defaultValues: {
-			amenities: [],
-			photos: [],
+			amenities: [] as ListingFormData['amenities'],
+			photos: [] as ListingFormData['photos'],
+			videos: [] as string[],
 			coverPhoto: '',
 			mapPreview: '',
-			mapFull: ''
+			mapFull: '',
+			availabilityStatus: 'available_now',
+			bedrooms: 1,
+			bathrooms: 1
 		}
 	});
 
 	// Watch values for controlled inputs
-	const campusAreaValue = watch('campusArea');
+	const universityValue = watch('university');
+	const locationValue = watch('location');
+	const propertyTypeValue = watch('propertyType');
+	const availabilityStatusValue = watch('availabilityStatus');
+
+	// Get available locations based on selected university
+	const availableLocations = universityValue
+		? getLocationsForUniversity(universityValue)
+		: [];
+
+	// Handle video upload
+	const handleVideosChange = (urls: string[]) => {
+		setUploadedVideos(urls);
+		setValue('videos', urls);
+	};
 
 	// Handle image upload
 	const handleImagesChange = (urls: string[]) => {
@@ -104,7 +128,7 @@ export default function NewListingPage() {
 	};
 
 	// Handle amenity toggle
-	const handleAmenityToggle = (amenity: string, checked: boolean) => {
+	const handleAmenityToggle = (amenity: ListingFormData['amenities'][number], checked: boolean) => {
 		const updated = checked
 			? [...selectedAmenities, amenity]
 			: selectedAmenities.filter((a) => a !== amenity);
@@ -138,6 +162,7 @@ export default function NewListingPage() {
 			{
 				...data,
 				photos: uploadedImages,
+				videos: uploadedVideos,
 				coverPhoto: coverImage,
 				amenities: selectedAmenities
 			},
@@ -291,32 +316,92 @@ export default function NewListingPage() {
 								)}
 							</div>
 
-							{/* Campus Area */}
+							{/* University */}
 							<div className='space-y-2'>
-								<Label htmlFor='campusArea'>Campus Area *</Label>
+								<Label htmlFor='university'>University *</Label>
 								<Select
-									value={campusAreaValue}
-									onValueChange={(value) =>
-										setValue(
-											'campusArea',
-											value as ListingFormData['campusArea']
-										)
-									}>
+									value={universityValue}
+									onValueChange={(value) => {
+										setValue('university', value as ListingFormData['university']);
+										setValue('location', ''); // Reset location when university changes
+									}}>
 									<SelectTrigger
-										className={errors.campusArea ? 'border-red-500' : ''}>
-										<SelectValue placeholder='Select campus area' />
+										className={errors.university ? 'border-red-500' : ''}>
+										<SelectValue placeholder='Select university' />
 									</SelectTrigger>
 									<SelectContent>
-										{CAMPUS_AREAS.map((area) => (
-											<SelectItem key={area} value={area}>
-												{area}
+										{UNIVERSITIES.map((uni) => (
+											<SelectItem key={uni.id} value={uni.id}>
+												{uni.shortName} - {uni.name}
 											</SelectItem>
 										))}
 									</SelectContent>
 								</Select>
-								{errors.campusArea && (
+								{errors.university && (
 									<p className='text-sm text-red-500'>
-										{errors.campusArea.message}
+										{errors.university.message}
+									</p>
+								)}
+							</div>
+
+							{/* Location */}
+							<div className='space-y-2'>
+								<Label htmlFor='location'>Location *</Label>
+								<Select
+									value={locationValue}
+									onValueChange={(value) =>
+										setValue('location', value)
+									}
+									disabled={!universityValue}>
+									<SelectTrigger
+										className={errors.location ? 'border-red-500' : ''}>
+										<SelectValue placeholder={universityValue ? 'Select location' : 'Select university first'} />
+									</SelectTrigger>
+									<SelectContent>
+										{availableLocations.map((location) => (
+											<SelectItem key={location} value={location}>
+												{location}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+								{errors.location && (
+									<p className='text-sm text-red-500'>
+										{errors.location.message}
+									</p>
+								)}
+								{universityValue && (
+									<p className='text-xs text-muted-foreground'>
+										Locations near {getUniversityDisplayName(universityValue)}
+									</p>
+								)}
+							</div>
+
+							{/* Property Type */}
+							<div className='space-y-2'>
+								<Label htmlFor='propertyType'>Property Type *</Label>
+								<Select
+									value={propertyTypeValue}
+									onValueChange={(value) =>
+										setValue('propertyType', value as ListingFormData['propertyType'])
+									}>
+									<SelectTrigger
+										className={errors.propertyType ? 'border-red-500' : ''}>
+										<SelectValue placeholder='Select property type' />
+									</SelectTrigger>
+									<SelectContent>
+										{PROPERTY_TYPES.map((type) => (
+											<SelectItem key={type} value={type}>
+												{type === 'bedsitter' ? 'Bedsitter' : 
+												 type === 'self-con' ? 'Self-Contained' : 
+												 type.charAt(0).toUpperCase() + type.slice(1)}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+								{errors.propertyType && (
+									<p className='text-sm text-red-500'>
+										{errors.propertyType.message}
 									</p>
 								)}
 							</div>
@@ -332,7 +417,7 @@ export default function NewListingPage() {
 							</CardTitle>
 							<CardDescription>
 								Provide address information (full address is revealed after
-								payment)
+								booking inspection)
 							</CardDescription>
 						</CardHeader>
 						<CardContent className='space-y-6'>
@@ -349,7 +434,7 @@ export default function NewListingPage() {
 									className={errors.addressApprox ? 'border-red-500' : ''}
 								/>
 								<p className='text-xs text-muted-foreground'>
-									This will be shown to all users before they unlock the listing
+									This will be shown to all users before they book an inspection
 								</p>
 								{errors.addressApprox && (
 									<p className='text-sm text-red-500'>
@@ -369,7 +454,7 @@ export default function NewListingPage() {
 									className={errors.addressFull ? 'border-red-500' : ''}
 								/>
 								<p className='text-xs text-muted-foreground'>
-									This will only be shown after a student unlocks the listing
+									This will only be shown after a student books an inspection
 								</p>
 								{errors.addressFull && (
 									<p className='text-sm text-red-500'>
@@ -378,23 +463,27 @@ export default function NewListingPage() {
 								)}
 							</div>
 
-							{/* Distance to Campus */}
+							{/* Walking Time to Campus */}
 							<div className='space-y-2'>
-								<Label htmlFor='distanceToCampusKm'>
+								<Label htmlFor='walkingMinutes'>
 									<Ruler className='h-4 w-4 inline mr-1' />
-									Distance to Campus (km) *
+									Walking Time to Campus (minutes) *
 								</Label>
 								<Input
-									id='distanceToCampusKm'
+									id='walkingMinutes'
 									type='number'
-									step='0.1'
-									placeholder='e.g., 1.5'
-									{...register('distanceToCampusKm', { valueAsNumber: true })}
-									className={errors.distanceToCampusKm ? 'border-red-500' : ''}
+									min='1'
+									max='120'
+									placeholder='e.g., 15'
+									{...register('walkingMinutes', { valueAsNumber: true })}
+									className={errors.walkingMinutes ? 'border-red-500' : ''}
 								/>
-								{errors.distanceToCampusKm && (
+								<p className='text-xs text-muted-foreground'>
+									How long does it take to walk from this property to campus?
+								</p>
+								{errors.walkingMinutes && (
 									<p className='text-sm text-red-500'>
-										{errors.distanceToCampusKm.message}
+										{errors.walkingMinutes.message}
 									</p>
 								)}
 							</div>
@@ -413,17 +502,17 @@ export default function NewListingPage() {
 							<div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
 								{/* Price */}
 								<div className='space-y-2'>
-									<Label htmlFor='priceMonthly'>Monthly Rent (₦) *</Label>
+									<Label htmlFor='priceYearly'>Yearly Rent (₦) *</Label>
 									<Input
-										id='priceMonthly'
+										id='priceYearly'
 										type='number'
 										placeholder='e.g., 50000'
-										{...register('priceMonthly', { valueAsNumber: true })}
-										className={errors.priceMonthly ? 'border-red-500' : ''}
+										{...register('priceYearly', { valueAsNumber: true })}
+										className={errors.priceYearly ? 'border-red-500' : ''}
 									/>
-									{errors.priceMonthly && (
+									{errors.priceYearly && (
 										<p className='text-sm text-red-500'>
-											{errors.priceMonthly.message}
+											{errors.priceYearly.message}
 										</p>
 									)}
 								</div>
@@ -437,12 +526,15 @@ export default function NewListingPage() {
 									<Input
 										id='bedrooms'
 										type='number'
-										min='1'
+										min='0'
 										max='5'
-										placeholder='e.g., 2'
+										placeholder='e.g., 2 (0 for bedsitter/self-con)'
 										{...register('bedrooms', { valueAsNumber: true })}
 										className={errors.bedrooms ? 'border-red-500' : ''}
 									/>
+									<p className='text-xs text-muted-foreground'>
+										Use 0 for bedsitter or self-contained
+									</p>
 									{errors.bedrooms && (
 										<p className='text-sm text-red-500'>
 											{errors.bedrooms.message}
@@ -480,7 +572,7 @@ export default function NewListingPage() {
 						<CardHeader>
 							<CardTitle>Amenities *</CardTitle>
 							<CardDescription>
-								Select all amenities available at this property (min 1, max 10)
+								Select all amenities available at this property (min 1, max 13)
 							</CardDescription>
 						</CardHeader>
 						<CardContent>
@@ -495,7 +587,7 @@ export default function NewListingPage() {
 											}
 											disabled={
 												!selectedAmenities.includes(amenity) &&
-												selectedAmenities.length >= 10
+												selectedAmenities.length >= 13
 											}
 										/>
 										<Label
@@ -512,8 +604,112 @@ export default function NewListingPage() {
 								</p>
 							)}
 							<p className='text-xs text-muted-foreground mt-3'>
-								Selected: {selectedAmenities.length}/10
+								Selected: {selectedAmenities.length}/13
 							</p>
+						</CardContent>
+					</Card>
+
+					{/* Availability Card */}
+					<Card>
+						<CardHeader>
+							<CardTitle>Availability *</CardTitle>
+							<CardDescription>
+								When is this property available?
+							</CardDescription>
+						</CardHeader>
+						<CardContent className='space-y-6'>
+							<div className='space-y-2'>
+								<Label htmlFor='availabilityStatus'>Availability Status *</Label>
+								<Select
+									value={availabilityStatusValue}
+									onValueChange={(value) =>
+										setValue('availabilityStatus', value as ListingFormData['availabilityStatus'])
+									}>
+									<SelectTrigger
+										className={errors.availabilityStatus ? 'border-red-500' : ''}>
+										<SelectValue placeholder='Select availability' />
+									</SelectTrigger>
+									<SelectContent>
+										{AVAILABILITY_STATUSES.map((status) => (
+											<SelectItem key={status} value={status}>
+												{status === 'available_now' ? 'Available Now' : 'Available Soon'}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+								{errors.availabilityStatus && (
+									<p className='text-sm text-red-500'>
+										{errors.availabilityStatus.message}
+									</p>
+								)}
+							</div>
+
+							{availabilityStatusValue === 'available_soon' && (
+								<div className='space-y-2'>
+									<Label htmlFor='availableFrom'>Available From *</Label>
+									<Input
+										id='availableFrom'
+										type='date'
+										min={new Date().toISOString().split('T')[0]}
+										{...register('availableFrom')}
+										className={errors.availableFrom ? 'border-red-500' : ''}
+									/>
+									<p className='text-xs text-muted-foreground'>
+										When will this property become available?
+									</p>
+									{errors.availableFrom && (
+										<p className='text-sm text-red-500'>
+											{errors.availableFrom.message}
+										</p>
+									)}
+								</div>
+							)}
+						</CardContent>
+					</Card>
+
+					{/* Landlord/Caretaker Contact Card */}
+					<Card>
+						<CardHeader>
+							<CardTitle>Landlord/Caretaker Contact</CardTitle>
+							<CardDescription>
+								Provide the landlord or caretaker details. This information will only be revealed after a student books an inspection.
+							</CardDescription>
+						</CardHeader>
+						<CardContent className='space-y-6'>
+							<div className='space-y-2'>
+								<Label htmlFor='landlordName'>Landlord/Caretaker Name</Label>
+								<Input
+									id='landlordName'
+									type='text'
+									placeholder='e.g., Mr. Johnson'
+									{...register('landlordName')}
+									className={errors.landlordName ? 'border-red-500' : ''}
+								/>
+								{errors.landlordName && (
+									<p className='text-sm text-red-500'>
+										{errors.landlordName.message}
+									</p>
+								)}
+							</div>
+
+							<div className='space-y-2'>
+								<Label htmlFor='landlordPhone'>Landlord/Caretaker Phone</Label>
+								<Input
+									id='landlordPhone'
+									type='tel'
+									placeholder='+234XXXXXXXXXX'
+									{...register('landlordPhone')}
+									className={errors.landlordPhone ? 'border-red-500' : ''}
+								/>
+								<p className='text-xs text-muted-foreground'>
+									Nigerian phone number format (+234XXXXXXXXXX)
+								</p>
+								{errors.landlordPhone && (
+									<p className='text-sm text-red-500'>
+										{errors.landlordPhone.message}
+									</p>
+								)}
+							</div>
 						</CardContent>
 					</Card>
 
@@ -555,6 +751,35 @@ export default function NewListingPage() {
 						</CardContent>
 					</Card>
 
+					{/* Videos Card */}
+					<Card>
+						<CardHeader>
+							<CardTitle className='flex items-center gap-2'>
+								<Video className='h-5 w-5' />
+								Property Videos (Optional)
+							</CardTitle>
+							<CardDescription>
+								Upload walkthrough videos of your property (up to 3 videos, max
+								100MB each). Supported formats: MP4, WebM, MOV, AVI
+							</CardDescription>
+						</CardHeader>
+						<CardContent>
+							<VideoGalleryUpload
+								value={uploadedVideos}
+								onChange={handleVideosChange}
+								folder={UPLOAD_FOLDERS.LISTING_VIDEOS}
+								maxSize={MAX_FILE_SIZES.VIDEO}
+								maxVideos={3}
+								disabled={isSubmitting}
+							/>
+							{errors.videos && (
+								<p className='text-sm text-red-500 mt-2'>
+									{errors.videos.message}
+								</p>
+							)}
+						</CardContent>
+					</Card>
+
 					{/* Map URLs Card */}
 					<Card>
 						<CardHeader>
@@ -579,7 +804,7 @@ export default function NewListingPage() {
 									className={errors.mapPreview ? 'border-red-500' : ''}
 								/>
 								<p className='text-xs text-muted-foreground'>
-									A blurred/zoomed-out map shown before unlock. Can be a Google
+									A blurred/zoomed-out map shown before booking. Can be a Google
 									Maps embed URL or an image URL.
 								</p>
 								{errors.mapPreview && (
@@ -600,7 +825,7 @@ export default function NewListingPage() {
 									className={errors.mapFull ? 'border-red-500' : ''}
 								/>
 								<p className='text-xs text-muted-foreground'>
-									The detailed map shown after unlock. Should include exact
+									The detailed map shown after booking inspection. Should include exact
 									location.
 								</p>
 								{errors.mapFull && (

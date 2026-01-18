@@ -290,11 +290,11 @@ export default function AgentDashboard() {
 												{listing.title}
 											</h4>
 											<p className='text-sm text-muted-foreground'>
-												{listing.campusArea}
+												{listing.location}
 											</p>
 											<div className='flex items-center space-x-4 mt-1'>
 												<span className='text-sm font-medium text-primary'>
-													{formatNaira(listing.priceMonthly)}/month
+													{formatNaira(listing.priceYearly)}/yr
 												</span>
 												<Badge
 													variant={
