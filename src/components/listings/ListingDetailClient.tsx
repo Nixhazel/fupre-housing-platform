@@ -310,7 +310,9 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 									))}
 								</div>
 								<p className='text-xs text-muted-foreground mt-3'>
-									{listing.videos.length} video{listing.videos.length > 1 ? 's' : ''} available - click to play
+									{listing.videos.length} video
+									{listing.videos.length > 1 ? 's' : ''} available - click to
+									play
 								</p>
 							</CardContent>
 						</Card>
@@ -338,7 +340,9 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 									<div className='font-semibold'>
 										{listing.walkingMinutes} min
 									</div>
-									<div className='text-sm text-muted-foreground'>Walk to Campus</div>
+									<div className='text-sm text-muted-foreground'>
+										Walk to Campus
+									</div>
 								</div>
 								<div className='text-center p-4 bg-muted rounded-lg'>
 									<Home className='h-6 w-6 mx-auto mb-2 text-primary' />
@@ -435,11 +439,12 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 									</div>
 									<div className='text-sm text-muted-foreground'>
 										Agent
-									{listing.agent?.isVerified && (
-										<Badge variant='success' className='text-xs'>
-											Verified
-										</Badge>
-									)}
+										{listing.agent?.isVerified && (
+											<Badge variant='success' className='text-xs'>
+												Verified
+											</Badge>
+										)}
+									</div>
 								</div>
 							</div>
 
