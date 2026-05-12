@@ -1,0 +1,113 @@
+---
+description: Testing conventions for EasyVille Estates. No tests exist yet — this file defines the target approach and rules for when tests are added.
+globs: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "**/__tests__/**"]
+alwaysApply: false
+---
+
+# Testing Rules
+
+## Current state
+
+**No tests exist in this repository.** There is no CI pipeline. This file establishes the conventions that must be followed when tests are added.
+
+## Target stack
+
+| Purpose | Tool |
+|---------|------|
+| Unit and integration tests | **Vitest** (compatible with Next.js App Router, ESM, TypeScript) |
+| E2E tests | **Playwright** |
+| API/fetch mocking in client tests | **MSW (Mock Service Worker)** |
+| Mongoose mocking | **`vi.mock`** with manual mock factory |
+
+Do not add Jest — the project's build tooling (Turbopack, ESM) is not compatible with Jest's default transform pipeline.
+
+## File placement
+
+Test files live **next to the file they test**:
+
+```
+src/lib/services/listings.service.ts
+src/lib/services/listings.service.test.ts  ← unit test
+
+src/app/api/listings/route.ts
+src/app/api/listings/route.test.ts         ← integration test
+```
+
+E2E tests live in a top-level `e2e/` directory (create it when needed).
+
+## Naming conventions
+
+```typescript
+describe('createListing', () => {
+  it('should create a listing and return a PublicListing', async () => { ... });
+  it('should throw if agent does not exist', async () => { ... });
+});
+
+describe('GET /api/listings', () => {
+  it('should return paginated listings', async () => { ... });
+  it('should filter by university', async () => { ... });
+});
+```
+
+- `describe` block = the function or route being tested
+- `it` block = a specific behaviour, starting with "should"
+
+## What to test at each level
+
+### Unit tests (services + validators)
+
+Test services by mocking `connectDB` and Mongoose models. Never hit a real database in unit tests.
+
+```typescript
+vi.mock('@/lib/db/connect', () => ({ default: vi.fn() }));
+vi.mock('@/lib/db/models/Listing', () => ({
+  default: {
+    create: vi.fn(),
+    findActiveById: vi.fn(),
+  }
+}));
+```
+
+Priority order for first tests:
+1. `listings.service.ts` — `getListingById` (privacy check), `getUnlockedListing`
+2. `payments.service.ts` — approval flow (does it add to `unlockedListingIds`?)
+3. `guards.ts` — `withAuth`, `withRole` (401 and 403 paths)
+4. `validators/listings.server.ts` — `createListingSchema` edge cases
+5. `validators/auth.server.ts` — password rules, phone regex
+
+### Integration tests (API routes)
+
+Mock the `AuthContext` by replacing the guard HOC:
+
+```typescript
+vi.mock('@/lib/auth/guards', () => ({
+  withAgent: (handler) => (req) =>
+    handler(req, { user: { userId: 'agent-id', email: 'a@b.com', role: 'agent' } }),
+}));
+```
+
+### E2E tests (Playwright)
+
+Cover the critical user journey:
+1. Register as student → verify email → login
+2. Browse listings → save a listing
+3. Submit payment proof → admin approves → listing unlocked
+
+## What NOT to test
+
+- Mongoose schema validation (covered by Zod validators and model-level constraints — test via service)
+- shadcn UI primitives in `src/components/ui/`
+- `src/lib/auth/jwt.ts` signing (test the guards that use it, not the crypto internals)
+
+## Mocking approach
+
+- Use `vi.mock` for module-level mocks (DB, external services)
+- Use `vi.spyOn` for function-level spies when you need to verify call arguments
+- Never mock `src/lib/api/response.ts` — those are pure functions, test their output directly
+
+---
+
+> **Rule maintenance:**
+> If you make a change that contradicts or extends any rule in this file, flag it immediately:
+> "This change affects testing-rules.mdc. Should we update the rule to match the new pattern?"
+> Rules must stay in sync with the codebase. Stale rules are worse than no rules.

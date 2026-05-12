@@ -1,0 +1,158 @@
+---
+description: TypeScript-specific rules derived from the EasyVille Estates tsconfig and actual code patterns.
+globs: ["src/**/*.ts", "src/**/*.tsx"]
+alwaysApply: false
+---
+
+# TypeScript Patterns
+
+## Strict mode is on
+
+`tsconfig.json` has `"strict": true`. This enables `strictNullChecks`, `noImplicitAny`, `strictFunctionTypes`, etc. All code must comply.
+
+Do not use `as any` without a code comment explaining why it is unavoidable. Prefer narrowing with type guards or explicit interface casting.
+
+```typescript
+// Acceptable with justification
+const agent = listing.agentId as unknown as PopulatedAgent; // populated by .populate()
+
+// Not acceptable
+const user = someValue as any;
+```
+
+## Enum pattern — as const objects only
+
+Never use TypeScript `enum`. Use `as const` object pattern, which produces literal union types and works correctly with Mongoose and Zod.
+
+```typescript
+// Correct — used throughout this codebase
+export const UserRole = {
+  STUDENT: 'student',
+  AGENT: 'agent',
+  OWNER: 'owner',
+  ADMIN: 'admin',
+} as const;
+export type UserRoleType = (typeof UserRole)[keyof typeof UserRole];
+
+// Wrong — never use this
+enum UserRole { STUDENT = 'student', AGENT = 'agent' }
+```
+
+Examples in codebase: `UserRole`, `PropertyType`, `ListingStatus`, `AvailabilityStatus`, `PaymentStatus`, `PaymentMethod`.
+
+## Mongoose model export guard
+
+Always use the hot-reload guard. In Next.js dev mode with Turbopack, modules can be re-evaluated, causing "Cannot overwrite model once compiled" errors.
+
+```typescript
+const User: IUserModel =
+  (mongoose.models.User as IUserModel) ||
+  mongoose.model<IUser, IUserModel>('User', UserSchema);
+
+export default User;
+```
+
+## Mongoose document interfaces
+
+Define a `Document` interface (`IUser`, `IListing`, etc.) and a `Model` interface (`IUserModel`, `IListingModel`) that extends `Model<I*>` with static methods. This is the pattern used in all models under `src/lib/db/models/`.
+
+```typescript
+export interface IListing extends Document {
+  _id: mongoose.Types.ObjectId;
+  title: string;
+  // ...
+  toPublicObject(): Partial<IListing>;
+}
+
+export interface IListingModel extends Model<IListing> {
+  findActive(filter?: FilterQuery<IListing>): Promise<IListing[]>;
+  findActiveById(id: string): Promise<IListing | null>;
+}
+```
+
+## Service return types — explicit interfaces, not Mongoose documents
+
+Service functions must return plain typed interfaces, not raw Mongoose documents. This prevents accidental access to private fields like `password`, `addressFull`, and `mapFull`.
+
+```typescript
+// Correct — service returns typed plain object
+export async function createListing(agentId: string, data: CreateListingInput): Promise<PublicListing> {
+  await connectDB();
+  const listing = await Listing.create({ ...data, agentId });
+  return toPublicListing(listing); // converts document to plain typed object
+}
+
+// Wrong — returning raw Mongoose document
+export async function createListing(...): Promise<IListing> { ... }
+```
+
+Canonical return types: `PublicListing`, `UnlockedListing`, `ListingAgent`, `ListingAgentUnlocked` (listings service); `SessionUser` (auth).
+
+## JWT payload type
+
+Use `TokenPayload` from `src/lib/auth/jwt.ts` for all JWT-related types. It extends `JWTPayload` from `jose`.
+
+```typescript
+import type { TokenPayload } from '@/lib/auth/jwt';
+```
+
+The payload shape: `{ userId, email, role, type: 'access' | 'refresh' }`.
+
+## API response types
+
+- `ApiResponse<T>` from `src/lib/api/types.ts` — the canonical wire shape `{ success, data?, error?, errors? }`
+- `SessionUser` from `src/lib/api/types.ts` — the canonical client-side user object
+
+Do not use the `User` interface from `src/types/index.ts` in API hooks or API responses — that is an older shape used in some legacy UI components. New code uses `SessionUser`.
+
+## AuthContext type
+
+When writing or wrapping route handlers, use the `AuthContext` type from `src/lib/auth/guards.ts`:
+
+```typescript
+import type { AuthContext } from '@/lib/auth/guards';
+
+export const POST = withAgent(async (request: NextRequest, context: AuthContext) => {
+  const { userId, email, role } = context.user;
+});
+```
+
+## Type utilities
+
+- `cn(...classes)` from `src/lib/utils.ts` — Tailwind class merging (wraps `clsx` + `tailwind-merge`)
+- `formatNaira(amount)` from `src/lib/utils/currency.ts` — Naira formatting
+- `formatDate(date)` from `src/lib/utils/date.ts` — date formatting with `dayjs`
+
+## Infer Zod types with z.infer
+
+Always use `z.infer` to derive TypeScript types from Zod schemas:
+
+```typescript
+export const createListingSchema = z.object({ ... });
+export type CreateListingInput = z.infer<typeof createListingSchema>;
+```
+
+This is the pattern in all `src/lib/validators/` files.
+
+## Mongoose ObjectId handling
+
+When comparing ObjectIds, always `.toString()`:
+
+```typescript
+if (listing.agentId.toString() !== agentId) {
+  throw new Error('You do not have permission to update this listing');
+}
+```
+
+When creating ObjectIds from strings:
+
+```typescript
+new mongoose.Types.ObjectId(someStringId)
+```
+
+---
+
+> **Rule maintenance:**
+> If you make a change that contradicts or extends any rule in this file, flag it immediately:
+> "This change affects typescript-patterns.mdc. Should we update the rule to match the new pattern?"
+> Rules must stay in sync with the codebase. Stale rules are worse than no rules.

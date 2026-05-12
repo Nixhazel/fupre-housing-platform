@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
-	Search,
+	Phone,
 	MapPin,
 	Users,
 	Shield,
@@ -52,7 +52,7 @@ function HomeContent() {
 			icon: Shield,
 			title: 'Verified Agents',
 			description:
-				'All our agents are verified students with valid matric numbers and ID cards.'
+				'Agents you can trust.'
 		},
 		{
 			icon: MapPin,
@@ -70,22 +70,22 @@ function HomeContent() {
 
 	const testimonials = [
 		{
-			name: 'John Doe',
-			role: 'Final Year Student',
+			name: 'Irhiobose Jesse',
+			role: 'Student',
 			content:
 				'Found my perfect apartment in Ugbomro through this platform. The agent was very helpful and the process was smooth.',
 			rating: 5
 		},
 		{
-			name: 'Mary Johnson',
-			role: 'Graduate Student',
+			name: 'Ovie Akporefe',
+			role: 'Student',
 			content:
 				'Great platform for finding roommates. Met my current roommate here and we get along perfectly!',
 			rating: 5
 		},
 		{
-			name: 'David Wilson',
-			role: 'Undergraduate',
+			name: 'Prince Clinton',
+			role: 'Student',
 			content:
 				"The verification process gives me confidence that I'm dealing with legitimate agents. Highly recommended!",
 			rating: 5
@@ -111,19 +111,17 @@ function HomeContent() {
 							</Badge>
 
 							<h1 className='text-4xl md:text-6xl font-bold bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent'>
-								Find Your Perfect
-								<br />
-								Student Housing
+								Welcome to EasyVille Estates!
 							</h1>
 
 							<p className='text-xl text-muted-foreground max-w-2xl mx-auto'>
-								Connect with verified agents and fellow students to find quality
-								accommodation.
+								Your trusted platform for everything student housing and
+								properties
 							</p>
 						</motion.div>
 
 						{/* Search Bar */}
-						<motion.div
+						{/* <motion.div
 							initial={{ opacity: 0, y: 20 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.6, delay: 0.2 }}
@@ -151,7 +149,7 @@ function HomeContent() {
 									</Button>
 								</Link>
 							</div>
-						</motion.div>
+						</motion.div> */}
 
 						{/* CTA Buttons */}
 						<motion.div
@@ -162,13 +160,25 @@ function HomeContent() {
 							<Link href='/listings'>
 								<Button size='lg' variant='default'>
 									<Building2 className='mr-2 h-5 w-5' />
-									Browse Listings
+									Looking for a house?
+								</Button>
+							</Link>
+							<Link href='/auth/register'>
+								<Button size='lg' variant='default'>
+									<Building2 className='mr-2 h-5 w-5' />
+									Have an available house for rent?
 								</Button>
 							</Link>
 							<Link href='/roommates'>
 								<Button size='lg' variant='outline'>
 									<Users className='mr-2 h-5 w-5' />
-									Find Roommates
+									Looking for a roommate?
+								</Button>
+							</Link>
+							<Link href='https://wa.me/2347048489342' target='_blank'>
+								<Button size='lg' variant='outline'>
+									<Phone className='mr-2 h-5 w-5' />
+									Do you have properties for sale?
 								</Button>
 							</Link>
 						</motion.div>
@@ -177,7 +187,7 @@ function HomeContent() {
 			</section>
 
 			{/* Stats Section */}
-			<section className='py-16 bg-muted/30'>
+			{/* <section className='py-16 bg-muted/30'>
 				<div className='container mx-auto px-4'>
 					<div className='grid grid-cols-2 md:grid-cols-4 gap-8'>
 						{stats.map((stat, index) => (
@@ -198,7 +208,7 @@ function HomeContent() {
 						))}
 					</div>
 				</div>
-			</section>
+			</section> */}
 
 			{/* Features Section */}
 			<section className='py-20'>
@@ -242,142 +252,6 @@ function HomeContent() {
 			</section>
 
 			{/* Featured Listings */}
-			<section className='py-20 bg-muted/30'>
-				<div className='container mx-auto px-4'>
-					<motion.div
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.6 }}
-						className='text-center space-y-4 mb-16'>
-						<h2 className='text-3xl md:text-4xl font-bold'>
-							Featured Listings
-						</h2>
-						<p className='text-xl text-muted-foreground max-w-2xl mx-auto'>
-							Discover our top-rated properties near campus.
-						</p>
-					</motion.div>
-
-					{/* Loading State */}
-					{isListingsLoading && (
-						<div className='grid md:grid-cols-2 lg:grid-cols-3 gap-6'>
-							{[...Array(6)].map((_, index) => (
-								<Card key={index} className='overflow-hidden'>
-									<Skeleton className='h-48 w-full' />
-									<CardContent className='p-4 space-y-3'>
-										<Skeleton className='h-5 w-3/4' />
-										<Skeleton className='h-4 w-1/2' />
-										<Skeleton className='h-6 w-1/3' />
-										<Skeleton className='h-9 w-full' />
-									</CardContent>
-								</Card>
-							))}
-						</div>
-					)}
-
-					{/* Error State */}
-					{isListingsError && !isListingsLoading && (
-						<div className='text-center py-12'>
-							<p className='text-muted-foreground mb-4'>
-								Unable to load featured listings at this time.
-							</p>
-							<Link href='/listings'>
-								<Button variant='outline'>Browse All Listings</Button>
-							</Link>
-						</div>
-					)}
-
-					{/* Empty State */}
-					{!isListingsLoading &&
-						!isListingsError &&
-						featuredListings.length === 0 && (
-							<div className='text-center py-12'>
-								<Building2 className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
-								<p className='text-muted-foreground mb-4'>
-									No listings available at the moment. Check back soon!
-								</p>
-								<Link href='/listings'>
-									<Button variant='outline'>Browse All Listings</Button>
-								</Link>
-							</div>
-						)}
-
-					{/* Listings Grid */}
-					{!isListingsLoading &&
-						!isListingsError &&
-						featuredListings.length > 0 && (
-							<div className='grid md:grid-cols-2 lg:grid-cols-3 gap-6'>
-								{featuredListings.map((listing, index) => (
-									<motion.div
-										key={listing.id}
-										initial={{ opacity: 0, y: 20 }}
-										animate={{ opacity: 1, y: 0 }}
-										transition={{ duration: 0.6, delay: index * 0.1 }}>
-										<Card className='overflow-hidden hover:shadow-lg transition-shadow'>
-											<div className='relative h-48'>
-												<Image
-													src={listing.coverPhoto}
-													alt={listing.title}
-													fill
-													sizes='(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw'
-													className='object-cover'
-												/>
-												<Badge
-													variant={
-														listing.status === 'available'
-															? 'success'
-															: 'secondary'
-													}
-													className='absolute top-2 right-2'>
-													{listing.status}
-												</Badge>
-											</div>
-											<CardContent className='p-4 space-y-3'>
-												<h3 className='font-semibold line-clamp-1'>
-													{listing.title}
-												</h3>
-												<div className='flex items-center space-x-2 text-sm text-muted-foreground'>
-													<MapPin className='h-4 w-4' />
-													<span>{listing.location}</span>
-												</div>
-												<div className='flex items-center justify-between'>
-													<span className='text-lg font-bold text-primary'>
-														{formatNaira(listing.priceYearly)}/yr
-													</span>
-													{listing.reviewsCount > 0 ? (
-														<div className='flex items-center space-x-1'>
-															<Star className='h-4 w-4 fill-yellow-400 text-yellow-400' />
-															<span className='text-sm'>{listing.rating.toFixed(1)}</span>
-														</div>
-													) : (
-														<span className='text-xs text-muted-foreground'>New</span>
-													)}
-												</div>
-												<Link href={`/listings/${listing.id}`}>
-													<Button className='w-full' size='sm'>
-														View Details
-													</Button>
-												</Link>
-											</CardContent>
-										</Card>
-									</motion.div>
-								))}
-							</div>
-						)}
-
-					<motion.div
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.6, delay: 0.6 }}
-						className='text-center mt-12'>
-						<Link href='/listings'>
-							<Button size='lg' variant='outline'>
-								View All Listings
-								<ArrowRight className='ml-2 h-4 w-4' />
-							</Button>
-						</Link>
-					</motion.div>
-				</div>
-			</section>
 
 			{/* Testimonials */}
 			<section className='py-20'>
@@ -450,14 +324,6 @@ function HomeContent() {
 								<Button size='lg' variant='secondary'>
 									Get Started Today
 									<ArrowRight className='ml-2 h-4 w-4' />
-								</Button>
-							</Link>
-							<Link href='/listings'>
-								<Button
-									size='lg'
-									variant='outline'
-									className='border-white text-white hover:bg-white hover:text-primary'>
-									Browse Listings
 								</Button>
 							</Link>
 						</div>

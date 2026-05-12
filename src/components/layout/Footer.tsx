@@ -7,23 +7,23 @@ export function Footer() {
 		<footer className='bg-muted/50 border-t'>
 			<div className='container mx-auto px-4 py-12'>
 				<div className='grid grid-cols-1 md:grid-cols-4 gap-8'>
-				{/* Brand */}
-				<div className='space-y-4'>
-					<Link href='/' className='flex items-center space-x-2'>
-						<Image
-							src='/images/easyvill-logo.png'
-							alt='EasyVille Estates'
-							width={40}
-							height={40}
-							className='h-10 w-10 object-contain'
-						/>
-						<span className='text-xl font-bold'>EasyVille Estates</span>
-					</Link>
-					<p className='text-sm text-muted-foreground'>
-						Your trusted platform for quality student housing and roommates
-						near campus. Find your perfect accommodation today.
-					</p>
-				</div>
+					{/* Brand */}
+					<div className='space-y-4'>
+						<Link href='/' className='flex items-center space-x-2'>
+							<Image
+								src='/images/easyvill-logo.png'
+								alt='EasyVille Estates'
+								width={40}
+								height={40}
+								className='h-10 w-10 object-contain'
+							/>
+							<span className='text-xl font-bold'>EasyVille Estates</span>
+						</Link>
+						<p className='text-sm text-muted-foreground'>
+							Your trusted platform for quality student housing and roommates
+							near campus. Find your perfect accommodation today.
+						</p>
+					</div>
 
 					{/* Quick Links */}
 					<div className='space-y-4'>
@@ -80,9 +80,23 @@ export function Footer() {
 							</li>
 							<li>
 								<Link
+									href='/listings?university=dou'
+									className='text-muted-foreground hover:text-foreground transition-colors'>
+									DOU
+								</Link>
+							</li>
+							<li>
+								<Link
 									href='/listings?university=uniben'
 									className='text-muted-foreground hover:text-foreground transition-colors'>
 									UNIBEN
+								</Link>
+							</li>
+							<li>
+								<Link
+									href='/listings?university=unical'
+									className='text-muted-foreground hover:text-foreground transition-colors'>
+									UNICAL
 								</Link>
 							</li>
 							<li>
@@ -112,10 +126,10 @@ export function Footer() {
 								<span className='text-muted-foreground'>+234 704 848 9342</span>
 							</div>
 							<div className='flex items-center space-x-2'>
-						<Mail className='h-4 w-4 text-muted-foreground' />
-							<span className='text-muted-foreground'>
-								support@easyvilleestates.com
-							</span>
+								<Mail className='h-4 w-4 text-muted-foreground' />
+								<span className='text-muted-foreground'>
+									info@easyvilleestates.com
+								</span>
 							</div>
 						</div>
 					</div>
@@ -123,7 +137,7 @@ export function Footer() {
 
 				<div className='border-t mt-8 pt-8 flex flex-col md:flex-row justify-between items-center'>
 					<p className='text-sm text-muted-foreground'>
-						© 2025 EasyVille Estates. All rights reserved.
+						© 2026 EasyVille Estates. All rights reserved.
 					</p>
 					<div className='flex space-x-6 mt-4 md:mt-0'>
 						<Link

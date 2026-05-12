@@ -1,0 +1,150 @@
+---
+description: Layer separation rules for EasyVille Estates. Enforces what each layer may import and where business logic must live.
+alwaysApply: true
+---
+
+# Architecture Boundaries
+
+## The four layers
+
+```
+src/app/api/**/route.ts       ← API Layer
+src/lib/services/*.service.ts ← Service Layer (business logic)
+src/lib/db/models/*.ts        ← Model Layer (data schema)
+src/app/**/*.tsx              ← UI Layer
+src/components/**/*.tsx       ← UI Layer
+src/hooks/api/*.ts            ← Client Data Layer
+```
+
+## What each layer may import
+
+### API Layer (`src/app/api/`)
+
+May import from:
+- `src/lib/auth/guards` — `withAuth`, `withRole`, `withAgent`, `withAdmin`, `withOptionalAuth`
+- `src/lib/validators/*.server.ts` — Zod schemas for request validation
+- `src/lib/services/*.service.ts` — business logic execution
+- `src/lib/api/response.ts` — response helpers
+- `src/lib/db/connect` — only for routes that bypass services (rare; justify in a comment)
+
+Must NOT import from:
+- `src/lib/db/models/` directly (use a service instead — except auth routes which legitimately access User)
+- `src/components/`
+- `src/hooks/`
+
+### Service Layer (`src/lib/services/`)
+
+May import from:
+- `src/lib/db/connect`
+- `src/lib/db/models/`
+- `src/lib/config/`
+- Other services when composing logic
+- `src/lib/email/` for sending emails as part of a workflow
+
+Must NOT import from:
+- `next/server`, `next/navigation`, or any Next.js module
+- `src/app/`
+- `src/components/`
+- `src/hooks/`
+- `src/lib/api/` (response helpers are for API routes, not services; services throw errors)
+
+### Model Layer (`src/lib/db/models/`)
+
+May import from:
+- Other models in `src/lib/db/models/` (refs only)
+- `src/lib/config/` (for constants like `UNIVERSITY_IDS`, `PLATFORM_CONFIG`)
+- `mongoose`
+- `bcryptjs` (User model only)
+
+Must NOT import from anything else. Models are the deepest layer.
+
+### UI Layer (`src/app/**/*.tsx`, `src/components/**/*.tsx`)
+
+May import from:
+- `src/hooks/api/` — **only** way to fetch/mutate data on the client
+- `src/lib/api/types.ts` — type definitions for API responses
+- `src/lib/utils/` — pure utility functions
+- `src/lib/config/env.ts` — constants like `PLATFORM_CONFIG` (client-safe fields only)
+- `src/components/` — other components
+- `src/types/` — shared type definitions
+
+Must NOT import from:
+- `src/lib/db/` — server-only, causes build failures in client bundles
+- `src/lib/services/` — server-only
+- `src/lib/auth/guards.ts` — server-only
+- `src/lib/auth/jwt.ts` — server-only
+
+### Client Data Layer (`src/hooks/api/`)
+
+May import from:
+- `src/lib/api/client.ts` — Axios instance
+- `src/lib/api/types.ts` — response types
+- `src/lib/query/keys.ts` — query key factory
+- `@tanstack/react-query`
+
+Must NOT import from:
+- `src/lib/db/`
+- `src/lib/services/`
+
+## Business logic placement
+
+Business logic belongs **exclusively** in `src/lib/services/*.service.ts`. This includes:
+
+- Ownership checks (e.g., "does this agentId own this listing?")
+- State transitions (e.g., approving a payment → updating unlockedListingIds)
+- Data privacy filtering (e.g., `toPublicListing()` vs `toUnlockedListing()`)
+- Cross-entity logic (e.g., counting a user's unlocked listings)
+
+API routes must be thin: validate input → call service → return response.
+
+```typescript
+// Correct — thin API route
+export const POST = withAgent(async (request, context) => {
+  const body = await request.json();
+  const validation = createListingSchema.safeParse(body);
+  if (!validation.success) return validationErrorResponse(validation.error);
+  const listing = await listingsService.createListing(context.user.userId, validation.data);
+  return successResponse({ listing }, 201);
+});
+
+// Wrong — business logic leaking into API route
+export const POST = withAgent(async (request, context) => {
+  const body = await request.json();
+  const existing = await Listing.findOne({ title: body.title }); // direct DB in route
+  if (existing) return conflictResponse('Title already exists');   // business rule in route
+  ...
+});
+```
+
+## Auth guard usage — no exceptions
+
+Every API route that requires authentication must be wrapped in a guard HOC. No inline cookie reading or manual JWT verification in route handlers.
+
+```typescript
+// Correct
+export const DELETE = withAgent(handler);
+export const GET = withOptionalAuth(handler);
+
+// Wrong — never do this in a route handler
+const token = request.cookies.get('access_token');
+const payload = await verifyToken(token.value);
+```
+
+Available guards and their role requirements:
+
+| Guard | Allowed roles |
+|-------|--------------|
+| `withAuth` | Any authenticated user |
+| `withUser` | Any authenticated user (alias for withAuth) |
+| `withAgent` | `agent` only |
+| `withAdmin` | `admin` only |
+| `withAgentOrAdmin` | `agent` or `admin` |
+| `withRole([...])` | Custom role list |
+| `withOptionalAuth` | Unauthenticated or authenticated (provides context if authenticated) |
+
+---
+
+> **Rule maintenance:**
+> If you make a change that contradicts or extends any rule in this file, flag it immediately:
+> "This change affects architecture-boundaries.mdc. Should we update the rule to match the new pattern?"
+> Rules must stay in sync with the codebase. Stale rules are worse than no rules.

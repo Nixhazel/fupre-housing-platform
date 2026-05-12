@@ -32,7 +32,7 @@ export const UNIVERSITIES: UniversityConfig[] = [
 	},
 	{
 		id: 'dou',
-		name: 'Delta State University of Science and Technology',
+		name: 'Dennis Osadebay University',
 		shortName: 'DOU',
 		state: 'Delta',
 		locations: ['Campus', 'Town']

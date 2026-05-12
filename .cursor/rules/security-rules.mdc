@@ -1,0 +1,154 @@
+---
+description: Security rules for EasyVille Estates. Covers private data, auth patterns, input validation, and sensitive field handling.
+alwaysApply: true
+---
+
+# Security Rules
+
+## Private listing fields — never in public responses
+
+The following Listing fields are **private** and must never appear in a public API response:
+
+| Field | Why private |
+|-------|-------------|
+| `addressFull` | Exact address — revealed only after unlock payment |
+| `mapFull` | Full map — revealed only after unlock payment |
+| `landlordName` | Contact info — revealed only after unlock payment |
+| `landlordPhone` | Contact info — revealed only after unlock payment |
+
+Always use the service-layer mapper functions that strip these fields:
+
+```typescript
+// Correct — toPublicListing strips private fields
+return toPublicListing(listing);
+
+// Also correct — model instance method
+return listing.toPublicObject();
+
+// Wrong — raw document exposed directly
+return successResponse({ listing: listing.toObject() });
+```
+
+When returning unlocked data (user has an approved PaymentProof for the listing), use `getUnlockedListing()` or `toUnlockedListing()` — these deliberately include the private fields but must only be called after verifying unlock status.
+
+```typescript
+const isUnlocked = user.unlockedListingIds.some(id => id.toString() === listingId);
+const listingData = isUnlocked
+  ? await listingsService.getUnlockedListing(listingId)
+  : await listingsService.getListingById(listingId);
+```
+
+## Password field — select: false
+
+The `password` field on `User` is marked `select: false` in the Mongoose schema. This means a standard `User.findOne()` call will NOT include the password.
+
+To compare passwords (login), always use:
+
+```typescript
+const user = await User.findByEmail(email); // adds +password selector
+await user.comparePassword(candidatePassword);
+```
+
+Never do:
+
+```typescript
+const user = await User.findOne({ email }); // password field missing — comparison will fail
+```
+
+Never include `password` in any API response shape.
+
+## Email enumeration prevention
+
+Login and forgot-password endpoints must return the same generic message whether or not the email exists, to prevent attackers from enumerating valid accounts:
+
+```typescript
+// Correct
+return errorResponse('Invalid email or password', 401);
+
+// Wrong — reveals whether email exists
+if (!user) return errorResponse('No account found with this email', 401);
+```
+
+The forgot-password route always returns success-looking message even when no account matches:
+
+```typescript
+return successResponse({ message: 'If an account with this email exists, a reset link has been sent.' });
+```
+
+## Zod validation before DB
+
+Every API route that accepts user input must validate it with Zod `safeParse` **before** any database operation. No unvalidated data touches MongoDB.
+
+```typescript
+const validation = schema.safeParse(body);
+if (!validation.success) return validationErrorResponse(validation.error); // stop here
+await connectDB();
+await SomeModel.create(validation.data); // only validated data reaches DB
+```
+
+## Phone number format
+
+All phone numbers stored in the system must match the Nigerian international format:
+
+```
+/^\+234\d{10}$/
+```
+
+This regex is enforced in:
+- `UserSchema` (`phone` field)
+- `ListingSchema` (`landlordPhone` field)
+- `src/lib/validators/auth.server.ts` (registration)
+
+Never accept local formats like `080XXXXXXXX` or `+2348XXXXXXXXX` — the regex is strict.
+
+## JWT secret strength
+
+In production, `JWT_SECRET` must be at least 32 characters. This is enforced at startup in `src/lib/config/env.ts`:
+
+```typescript
+if (isProduction && jwtSecret.length < 32) {
+  throw new Error('JWT_SECRET must be at least 32 characters in production');
+}
+```
+
+Never hardcode a JWT secret in code. Always read from `process.env.JWT_SECRET`.
+
+## Security headers
+
+`src/middleware.ts` sets security headers on every non-API response:
+
+```
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin
+```
+
+Do not remove these. If adding new middleware behaviour, preserve this header block.
+
+## Production error exposure
+
+`src/lib/api/response.ts` uses `isProduction` to strip internal error details from responses. The `serverErrorResponse()` helper always returns a generic "An unexpected error occurred" message to clients in production, regardless of the actual error.
+
+Never add code that returns raw `error.message` or stack traces in production responses.
+
+## Admin-only endpoints
+
+The `/api/docs` and `/api/health/email` routes return 404/403 in production. Do not make these accessible in production:
+
+```typescript
+if (isProduction) {
+  return NextResponse.json({ error: 'Not found' }, { status: 404 });
+}
+```
+
+## Cloudinary images — wildcard hostname
+
+`next.config.ts` uses `hostname: '**'` in `remotePatterns`, allowing any HTTPS source for `next/image`. This is intentional for Cloudinary CDN URLs but means all HTTPS image URLs are trusted. Do not change this without understanding the impact on uploaded media.
+
+---
+
+> **Rule maintenance:**
+> If you make a change that contradicts or extends any rule in this file, flag it immediately:
+> "This change affects security-rules.mdc. Should we update the rule to match the new pattern?"
+> Rules must stay in sync with the codebase. Stale rules are worse than no rules.

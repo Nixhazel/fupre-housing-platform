@@ -434,8 +434,7 @@ export function ListingDetailClient({ listingId }: ListingDetailClientProps) {
 										{listing.agent?.name || 'Agent'}
 									</div>
 									<div className='text-sm text-muted-foreground'>
-										Student Agent (ISA)
-									</div>
+										Agent
 									{listing.agent?.isVerified && (
 										<Badge variant='success' className='text-xs'>
 											Verified

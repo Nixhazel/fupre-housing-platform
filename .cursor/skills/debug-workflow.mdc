@@ -1,0 +1,186 @@
+---
+description: Systematic debugging workflow for EasyVille Estates. Use when diagnosing unexpected behaviour in the API, auth, or UI.
+---
+
+# Skill: Debug Workflow
+
+## When to use this skill
+
+Use this when something is broken and you need a systematic approach. This workflow is ordered from the most common failure points outward.
+
+---
+
+## Layer 1 — Is the request even reaching the route?
+
+### Check: middleware skipping the route
+
+`src/middleware.ts` skips all `/api` routes. If a page redirect isn't happening, check:
+
+1. Is the path in `protectedRoutes`? (`/profile`, `/dashboard`, `/unlock`)
+2. Does the path **start with** one of those prefixes? The check is `pathname.startsWith(`${route}/`)`.
+3. Does the path contain a `.`? (e.g. `/profile.html`) — middleware skips anything with a dot.
+
+```typescript
+// From middleware.ts — paths with dots are skipped
+if (pathname.includes('.')) {
+  return NextResponse.next();
+}
+```
+
+### Check: correct HTTP method
+
+API routes export named methods. If you get a 405 Method Not Allowed, the handler for that method doesn't exist in the route file.
+
+---
+
+## Layer 2 — Auth / guard failures
+
+### Symptom: 401 from an API route that should be public
+
+Check if the route is wrapped in `withAuth` when it should be `withOptionalAuth`.
+
+### Symptom: 401 even with valid login
+
+1. Check cookie names: `access_token` and `refresh_token`. Inspect browser DevTools → Application → Cookies.
+2. Check cookie `httpOnly` flag — it should be true. If missing, the middleware can't read it.
+3. Check if the access token has expired (15 min). The guard will try the refresh token. If the refresh token is also expired (7 days), both fail → 401.
+4. Check `JWT_SECRET` — if it changed since the token was issued, verification fails.
+
+### Symptom: 403 Forbidden
+
+The user is authenticated but the wrong role. Check:
+
+```typescript
+// Which guard is wrapping this route?
+export const POST = withAgent(handler); // only 'agent' role
+export const DELETE = withAdmin(handler); // only 'admin' role
+```
+
+Compare `context.user.role` against the required role.
+
+### Symptom: Guard wraps but context.user is undefined
+
+The guard injects `context` as the second argument. If you accidentally destructure the wrong parameter:
+
+```typescript
+// Wrong — context is the second arg, not first
+export const POST = withAgent(async (context: AuthContext) => { ... });
+
+// Correct
+export const POST = withAgent(async (request: NextRequest, context: AuthContext) => { ... });
+```
+
+---
+
+## Layer 3 — Validation failures
+
+### Symptom: 400 with `{ success: false, error: 'Validation failed', errors: {...} }`
+
+The Zod schema rejected the input. Check:
+
+1. What did the request actually send? Log `body` before `safeParse`.
+2. Query params come in as strings — the server validator uses `z.coerce.number()` for numeric params. Check if the client sends the right type.
+3. Enum values are case-sensitive. `'AVAILABLE'` will fail if the schema expects `'available'`.
+4. `availableFrom` requires ISO 8601 datetime format (`z.string().datetime()`).
+
+### Symptom: Zod error not being caught
+
+Check that the route uses `validationErrorResponse(validation.error)` and does NOT use `schema.parse()` (which throws instead of returning a result object).
+
+---
+
+## Layer 4 — Database / service failures
+
+### Symptom: `Database connection failed` error
+
+1. Check `MONGODB_URI` in `.env.local` — is it correct?
+2. Check that the service function calls `await connectDB()` before any query.
+3. Check MongoDB Atlas network access — is the server's IP whitelisted?
+
+### Symptom: Service function returns null when it shouldn't
+
+1. Check if the document has `isDeleted: true`. All `findActive*` helpers filter `isDeleted: false`.
+2. Check that you're querying by the right field. `findActiveById` uses `_id`, not `id`.
+3. Check ObjectId format — `mongoose.Types.ObjectId` from a string can fail silently if the string isn't a valid 24-char hex ID.
+
+### Symptom: Soft-deleted record still appearing
+
+Check the query — it must include `isDeleted: false`. Use `Model.findActive()` or `Model.findActiveById()` static methods which include this filter automatically.
+
+### Symptom: Private fields (`addressFull`, `mapFull`) returning in API response
+
+The route is probably returning a raw Mongoose document or calling `toObject()` without stripping private fields. Use the service's `toPublicListing()` mapper or the model's `toPublicObject()` method.
+
+---
+
+## Layer 5 — Client-side / TanStack Query failures
+
+### Symptom: Stale data after a mutation
+
+The `onSuccess` handler in the mutation hook probably isn't invalidating the right query key. Check `src/hooks/api/` for the mutation and compare its `queryClient.invalidateQueries` calls against the keys in `src/lib/query/keys.ts`.
+
+### Symptom: `useAuth()` returns null user even after login
+
+1. `useLogin` sets the query cache: `queryClient.setQueryData(queryKeys.auth.me(), data.user)`. If this is missing, the cache won't update.
+2. The `AuthProvider` reads from `useCurrentUser`, which reads from `queryKeys.auth.me()`. If the key doesn't match exactly, it won't find the data.
+
+### Symptom: 401 dispatched event causing unexpected redirect
+
+`src/lib/api/client.ts` fires `auth:session-expired` only when:
+1. The response status is 401, AND
+2. The current page is a protected route (`/profile`, `/dashboard`, `/unlock`), AND
+3. The request URL is NOT `/auth/me`
+
+If you're seeing unexpected redirects on public pages, check that the API call URL is correct and the page isn't accidentally matching a protected path prefix.
+
+### Symptom: Query not refetching after tab focus
+
+`useCurrentUser` has a `visibilitychange` listener but it only refetches if `hasData` (the user was previously loaded). If the user never loaded, the tab-focus refetch won't trigger.
+
+---
+
+## Layer 6 — Build / TypeScript errors
+
+### Run typecheck first
+
+```bash
+npm run typecheck
+```
+
+Never commit with TypeScript errors. Fix them before trying to debug runtime behaviour.
+
+### Common build issues
+
+1. **`mongoose.models.X` is undefined** — missing the hot-reload guard in the model export.
+2. **`Cannot find module '@/...'`** — check `tsconfig.json` paths and that the file actually exists at `src/...`.
+3. **`'use client'` missing** — if a component uses hooks but doesn't have `'use client'` at the top, Next.js will throw a server-component error.
+
+---
+
+## Quick diagnostic commands
+
+```bash
+# TypeScript errors
+npm run typecheck
+
+# Lint issues
+npm run lint
+
+# Check if dev server starts without errors
+npm run dev
+```
+
+Check the health endpoint for DB connectivity:
+```
+GET /api/health    → { status: 'ok' | 'degraded', database: 'connected' | 'disconnected' }
+```
+
+---
+
+> **After completing this workflow:**
+> Review whether this change warrants updates to:
+> - `AGENTS.md` (new failure mode documented? new risky file identified?)
+> - Any `.cursor/rules/` file (new pattern that prevents recurrence?)
+> - Any other `.cursor/skills/` file (debug step changed?)
+>
+> If yes, update now. Do not defer.

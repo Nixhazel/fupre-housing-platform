@@ -17,7 +17,9 @@ import Link from 'next/link';
 import { PLATFORM_CONFIG, formatUnlockFee } from '@/lib/config/env';
 
 // Calculate agent commission percentage for display
-const AGENT_COMMISSION_PERCENT = Math.round(PLATFORM_CONFIG.AGENT_COMMISSION_RATE * 100);
+const AGENT_COMMISSION_PERCENT = Math.round(
+	PLATFORM_CONFIG.AGENT_COMMISSION_RATE * 100
+);
 
 export default function TermsOfServicePage() {
 	return (
@@ -40,7 +42,7 @@ export default function TermsOfServicePage() {
 						<FileText className='h-8 w-8' />
 					</div>
 					<h1 className='text-4xl font-bold mb-4'>Terms of Service</h1>
-					<p className='text-muted-foreground'>Last updated: January 2025</p>
+					<p className='text-muted-foreground'>Last updated: January 2026</p>
 				</motion.div>
 
 				{/* Content */}
@@ -124,8 +126,8 @@ export default function TermsOfServicePage() {
 							<h4>Listing Unlock Fees</h4>
 							<ul>
 								<li>
-									A fee of {formatUnlockFee()} is required to unlock the full address and
-									contact information for each listing
+									A fee of {formatUnlockFee()} is required to unlock the full
+									address and contact information for each listing
 								</li>
 								<li>
 									Unlock fees are non-refundable once the information is
@@ -139,7 +141,10 @@ export default function TermsOfServicePage() {
 
 							<h4>Agent Earnings</h4>
 							<ul>
-								<li>Agents receive {AGENT_COMMISSION_PERCENT}% of the unlock fee for their listings</li>
+								<li>
+									Agents receive {AGENT_COMMISSION_PERCENT}% of the unlock fee
+									for their listings
+								</li>
 								<li>
 									Earnings are tracked and can be viewed in the agent dashboard
 								</li>

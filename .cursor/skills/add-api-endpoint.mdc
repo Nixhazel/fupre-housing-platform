@@ -1,0 +1,150 @@
+---
+description: Workflow for adding a new API endpoint to EasyVille Estates. Use when creating a new route under src/app/api/.
+---
+
+# Skill: Add API Endpoint
+
+## When to use this skill
+
+Use this when adding a new API route to `src/app/api/`. This includes new resources, new actions on existing resources, and new sub-routes.
+
+---
+
+## Step-by-step workflow
+
+### Step 1 — Define or extend the server-side Zod validator
+
+File: `src/lib/validators/<domain>.server.ts`
+
+- If the domain already has a validator file, add the new schema to it.
+- If this is a new domain, create `<domain>.server.ts`.
+- Use `z.coerce` for query params that come in as strings (e.g. `z.coerce.number()`).
+- Export a `z.infer<typeof schema>` type.
+
+```typescript
+export const createThingSchema = z.object({
+  name: z.string().min(2).max(100).transform(v => v.trim()),
+  amount: z.number().min(0),
+});
+export type CreateThingInput = z.infer<typeof createThingSchema>;
+```
+
+### Step 2 — Add business logic to the service
+
+File: `src/lib/services/<domain>.service.ts`
+
+- If the domain already has a service, add the new function to it.
+- If this is a new domain, create `<domain>.service.ts`.
+- Always start with `await connectDB()`.
+- Return an explicit typed interface, never a raw Mongoose document.
+- Throw descriptive `Error` instances for known failure cases (not found, permission denied, etc.).
+
+```typescript
+export async function createThing(userId: string, data: CreateThingInput): Promise<Thing> {
+  await connectDB();
+  const thing = await ThingModel.create({ ...data, userId });
+  return toThing(thing);
+}
+```
+
+### Step 3 — Create the route file
+
+File: `src/app/api/<domain>/route.ts` (or `src/app/api/<domain>/[id]/route.ts`)
+
+- Export named HTTP methods only.
+- Wrap with the appropriate guard.
+- Validate input with `safeParse` before calling the service.
+- Always return via a response helper.
+
+```typescript
+import { NextRequest } from 'next/server';
+import { withAuth, type AuthContext } from '@/lib/auth/guards';
+import { createThingSchema } from '@/lib/validators/thing.server';
+import * as thingService from '@/lib/services/thing.service';
+import { successResponse, validationErrorResponse, serverErrorResponse } from '@/lib/api/response';
+
+export const POST = withAuth(async (request: NextRequest, context: AuthContext) => {
+  try {
+    const body = await request.json();
+    const validation = createThingSchema.safeParse(body);
+    if (!validation.success) return validationErrorResponse(validation.error);
+
+    const thing = await thingService.createThing(context.user.userId, validation.data);
+    return successResponse({ thing }, 201);
+  } catch (error) {
+    return serverErrorResponse(error);
+  }
+});
+```
+
+### Step 4 — Add OpenAPI documentation
+
+File: `src/lib/openapi/schemas/<domain>.ts`
+
+Add JSDoc annotations or a schema object entry for the new endpoint. The Swagger UI at `/api-docs` reads from `src/lib/openapi/index.ts`.
+
+### Step 5 — Add query key(s)
+
+File: `src/lib/query/keys.ts`
+
+Add an entry in the appropriate domain section of `queryKeys`:
+
+```typescript
+things: {
+  all: ['things'] as const,
+  list: (filters: Record<string, unknown>) => [...queryKeys.things.all, 'list', filters] as const,
+  detail: (id: string) => [...queryKeys.things.all, 'detail', id] as const,
+}
+```
+
+### Step 6 — Add TanStack Query hook(s)
+
+File: `src/hooks/api/use<Domain>.ts`
+
+Add `useQuery` and/or `useMutation` hooks:
+
+```typescript
+export function useCreateThing() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateThingInput) => api.post<{ thing: Thing }>('/things', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.things.all });
+    },
+  });
+}
+```
+
+Export from `src/hooks/api/index.ts`.
+
+### Step 7 — Update the client-side type if needed
+
+File: `src/lib/api/types.ts`
+
+If the new endpoint returns a new shape, add it to the types file. If `src/types/index.ts` also needs updating (shared with legacy UI code), update it too but prefer `src/lib/api/types.ts` for API-level types.
+
+---
+
+## Checklist
+
+- [ ] Zod schema defined and type exported (`src/lib/validators/<domain>.server.ts`)
+- [ ] Service function written, returns typed plain object (`src/lib/services/<domain>.service.ts`)
+- [ ] Route file created with named method exports
+- [ ] Route is wrapped in appropriate guard (`withAuth`, `withAgent`, `withAdmin`, etc.)
+- [ ] Input validated with `safeParse` before service call
+- [ ] Response uses helper (`successResponse`, `handleError`, etc.)
+- [ ] OpenAPI doc updated (`src/lib/openapi/schemas/<domain>.ts`)
+- [ ] Query key added (`src/lib/query/keys.ts`)
+- [ ] TanStack Query hook added (`src/hooks/api/use<Domain>.ts`) and exported from `index.ts`
+- [ ] `npm run typecheck` passes
+
+---
+
+> **After completing this workflow:**
+> Review whether this change warrants updates to:
+> - `AGENTS.md` (new domain entity, new env var, architecture change?)
+> - Any `.cursor/rules/` file (new pattern introduced or old one deprecated?)
+> - Any other `.cursor/skills/` file (workflow changed?)
+>
+> If yes, update now. Do not defer.

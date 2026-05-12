@@ -1,0 +1,217 @@
+---
+description: Workflow for adding a new React component to EasyVille Estates. Use when creating any new UI component.
+---
+
+# Skill: Add Component
+
+## When to use this skill
+
+Use when creating a new React component — whether a UI primitive, a shared utility component, a feature-specific component, or a heavy client detail screen.
+
+---
+
+## Step 1 — Determine placement
+
+Choose the correct directory based on the component's purpose:
+
+| Directory | When to use |
+|-----------|-------------|
+| `src/components/ui/` | Only for shadcn/Radix UI generated primitives. No business logic. |
+| `src/components/shared/` | Reusable display components used across multiple features (e.g. `Badge`, `EmptyState`, `Skeleton`, `Rating`) |
+| `src/components/layout/` | Chrome — `Navbar`, `Footer`, `MobileTabBar` |
+| `src/components/listing/` | Listing-specific UI (e.g. filters, map blur) |
+| `src/components/listings/` | Heavy listing client screens (`ListingDetailClient`) |
+| `src/components/admin/` | Admin dashboard UI (tables, modals) |
+| `src/components/reviews/` | Review forms and lists |
+| `src/components/roommate/` | Roommate filter components |
+| `src/components/roommates/` | Heavy roommate client screens |
+| `src/components/auth/` | Auth-specific UI (e.g. `EmailVerificationBanner`) |
+| `src/components/providers/` | React context providers and guards — touch only if needed |
+
+**Rule:** If a component is used in only one feature, put it in that feature's directory. If used across two or more features, it belongs in `shared/`.
+
+---
+
+## Step 2 — Write the component
+
+### Base structure
+
+```typescript
+'use client'; // only if using hooks, browser APIs, or event handlers
+
+import { cn } from '@/lib/utils';
+// Radix/shadcn primitives from src/components/ui/
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+// Icons from lucide-react
+import { Heart } from 'lucide-react';
+
+interface MyComponentProps {
+  title: string;
+  className?: string;
+}
+
+export function MyComponent({ title, className }: MyComponentProps) {
+  return (
+    <Card className={cn('some-base-class', className)}>
+      <CardContent>
+        <Heart className='h-4 w-4' />
+        <span>{title}</span>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+### Class merging
+
+Always use `cn()` from `src/lib/utils.ts` (wraps `clsx` + `tailwind-merge`) when accepting a `className` prop or conditionally applying Tailwind classes:
+
+```typescript
+import { cn } from '@/lib/utils';
+
+<div className={cn('base-class', isActive && 'active-class', className)}>
+```
+
+### Variants with CVA
+
+For components with multiple visual variants, use `class-variance-authority`:
+
+```typescript
+import { cva, type VariantProps } from 'class-variance-authority';
+
+const badgeVariants = cva('base-classes', {
+  variants: {
+    variant: {
+      default: 'bg-primary text-primary-foreground',
+      success: 'bg-green-500 text-white',
+      secondary: 'bg-secondary text-secondary-foreground',
+    },
+  },
+  defaultVariants: { variant: 'default' },
+});
+
+interface BadgeProps extends VariantProps<typeof badgeVariants> {
+  children: React.ReactNode;
+  className?: string;
+}
+```
+
+See `src/components/shared/Badge.tsx` and `src/components/ui/badge.tsx` for examples.
+
+---
+
+## Step 3 — Data fetching inside the component
+
+If the component needs server data, use a TanStack Query hook from `src/hooks/api/`:
+
+```typescript
+import { useListings } from '@/hooks/api/useListings';
+
+export function FeaturedListings() {
+  const { data, isLoading, isError } = useListings({ status: 'available', sortBy: 'rating', limit: 6 });
+
+  if (isLoading) return <LoadingSkeleton />;
+  if (isError) return <ErrorState />;
+
+  return <div>{data?.listings.map(l => <ListingCard key={l.id} listing={l} />)}</div>;
+}
+```
+
+Never call `fetch()` or `axios` directly from a component. Never import from `src/lib/services/` or `src/lib/db/`.
+
+---
+
+## Step 4 — User feedback
+
+For all async actions (save, submit, delete), use `sonner` toasts:
+
+```typescript
+import { toast } from 'sonner';
+
+const mutation = useSaveListing();
+
+const handleSave = async () => {
+  try {
+    await mutation.mutateAsync(listingId);
+    toast.success('Listing saved');
+  } catch (error) {
+    toast.error(error instanceof Error ? error.message : 'Failed to save listing');
+  }
+};
+```
+
+---
+
+## Step 5 — Loading and empty states
+
+Always handle three UI states:
+
+```typescript
+if (isLoading) {
+  return (
+    <div className='grid grid-cols-3 gap-4'>
+      {[...Array(3)].map((_, i) => <Skeleton key={i} className='h-32 w-full' />)}
+    </div>
+  );
+}
+
+if (isError || !data) {
+  return <EmptyState message='Unable to load data' />;
+}
+
+if (data.items.length === 0) {
+  return <EmptyState message='No items found' action={{ label: 'Browse All', href: '/listings' }} />;
+}
+```
+
+Use `src/components/shared/Skeleton.tsx` and `src/components/shared/EmptyState.tsx`.
+
+---
+
+## Step 6 — Animation (optional)
+
+For entrance animations, use `framer-motion` following the pattern in dashboard pages:
+
+```typescript
+import { motion } from 'framer-motion';
+
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: index * 0.1 }}>
+  <Card>...</Card>
+</motion.div>
+```
+
+---
+
+## Step 7 — Export and barrel
+
+If the feature directory has an `index.ts` barrel file (like `src/components/reviews/index.ts`), add the new export:
+
+```typescript
+export { MyComponent } from './MyComponent';
+```
+
+---
+
+## Checklist
+
+- [ ] Component placed in the correct directory (see table in Step 1)
+- [ ] `'use client'` only present if hooks/browser APIs are used
+- [ ] `cn()` used for all conditional/composable class names
+- [ ] Data fetched via `src/hooks/api/` hook (never raw fetch)
+- [ ] Loading, error, and empty states handled
+- [ ] User feedback uses `sonner` toast (no `alert()`)
+- [ ] `npm run typecheck` passes
+
+---
+
+> **After completing this workflow:**
+> Review whether this change warrants updates to:
+> - `AGENTS.md` (new pattern introduced, new shared component worth documenting?)
+> - Any `.cursor/rules/` file (new pattern introduced?)
+> - Any other `.cursor/skills/` file (workflow changed?)
+>
+> If yes, update now. Do not defer.

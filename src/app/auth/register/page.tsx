@@ -136,8 +136,8 @@ export default function RegisterPage() {
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem value='student'>Student</SelectItem>
-										<SelectItem value='agent'>Student Agent (ISA)</SelectItem>
-										<SelectItem value='owner'>Property Owner</SelectItem>
+										<SelectItem value='agent'>Agent</SelectItem>
+										<SelectItem value='owner'>Landlord/Caretaker</SelectItem>
 									</SelectContent>
 								</Select>
 								{errors.role && (
@@ -242,11 +242,11 @@ export default function RegisterPage() {
 									<strong>Student:</strong> Browse and book accommodations
 								</p>
 								<p>
-									<strong>Student Agent (ISA):</strong> List properties and earn
+									<strong>Agent:</strong> List properties and earn
 									commissions
 								</p>
 								<p>
-									<strong>Property Owner:</strong> Find roommates for your
+									<strong>Caretaker/Landlord:</strong> Find students for your
 									property
 								</p>
 							</div>

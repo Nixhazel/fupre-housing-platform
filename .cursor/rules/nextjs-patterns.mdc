@@ -1,0 +1,162 @@
+---
+description: Next.js 15 App Router and React patterns specific to the EasyVille Estates codebase.
+globs: ["src/app/**/*.tsx", "src/app/**/*.ts", "src/components/**/*.tsx", "src/hooks/**/*.ts"]
+alwaysApply: false
+---
+
+# Next.js & React Patterns
+
+## API routes — named exports, never default
+
+All API route handlers in `src/app/api/` must use named HTTP method exports. Default exports are not used.
+
+```typescript
+// Correct
+export const GET = withOptionalAuth(async (request, context) => { ... });
+export const POST = withAgent(async (request, context) => { ... });
+export const PATCH = withAuth(async (request, context) => { ... });
+export const DELETE = withAdmin(async (request, context) => { ... });
+
+// Wrong
+export default async function handler(request) { ... }
+```
+
+## Protected API routes — always wrapped
+
+Every route that requires authentication must be wrapped in a guard HOC before export. There must be no manual cookie/token reading in route handler bodies.
+
+```typescript
+// Correct
+export const POST = withAgent(handler);
+
+// Wrong — manual auth in handler body
+export async function POST(request: NextRequest) {
+  const token = request.cookies.get('access_token');
+  // ...
+}
+```
+
+## Client data fetching — hooks only
+
+Pages and components must never use raw `fetch()` or `axios` directly. All data fetching and mutations go through TanStack Query hooks in `src/hooks/api/`.
+
+```typescript
+// Correct
+const { data, isLoading } = useListings({ status: 'available' });
+
+// Wrong
+useEffect(() => {
+  fetch('/api/listings').then(r => r.json()).then(setListings);
+}, []);
+```
+
+## Query keys — always from the factory
+
+Always use `queryKeys` from `src/lib/query/keys.ts`. Never inline string arrays.
+
+```typescript
+// Correct
+queryClient.invalidateQueries({ queryKey: queryKeys.listings.saved() });
+queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+
+// Wrong
+queryClient.invalidateQueries({ queryKey: ['listings', 'saved'] });
+```
+
+## Component placement
+
+| Type | Directory |
+|------|-----------|
+| shadcn/Radix UI primitives | `src/components/ui/` — no business logic |
+| Cross-feature shared utilities | `src/components/shared/` |
+| Layout chrome | `src/components/layout/` |
+| Feature-specific | `src/components/listing/`, `src/components/admin/`, `src/components/reviews/`, etc. |
+| Heavy client detail screens | `src/components/listings/ListingDetailClient.tsx` pattern |
+| Auth-related UI | `src/components/auth/` |
+| Provider wrappers | `src/components/providers/` |
+
+`src/components/ui/` is reserved for shadcn-generated primitive components. Do not add business logic, API calls, or domain-specific props there.
+
+## Toast notifications — sonner only
+
+Use `toast` from `sonner` for all user feedback. Never use `alert()`, `confirm()`, or `window.confirm()`.
+
+```typescript
+import { toast } from 'sonner';
+
+toast.success('Listing saved successfully');
+toast.error('Failed to submit payment proof');
+```
+
+The `Toaster` is mounted once in `src/app/layout.tsx`.
+
+## Optimistic updates
+
+When implementing optimistic UI (as in `useUpdateProfile`), follow the TanStack Query pattern:
+
+```typescript
+onMutate: async (newData) => {
+  await queryClient.cancelQueries({ queryKey: queryKeys.auth.me() });
+  const previous = queryClient.getQueryData(queryKeys.auth.me());
+  queryClient.setQueryData(queryKeys.auth.me(), (old) => ({ ...old, ...newData }));
+  return { previous };
+},
+onError: (_err, _vars, context) => {
+  queryClient.setQueryData(queryKeys.auth.me(), context?.previous);
+},
+onSettled: () => {
+  queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+},
+```
+
+## Auth-gated UI
+
+Use the `useAuth()` hook from `AuthProvider` for checking auth state in components:
+
+```typescript
+import { useAuth } from '@/components/providers/AuthProvider';
+
+const { user, isAuthenticated, isLoading } = useAuth();
+```
+
+For routes that must redirect unauthenticated users, either rely on the Edge middleware (for `/dashboard`, `/profile`, `/unlock` prefixes) or use `useRequireAuth` from `src/hooks/useRequireAuth.ts` for custom redirect logic.
+
+## Server component metadata
+
+The only server component in the app is `src/app/layout.tsx` and individual `page.tsx` files that export `generateMetadata`. The `'use client'` directive is absent on these. Do not add `'use client'` to layout or pages that generate metadata.
+
+```typescript
+// src/app/listings/[id]/page.tsx — server component, no 'use client'
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> { ... }
+export default async function ListingDetailPage({ params }: PageProps) {
+  return <ListingDetailClient listingId={id} />;
+}
+```
+
+Heavy client logic (state, hooks, events) lives in `*Client.tsx` components imported into the page.
+
+## Image handling
+
+Use `next/image` (`Image`) for all images that are part of UI layout. The `next.config.ts` allows any HTTPS hostname via `remotePatterns`. When the image URL is user-submitted (Cloudinary), use `Image` with `fill` and a sized container.
+
+Note: `.eslintrc.json` has `@next/next/no-img-element: off` — raw `<img>` tags are allowed but prefer `Image` for optimised loading.
+
+## Animation
+
+Use `framer-motion` for animations. Follow the existing pattern in dashboard pages:
+
+```typescript
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.1 }}>
+  ...
+</motion.div>
+```
+
+---
+
+> **Rule maintenance:**
+> If you make a change that contradicts or extends any rule in this file, flag it immediately:
+> "This change affects nextjs-patterns.mdc. Should we update the rule to match the new pattern?"
+> Rules must stay in sync with the codebase. Stale rules are worse than no rules.

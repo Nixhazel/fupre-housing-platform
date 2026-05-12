@@ -6,17 +6,29 @@ export const agentSchemas = {
 	AgentStats: {
 		type: 'object',
 		properties: {
-			totalListings: { type: 'integer', description: 'Total number of listings' },
-			activeListings: { type: 'integer', description: 'Active (available) listings' },
-			totalViews: { type: 'integer', description: 'Total views across all listings' },
-			totalUnlocks: { type: 'integer', description: 'Total unlocks (approved proofs)' },
+			totalListings: {
+				type: 'integer',
+				description: 'Total number of listings'
+			},
+			activeListings: {
+				type: 'integer',
+				description: 'Active (available) listings'
+			},
+			totalViews: {
+				type: 'integer',
+				description: 'Total views across all listings'
+			},
+			totalUnlocks: {
+				type: 'integer',
+				description: 'Total unlocks (approved proofs)'
+			},
 			totalEarnings: { type: 'number', description: 'Total earnings in Naira' }
 		}
 	},
 	MonthlyEarning: {
 		type: 'object',
 		properties: {
-			month: { type: 'string', description: 'Month label (e.g., "Jan 2025")' },
+			month: { type: 'string', description: 'Month label (e.g., "Jan 2026")' },
 			unlocks: { type: 'integer', description: 'Number of unlocks' },
 			amount: { type: 'number', description: 'Earnings in Naira' }
 		}
@@ -28,7 +40,10 @@ export const agentSchemas = {
 			title: { type: 'string' },
 			status: { type: 'string', enum: ['available', 'taken'] },
 			views: { type: 'integer' },
-			unlockCount: { type: 'integer', description: 'Number of unlocks for this listing' },
+			unlockCount: {
+				type: 'integer',
+				description: 'Number of unlocks for this listing'
+			},
 			earnings: { type: 'number', description: 'Earnings from this listing' },
 			createdAt: { type: 'string', format: 'date-time' }
 		}
@@ -108,12 +123,21 @@ export const agentPaths = {
 		get: {
 			tags: ['Agent'],
 			summary: 'Get agent listings with stats',
-			description: 'Get current agent\'s listings with unlock counts and earnings.',
+			description:
+				"Get current agent's listings with unlock counts and earnings.",
 			security: [{ cookieAuth: [] }],
 			parameters: [
 				{ name: 'page', in: 'query', schema: { type: 'integer', default: 1 } },
-				{ name: 'limit', in: 'query', schema: { type: 'integer', default: 20, maximum: 50 } },
-				{ name: 'status', in: 'query', schema: { type: 'string', enum: ['available', 'taken'] } }
+				{
+					name: 'limit',
+					in: 'query',
+					schema: { type: 'integer', default: 20, maximum: 50 }
+				},
+				{
+					name: 'status',
+					in: 'query',
+					schema: { type: 'string', enum: ['available', 'taken'] }
+				}
 			],
 			responses: {
 				'200': {
@@ -129,9 +153,13 @@ export const agentPaths = {
 										properties: {
 											listings: {
 												type: 'array',
-												items: { $ref: '#/components/schemas/AgentListingWithStats' }
+												items: {
+													$ref: '#/components/schemas/AgentListingWithStats'
+												}
 											},
-											pagination: { $ref: '#/components/schemas/PaginationMeta' }
+											pagination: {
+												$ref: '#/components/schemas/PaginationMeta'
+											}
 										}
 									}
 								}
@@ -145,4 +173,3 @@ export const agentPaths = {
 		}
 	}
 };
-

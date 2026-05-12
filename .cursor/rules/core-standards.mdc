@@ -1,0 +1,92 @@
+---
+description: Non-negotiable rules that apply to every file in the EasyVille Estates codebase.
+alwaysApply: true
+---
+
+# Core Standards
+
+## Import paths
+
+Always use the `@/*` path alias. Never use relative `../../` imports crossing module boundaries.
+
+```typescript
+// Correct
+import connectDB from '@/lib/db/connect';
+import { withAuth } from '@/lib/auth/guards';
+
+// Wrong
+import connectDB from '../../lib/db/connect';
+```
+
+The alias is defined in `tsconfig.json`: `"@/*": ["./src/*"]`.
+
+## Zod validation — safeParse only
+
+Never call `schema.parse(...)` in route handlers or anywhere that would leave a Zod error uncaught. Always use `safeParse` and return a structured error response:
+
+```typescript
+const validation = schema.safeParse(body);
+if (!validation.success) {
+  return validationErrorResponse(validation.error);
+}
+// safe to use validation.data
+```
+
+## API response helpers — always
+
+Every value returned from an API route must go through a helper from `src/lib/api/response.ts`. Never use raw `NextResponse.json()` in route files.
+
+```typescript
+// Correct
+return successResponse({ listing }, 201);
+return errorResponse('Listing not found', 404);
+return validationErrorResponse(zodError);
+return handleError(error);
+
+// Wrong
+return NextResponse.json({ listing }, { status: 201 });
+```
+
+Available helpers: `successResponse`, `errorResponse`, `validationErrorResponse`, `unauthorizedResponse`, `forbiddenResponse`, `notFoundResponse`, `conflictResponse`, `serverErrorResponse`, `handleError`.
+
+## Database calls — connectDB first
+
+Every service function that executes a Mongoose query must call `await connectDB()` before any query. This is a no-op when already connected but required for cold serverless starts.
+
+```typescript
+export async function getListingById(id: string) {
+  await connectDB(); // always first
+  return Listing.findActiveById(id);
+}
+```
+
+## Soft delete — never hard delete
+
+Never call `.deleteOne()`, `.deleteMany()`, or `.findByIdAndDelete()` on production data. Always soft-delete:
+
+```typescript
+document.isDeleted = true;
+document.deletedAt = new Date();
+await document.save();
+```
+
+All queries must filter `{ isDeleted: false }` or use the static `findActive*` model helpers.
+
+## No secrets in logs
+
+Never log: passwords, JWT tokens, password reset tokens, email verification tokens, or phone numbers. The `logger` utility in `src/lib/config/env.ts` automatically strips output in production — use it instead of `console.log` directly in library code.
+
+## Never auto-generate these files
+
+AI must never create or modify:
+- `package-lock.json`
+- Any file in `.next/`
+- Migration files (there are none — this project uses Mongoose, not Prisma)
+- `.env.local`, `.env.production`, or any live environment file
+
+---
+
+> **Rule maintenance:**
+> If you make a change that contradicts or extends any rule in this file, flag it immediately:
+> "This change affects core-standards.mdc. Should we update the rule to match the new pattern?"
+> Rules must stay in sync with the codebase. Stale rules are worse than no rules.
